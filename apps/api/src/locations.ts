@@ -250,7 +250,7 @@ export function locationRoutes(
   );
   app.post<{
     Body: {
-      targetType: "post" | "location";
+      targetType: "post" | "location" | "track";
       targetId: string;
       reason: string;
       details: string;
@@ -269,7 +269,12 @@ export function locationRoutes(
         );
       // Lock the visible target until report creation completes; private objects cannot be probed.
       const result = await db.transaction(async (tx) => {
-        const table = b.targetType === "post" ? "posts" : "locations";
+        const table =
+          b.targetType === "post"
+            ? "posts"
+            : b.targetType === "track"
+              ? "tracks"
+              : "locations";
         const visible =
           b.targetType === "post"
             ? "visibility='public' AND NOT hidden"
@@ -356,7 +361,12 @@ export function locationRoutes(
         if (r.status !== "open") throw conflict();
         if (b.action === "hide") {
           // The target may have been deleted or made private after the report. Never expose private content.
-          const table = r.target_type === "post" ? "posts" : "locations";
+          const table =
+            r.target_type === "post"
+              ? "posts"
+              : r.target_type === "track"
+                ? "tracks"
+                : "locations";
           const assignment =
             r.target_type === "post"
               ? "hidden=true,updated_at=now()"

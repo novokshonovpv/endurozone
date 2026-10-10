@@ -142,7 +142,7 @@ export const schemas = {
     expectedStatus: { type: "string", enum: ["pending", "published"] },
   }),
   report: obj({
-    targetType: { type: "string", enum: ["post", "location"] },
+    targetType: { type: "string", enum: ["post", "location", "track"] },
     targetId: { type: "string", format: "uuid" },
     reason: {
       type: "string",
@@ -232,7 +232,7 @@ const locationResponse = obj({
 });
 const reportResponse = obj({
   id: uuid,
-  targetType: { type: "string", enum: ["post", "location"] },
+  targetType: { type: "string", enum: ["post", "location", "track"] },
   targetId: uuid,
   reason: text(20),
   details: text(2000),
@@ -290,8 +290,10 @@ export interface LocationInput {
   accessNotes: string;
   publicationConsent: true;
 }
-export interface EnduroLocation
-  extends Omit<LocationInput, "publicationConsent"> {
+export interface EnduroLocation extends Omit<
+  LocationInput,
+  "publicationConsent"
+> {
   id: string;
   author: Profile;
   status: LocationStatus;
@@ -300,7 +302,7 @@ export interface EnduroLocation
 }
 export interface Report {
   id: string;
-  targetType: "post" | "location";
+  targetType: "post" | "location" | "track";
   targetId: string;
   reason: string;
   details: string;
@@ -331,3 +333,5 @@ export const reportReasons = {
   abuse: "Оскорбления",
   other: "Другое",
 };
+
+export * from "./adventure.ts";

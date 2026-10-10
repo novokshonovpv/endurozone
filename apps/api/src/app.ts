@@ -24,6 +24,8 @@ import {
   profileOf,
 } from "./auth.ts";
 
+import { GpxError } from "./gpx.ts";
+import { adventureRoutes, adventureOutputs } from "./adventure.ts";
 import { locationRoutes, locationOutputs } from "./locations.ts";
 
 interface AuthContext {
@@ -167,7 +169,7 @@ export async function buildApp(options: {
     openapi: {
       info: {
         title: "Enduro.Zone API",
-        version: "0.4.0",
+        version: "0.5.0",
         description:
           "Аккаунт, гараж, бортжурнал, локации и модерация. Для cookie-сессии запросить /api/me и передать csrfToken в X-CSRF-Token при изменении данных. Все изменения требуют X-Enduro-Client: web. Вход для внутреннего тестирования без проверки email.",
       },
@@ -180,6 +182,7 @@ export async function buildApp(options: {
   });
   const output: Record<string, [number, unknown]> = {
     ...locationOutputs,
+    ...adventureOutputs,
     "POST /api/auth/register": [201, responses.session],
     "POST /api/auth/login": [200, responses.session],
     "GET /api/me": [200, responses.session],
@@ -258,7 +261,12 @@ export async function buildApp(options: {
     let message = e.validation
       ? "Проверьте заполнение полей и длину текста."
       : e.message;
-    if (status === 400 && !(e instanceof HttpError) && !e.validation)
+    if (
+      status === 400 &&
+      !(e instanceof HttpError) &&
+      !(e instanceof GpxError) &&
+      !e.validation
+    )
       message = "Не удалось прочитать запрос. Проверьте заполнение полей.";
     if (status === 413) message = "Запрос слишком большой. Сократите текст.";
     if (status >= 500) {
@@ -279,7 +287,7 @@ export async function buildApp(options: {
 
   app.get("/api/health", { schema: { tags: ["System"] } }, () => ({
     ok: true,
-    version: "0.4.0",
+    version: "0.5.0",
   }));
   app.get("/api/openapi.json", { schema: { hide: true } }, () => app.swagger());
   app.post<{ Body: RegisterInput }>(
@@ -742,6 +750,7 @@ export async function buildApp(options: {
       return reply.code(204).send();
     },
   );
+  adventureRoutes(app, db, { requireAuth, requireWrite, HttpError, notFound });
   locationRoutes(app, db, { requireAuth, requireWrite, HttpError, notFound });
   if (options.webRoot)
     await app.register(staticFiles, { root: options.webRoot });

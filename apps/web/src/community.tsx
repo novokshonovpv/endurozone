@@ -273,17 +273,17 @@ export function Feed({ session }: { session: Session | null }) {
             </section>
           )}
           <section className="card next-card">
-            <span className="tag green">На очереди</span>
+            <span className="tag green">Уже в проекте</span>
             <h3>
               От гаража
               <br />к маршрутам.
             </h3>
             <p>
-              Следом появятся карта локаций и совместные покатушки. Начинаем со
-              Смоленска и Сочи.
+              Находите локации, делитесь GPX-треками и собирайте участников на
+              совместные покатушки.
             </p>
-            <a href="#roadmap">
-              Посмотреть этапы
+            <a href="#rides">
+              Найти покатушку
               <Icon name="arrow" size={16} />
             </a>
           </section>

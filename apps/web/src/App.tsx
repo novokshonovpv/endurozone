@@ -15,17 +15,19 @@ import {
   type RegisterInput,
   type Profile,
 } from "@enduro/contracts";
+import { Tracks, TrackDetail, Rides, RideDetail } from "./adventure.tsx";
 import { Locations, Moderation } from "./locations.tsx";
 import { go } from "./routing.ts";
 
 const nav: { path: string; label: string; icon: IconName }[] = [
   { path: "feed", label: "Сообщество", icon: "feed" },
   { path: "map", label: "Карта локаций", icon: "route" },
+  { path: "tracks", label: "GPX-треки", icon: "mountain" },
+  { path: "rides", label: "Покатушки", icon: "route" },
   { path: "garage", label: "Мой гараж", icon: "bike" },
   { path: "profile", label: "Мой профиль", icon: "user" },
 ];
 const upcoming: { label: string; icon: IconName }[] = [
-  { label: "Совместные покатушки", icon: "route" },
   { label: "Магазин", icon: "shop" },
   { label: "Обучение", icon: "book" },
   { label: "ИИ-механик", icon: "wrench" },
@@ -160,17 +162,21 @@ export default function App() {
           <span className="breadcrumb">
             {route.startsWith("post/")
               ? "Бортжурнал"
-              : (nav.find((n) => n.path === route)?.label ??
-                (route === "roadmap"
-                  ? "Ход разработки"
-                  : route === "moderation"
-                    ? "Модерация"
-                    : "Добро пожаловать"))}
+              : route.startsWith("track/")
+                ? "GPX-трек"
+                : route.startsWith("ride/")
+                  ? "Покатушка"
+                  : (nav.find((n) => n.path === route)?.label ??
+                    (route === "roadmap"
+                      ? "Ход разработки"
+                      : route === "moderation"
+                        ? "Модерация"
+                        : "Добро пожаловать"))}
           </span>
           <div className="top-actions">
             <span className="version">
               <span className="tiny-dot" />
-              Разработка · 0.4
+              Разработка · 0.5
             </span>
             {session ? (
               <>
@@ -238,6 +244,32 @@ export default function App() {
             />
           ) : route === "map" ? (
             <Locations session={session} notify={setNotice} />
+          ) : route === "tracks" ? (
+            <Tracks
+              key={session?.user.id}
+              session={session}
+              notify={setNotice}
+            />
+          ) : route.startsWith("track/") ? (
+            <TrackDetail
+              key={route + session?.user.id}
+              id={route.slice(6)}
+              session={session}
+              notify={setNotice}
+            />
+          ) : route === "rides" ? (
+            <Rides
+              key={session?.user.id}
+              session={session}
+              notify={setNotice}
+            />
+          ) : route.startsWith("ride/") ? (
+            <RideDetail
+              key={route + session?.user.id}
+              id={route.slice(5)}
+              session={session}
+              notify={setNotice}
+            />
           ) : route === "moderation" ? (
             <Moderation session={session} notify={setNotice} />
           ) : route === "roadmap" ? (
@@ -247,7 +279,7 @@ export default function App() {
           )}
         </main>
         <footer>
-          Enduro.Zone <span>Сообщество, гараж и карта локаций.</span>
+          Enduro.Zone <span>Сообщество, гараж, маршруты и покатушки.</span>
           <a href="#roadmap">
             Что дальше <Icon name="arrow" size={15} />
           </a>
@@ -579,7 +611,7 @@ function Roadmap() {
       n: "02",
       title: "Карта и совместные выезды",
       state: "В работе",
-      body: "Точки локаций и проверка модератором готовы. Дальше — загрузка GPX, события и заявки с лимитом участников.",
+      body: "Локации, очищенные GPX-треки и модерация, выезды с заявками и лимитом участников. Дальше — приёмка и подготовка пилота.",
       tasks: "W05–W09. Реальные разрешённые маршруты для Смоленска и Сочи.",
     },
     {

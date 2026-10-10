@@ -2058,3 +2058,28 @@ footer > a {
     width: 100%;
   }
 }
+
+.ride-member {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+  padding: 20px 0;
+  border-bottom: 1px solid #e5e9e1;
+}
+.ride-member .location-actions {
+  margin: 0;
+}
+.location-form input[type="file"] {
+  max-width: 100%;
+  overflow: hidden;
+}
+@media (max-width: 650px) {
+  .ride-member .location-actions {
+    width: 100%;
+  }
+  .ride-member .button {
+    width: 100%;
+  }
+}
