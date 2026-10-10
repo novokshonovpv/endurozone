@@ -18,7 +18,12 @@ import {
 import { Tracks, TrackDetail, Rides, RideDetail } from "./adventure.tsx";
 import { Locations, Moderation } from "./locations.tsx";
 import { go } from "./routing.ts";
-import { Account, Recovery, Notifications } from "./pilot.tsx";
+import {
+  Account,
+  Recovery,
+  Notifications,
+  NotificationBell,
+} from "./pilot.tsx";
 import { AccountData } from "./account-rights.tsx";
 import { Shop } from "./shop.tsx";
 import { Riders, RiderProfile } from "./riders.tsx";
@@ -41,7 +46,6 @@ const nav: { path: string; label: string; icon: IconName }[] = [
   { path: "saved", label: "Избранное", icon: "book" },
   { path: "profile", label: "Мой профиль", icon: "user" },
   { path: "account", label: "Доступ к аккаунту", icon: "user" },
-  { path: "notifications", label: "Уведомления", icon: "feed" },
 ];
 function useRoute() {
   const [route, set] = useState(window.location.hash.slice(1) || "feed");
@@ -161,7 +165,7 @@ export default function App() {
           <span className="tiny-dot" />
           Первая рабочая версия
           <small>
-            Смоленск × Сочи
+            Твоя территория
             <br />
             Создаём вместе. Катаемся вместе.
           </small>
@@ -197,13 +201,15 @@ export default function App() {
                             : undefined) ??
                           (route === "roadmap"
                             ? "Ход разработки"
-                            : route === "moderation"
-                              ? "Модерация"
-                              : route === "pilot-feedback"
-                                ? "Отзывы пилота"
-                                : route === "feedback"
-                                  ? "Мои отзывы"
-                                  : "Добро пожаловать"))}
+                            : route === "notifications"
+                              ? "Уведомления"
+                              : route === "moderation"
+                                ? "Модерация"
+                                : route === "pilot-feedback"
+                                  ? "Отзывы пилота"
+                                  : route === "feedback"
+                                    ? "Мои отзывы"
+                                    : "Добро пожаловать"))}
           </span>
           <div className="top-actions">
             <span className="version">
@@ -212,6 +218,7 @@ export default function App() {
             </span>
             {session ? (
               <>
+                <NotificationBell route={route} />
                 <a href="#profile" className="top-user">
                   <Avatar name={session.user.displayName} />
                   <span>{session.user.displayName}</span>
@@ -507,7 +514,7 @@ function AuthForm({
         </p>
         <span className="story-note">
           <Icon name="mountain" />
-          Enduro.Zone · Смоленск × Сочи
+          Enduro.Zone · Твоя территория
         </span>
       </div>
       <section className="auth-card card">

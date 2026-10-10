@@ -14,7 +14,8 @@ export type IconName =
   | "shop"
   | "book"
   | "wrench"
-  | "check";
+  | "check"
+  | "bell";
 const paths: Record<IconName, ReactNode> = {
   feed: (
     <>
@@ -65,6 +66,12 @@ const paths: Record<IconName, ReactNode> = {
     <path d="M15 3a6 6 0 0 0-6 8L2 18l4 4 7-7a6 6 0 0 0 8-6l-4 3-4-4 3-5Z" />
   ),
   check: <path d="m4 12 5 5L20 6" />,
+  bell: (
+    <>
+      <path d="M6 16v-5a6 6 0 0 1 12 0v5l2 2H4l2-2Z" />
+      <path d="M10 21a2 2 0 0 0 4 0" />
+    </>
+  ),
 };
 export const Icon = ({
   name,

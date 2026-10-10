@@ -948,6 +948,69 @@ footer {
     display: none;
   }
 }
+/* Header bell with an unread badge */
+.bell-button {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 4px;
+  color: var(--olive);
+  transition:
+    background 0.2s ease,
+    transform 0.15s var(--ease-out);
+}
+.bell-button:hover {
+  background: rgba(43, 45, 28, 0.08);
+}
+.bell-button:active {
+  transform: scale(0.92);
+}
+.bell-button.active {
+  background: var(--olive);
+  color: var(--paper);
+}
+.bell-button:hover svg {
+  animation: ez-ring 0.6s ease;
+  transform-origin: 50% 10%;
+}
+.bell-badge {
+  position: absolute;
+  top: 3px;
+  right: 2px;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 5px;
+  border-radius: 9px;
+  background: var(--rust);
+  color: var(--rust-ink);
+  font-family: var(--display);
+  font-size: 10px;
+  line-height: 18px;
+  text-align: center;
+  box-shadow: 0 0 0 2px var(--card);
+  animation: ez-pop 0.35s var(--ease-spring) both;
+}
+@keyframes ez-ring {
+  0%,
+  100% {
+    transform: rotate(0);
+  }
+  20% {
+    transform: rotate(14deg);
+  }
+  40% {
+    transform: rotate(-12deg);
+  }
+  60% {
+    transform: rotate(8deg);
+  }
+  80% {
+    transform: rotate(-4deg);
+  }
+}
 /* Riders who reduce motion get a calm, instant interface */
 @media (prefers-reduced-motion: reduce) {
   html {

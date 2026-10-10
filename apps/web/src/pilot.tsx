@@ -1,7 +1,7 @@
 import { useState, useEffect, type FormEvent } from "react";
 import type { Notification, Session } from "@enduro/contracts";
 import { api } from "./api.ts";
-import { ErrorBox, Loading } from "./ui.tsx";
+import { ErrorBox, Icon, Loading } from "./ui.tsx";
 import { go } from "./routing.ts";
 export function Account({
   session,
@@ -248,6 +248,7 @@ export function Notifications() {
         "/me/notifications?limit=1",
       );
       setUnread(count.unreadCount);
+      window.dispatchEvent(new Event("ez:notifications"));
       if (follow) go(n.path);
     } catch (e) {
       setError((e as Error).message);
@@ -268,8 +269,8 @@ export function Notifications() {
       {busy && <Loading />}
       {!busy && !items.length && (
         <p>
-          Пока нет уведомлений. Здесь появятся новые подписчики, заявки,
-          решения и отмены покатушек.
+          Пока нет уведомлений. Здесь появятся новые подписчики, заявки, решения
+          и отмены покатушек.
         </p>
       )}
       <div className="notifications-list">
@@ -303,5 +304,50 @@ export function Notifications() {
         обновления страницы или кнопки «Обновить».
       </p>
     </>
+  );
+}
+
+// Header bell: unread count refreshed on navigation, on returning to the tab and once a minute.
+export function NotificationBell({ route }: { route: string }) {
+  const [unread, setUnread] = useState(0);
+  useEffect(() => {
+    let alive = true;
+    const load = () =>
+      api<{ unreadCount: number }>("/me/notifications?limit=1")
+        .then((r) => {
+          if (alive) setUnread(r.unreadCount);
+        })
+        .catch(() => {
+          /* The bell stays quiet if the count is unavailable. */
+        });
+    load();
+    const timer = setInterval(load, 60000);
+    const onFocus = () => {
+      if (document.visibilityState === "visible") load();
+    };
+    document.addEventListener("visibilitychange", onFocus);
+    window.addEventListener("ez:notifications", load);
+    return () => {
+      alive = false;
+      clearInterval(timer);
+      document.removeEventListener("visibilitychange", onFocus);
+      window.removeEventListener("ez:notifications", load);
+    };
+  }, [route]);
+  const label = unread ? `Уведомления: ${unread} непрочитанных` : "Уведомления";
+  return (
+    <a
+      href="#notifications"
+      className={`bell-button ${route === "notifications" ? "active" : ""}`}
+      aria-label={label}
+      title={label}
+    >
+      <Icon name="bell" size={21} />
+      {unread > 0 && (
+        <span className="bell-badge" aria-hidden="true">
+          {unread > 99 ? "99+" : unread}
+        </span>
+      )}
+    </a>
   );
 }
