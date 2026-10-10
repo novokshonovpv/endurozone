@@ -21,11 +21,13 @@ import { go } from "./routing.ts";
 import { Account, Recovery, Notifications } from "./pilot.tsx";
 import { AccountData } from "./account-rights.tsx";
 import { Shop } from "./shop.tsx";
+import { Riders, RiderProfile } from "./riders.tsx";
 import { Mechanic } from "./mechanic.tsx";
 import { Learning } from "./learning.tsx";
 
 const nav: { path: string; label: string; icon: IconName }[] = [
   { path: "feed", label: "Сообщество", icon: "feed" },
+  { path: "riders", label: "Райдеры", icon: "user" },
   { path: "map", label: "Карта локаций", icon: "route" },
   { path: "tracks", label: "GPX-треки", icon: "mountain" },
   { path: "rides", label: "Покатушки", icon: "route" },
@@ -117,7 +119,7 @@ export default function App() {
             <a
               key={n.path}
               href={`#${n.path}`}
-              className={`nav-item ${route === n.path || (n.path === "feed" && route.startsWith("post/")) || (n.path === "shop" && route.startsWith("shop/")) || (n.path === "learning" && route.startsWith("learning/")) ? "active" : ""}`}
+              className={`nav-item ${route === n.path || (n.path === "feed" && route.startsWith("post/")) || (n.path === "riders" && route.startsWith("rider/")) || (n.path === "shop" && route.startsWith("shop/")) || (n.path === "learning" && route.startsWith("learning/")) ? "active" : ""}`}
             >
               <Icon name={n.icon} />
               {n.label}
@@ -158,27 +160,29 @@ export default function App() {
       <div className="workspace">
         <header className="topbar">
           <span className="breadcrumb">
-            {route.startsWith("learning/")
-              ? "Урок"
-              : route.startsWith("shop/")
-                ? "Карточка товара"
-                : route.startsWith("post/")
-                  ? "Бортжурнал"
-                  : route.startsWith("track/")
-                    ? "GPX-трек"
-                    : route.startsWith("ride/")
-                      ? "Покатушка"
-                      : (nav.find((n) => n.path === route)?.label ??
-                        (route === "roadmap"
-                          ? "Ход разработки"
-                          : route === "moderation"
-                            ? "Модерация"
-                            : "Добро пожаловать"))}
+            {route.startsWith("rider/")
+              ? "Страница райдера"
+              : route.startsWith("learning/")
+                ? "Урок"
+                : route.startsWith("shop/")
+                  ? "Карточка товара"
+                  : route.startsWith("post/")
+                    ? "Бортжурнал"
+                    : route.startsWith("track/")
+                      ? "GPX-трек"
+                      : route.startsWith("ride/")
+                        ? "Покатушка"
+                        : (nav.find((n) => n.path === route)?.label ??
+                          (route === "roadmap"
+                            ? "Ход разработки"
+                            : route === "moderation"
+                              ? "Модерация"
+                              : "Добро пожаловать"))}
           </span>
           <div className="top-actions">
             <span className="version">
               <span className="tiny-dot" />
-              Разработка · 0.11
+              Разработка · 0.12
             </span>
             {session ? (
               <>
@@ -332,6 +336,15 @@ export default function App() {
               lessonId={
                 route.startsWith("learning/") ? route.slice(9) : undefined
               }
+            />
+          ) : route === "riders" ? (
+            <Riders />
+          ) : route.startsWith("rider/") ? (
+            <RiderProfile
+              key={route.slice(6)}
+              handle={route.slice(6)}
+              session={session}
+              requestedBike={shopBike}
             />
           ) : route === "mechanic" ? (
             <Mechanic key={session?.user.id ?? "guest"} session={session} />
@@ -594,6 +607,12 @@ function ProfileForm({
           <p className="eyebrow">ТВОИ ЛЮДИ УЗНАЮТ ТЕБЯ</p>
           <h1>Мой профиль</h1>
           <p className="muted">Город помогает найти местное сообщество.</p>
+          <a
+            href={`#rider/${session.user.handle}`}
+            className="button outline small"
+          >
+            Посмотреть публичную страницу
+          </a>
         </div>
       </div>
       <div className="profile-layout">

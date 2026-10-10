@@ -25,7 +25,7 @@ import { go } from "./routing.ts";
 import { GarageJournal, BikeServicePanel } from "./garage.tsx";
 
 const noteError = (e: unknown) => (e as Error).message;
-function PostCard({ post }: { post: Post }) {
+export function PostCard({ post }: { post: Post }) {
   return (
     <article className="card post-card">
       <div className={`post-stripe ${post.kind}`} />
@@ -33,7 +33,9 @@ function PostCard({ post }: { post: Post }) {
         <div className="author-row">
           <Avatar name={post.author.displayName} />
           <div>
-            <strong>{post.author.displayName}</strong>
+            <a className="author-link" href={`#rider/${post.author.handle}`}>
+              <strong>{post.author.displayName}</strong>
+            </a>
             <small>
               {post.author.city} · {formatDate(post.createdAt)}
             </small>
@@ -47,7 +49,15 @@ function PostCard({ post }: { post: Post }) {
         <div className="post-card-bottom">
           <span className="bike-label">
             <Icon name="bike" size={18} />
-            {post.bike.make} {post.bike.model} · {post.bike.year}
+            {post.visibility === "public" && !post.hidden ? (
+              <a href={`#rider/${post.author.handle}?bike=${post.bike.id}`}>
+                {post.bike.make} {post.bike.model} · {post.bike.year}
+              </a>
+            ) : (
+              <>
+                {post.bike.make} {post.bike.model} · {post.bike.year}
+              </>
+            )}
           </span>
           <a
             href={`#post/${post.id}`}
@@ -974,7 +984,12 @@ export function PostDetail({
               <div className="author-row">
                 <Avatar name={post.author.displayName} />
                 <div>
-                  <strong>{post.author.displayName}</strong>
+                  <a
+                    className="author-link"
+                    href={`#rider/${post.author.handle}`}
+                  >
+                    <strong>{post.author.displayName}</strong>
+                  </a>
                   <small>
                     {post.author.city} · {formatDate(post.createdAt)}
                   </small>
@@ -1074,7 +1089,12 @@ export function PostDetail({
                   <div className="comment" key={c.id}>
                     <Avatar name={c.author.displayName} />
                     <div>
-                      <strong>{c.author.displayName}</strong>
+                      <a
+                        className="author-link"
+                        href={`#rider/${c.author.handle}`}
+                      >
+                        <strong>{c.author.displayName}</strong>
+                      </a>
                       <small>{formatDate(c.createdAt)}</small>
                       <p>{c.body}</p>
                       {session?.user.id === c.author.id && (
