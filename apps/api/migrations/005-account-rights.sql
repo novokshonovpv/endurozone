@@ -1,0 +1,10 @@
+ALTER TABLE reports DROP CONSTRAINT reports_target_type_check;
+ALTER TABLE reports ADD CONSTRAINT reports_target_type_check CHECK(target_type IN ('post','location','track','ride'));
+ALTER TABLE rides ADD COLUMN hidden boolean NOT NULL DEFAULT false;
+ALTER TABLE rides DROP CONSTRAINT rides_organizer_id_fkey;
+ALTER TABLE rides ADD CONSTRAINT rides_organizer_id_fkey FOREIGN KEY(organizer_id) REFERENCES users(id) ON DELETE CASCADE;
+ALTER TABLE rides DROP CONSTRAINT rides_track_id_fkey;
+ALTER TABLE rides ADD CONSTRAINT rides_track_id_fkey FOREIGN KEY(track_id) REFERENCES tracks(id) ON DELETE CASCADE;
+ALTER TABLE moderation_actions ALTER COLUMN actor_id DROP NOT NULL;
+ALTER TABLE moderation_actions DROP CONSTRAINT moderation_actions_actor_id_fkey;
+ALTER TABLE moderation_actions ADD CONSTRAINT moderation_actions_actor_id_fkey FOREIGN KEY(actor_id) REFERENCES users(id) ON DELETE SET NULL;

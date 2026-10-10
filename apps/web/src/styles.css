@@ -2100,3 +2100,18 @@ footer > a {
   flex-wrap: wrap;
   margin-top: 16px;
 }
+
+.account-data-form {
+  display: grid;
+  gap: 16px;
+  margin-top: 24px;
+  max-width: 680px;
+}
+.account-data-form label {
+  display: grid;
+  gap: 8px;
+}
+.account-data-form input {
+  width: 100%;
+  min-width: 0;
+}

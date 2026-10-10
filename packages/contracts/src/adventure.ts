@@ -46,6 +46,7 @@ export interface Ride extends Omit<RideInput, "meetingNotes"> {
   organizer: Profile;
   city: string;
   trackTitle: string;
+  hidden: boolean;
   status: "open" | "cancelled";
   acceptedCount: number;
   createdAt: string;
@@ -159,6 +160,7 @@ const ride = obj({
   city: text(80),
   trackTitle: text(140),
   status: { type: "string", enum: ["open", "cancelled"] },
+  hidden: { type: "boolean" },
   acceptedCount: { type: "integer" },
   createdAt: time,
 });

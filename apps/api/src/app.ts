@@ -25,6 +25,7 @@ import {
 } from "./auth.ts";
 
 import { pilotRoutes, pilotOutputs, queueAccountMail } from "./pilot.ts";
+import { accountRightsRoutes } from "./account-rights.ts";
 import { GpxError } from "./gpx.ts";
 import { adventureRoutes, adventureOutputs } from "./adventure.ts";
 import { locationRoutes, locationOutputs } from "./locations.ts";
@@ -171,7 +172,7 @@ export async function buildApp(options: {
     openapi: {
       info: {
         title: "Enduro.Zone API",
-        version: "0.6.0",
+        version: "0.7.0",
         description:
           "Аккаунт, гараж, бортжурнал, локации и модерация. Для cookie-сессии запросить /api/me и передать csrfToken в X-CSRF-Token при изменении данных. Все изменения требуют X-Enduro-Client: web. Подтверждение email, восстановление доступа и личные уведомления. Проверка email перед публикацией включается REQUIRE_VERIFIED_EMAIL=true.",
       },
@@ -299,6 +300,10 @@ export async function buildApp(options: {
     return auth;
   };
   pilotRoutes(app, db, origin, { requireAuth, requireWrite, HttpError });
+  accountRightsRoutes(app, db, options.secureCookie ?? false, {
+    requireWrite,
+    HttpError,
+  });
   const protectedSchema = { security: [{ cookieSession: [] }] };
   const authRate = { rateLimit: { max: 10, timeWindow: "1 minute" } };
   // Fake credentials perform the same expensive derivation on unknown-email login.
@@ -306,7 +311,7 @@ export async function buildApp(options: {
 
   app.get("/api/health", { schema: { tags: ["System"] } }, () => ({
     ok: true,
-    version: "0.6.0",
+    version: "0.7.0",
   }));
   app.get("/api/openapi.json", { schema: { hide: true } }, () => app.swagger());
   app.post<{ Body: RegisterInput }>(

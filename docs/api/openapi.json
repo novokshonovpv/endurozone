@@ -2,7 +2,7 @@
   "openapi": "3.0.3",
   "info": {
     "title": "Enduro.Zone API",
-    "version": "0.6.0",
+    "version": "0.7.0",
     "description": "Аккаунт, гараж, бортжурнал, локации и модерация. Для cookie-сессии запросить /api/me и передать csrfToken в X-CSRF-Token при изменении данных. Все изменения требуют X-Enduro-Client: web. Подтверждение email, восстановление доступа и личные уведомления. Проверка email перед публикацией включается REQUIRE_VERIFIED_EMAIL=true."
   },
   "components": {
@@ -1798,6 +1798,98 @@
             "required": true
           }
         ],
+        "security": [
+          {
+            "cookieSession": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response"
+          }
+        }
+      }
+    },
+    "/api/me/export": {
+      "post": {
+        "tags": [
+          "Account"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "password"
+                ],
+                "properties": {
+                  "password": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 128
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "cookieSession": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Own account data only; no credentials, sessions or other participants private data.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": true,
+                  "description": "Own account data only; no credentials, sessions or other participants private data."
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/me/delete": {
+      "post": {
+        "tags": [
+          "Account"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "password",
+                  "confirmation"
+                ],
+                "properties": {
+                  "password": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 128
+                  },
+                  "confirmation": {
+                    "type": "string",
+                    "enum": [
+                      "УДАЛИТЬ АККАУНТ"
+                    ]
+                  }
+                }
+              }
+            }
+          }
+        },
         "security": [
           {
             "cookieSession": []
@@ -13071,6 +13163,9 @@
                               "cancelled"
                             ]
                           },
+                          "hidden": {
+                            "type": "boolean"
+                          },
                           "acceptedCount": {
                             "type": "integer"
                           },
@@ -13091,6 +13186,7 @@
                           "city",
                           "trackTitle",
                           "status",
+                          "hidden",
                           "acceptedCount",
                           "createdAt"
                         ]
@@ -13582,6 +13678,9 @@
                         "cancelled"
                       ]
                     },
+                    "hidden": {
+                      "type": "boolean"
+                    },
                     "acceptedCount": {
                       "type": "integer"
                     },
@@ -13602,6 +13701,7 @@
                     "city",
                     "trackTitle",
                     "status",
+                    "hidden",
                     "acceptedCount",
                     "createdAt"
                   ]
@@ -14058,6 +14158,9 @@
                               "cancelled"
                             ]
                           },
+                          "hidden": {
+                            "type": "boolean"
+                          },
                           "acceptedCount": {
                             "type": "integer"
                           },
@@ -14078,6 +14181,7 @@
                           "city",
                           "trackTitle",
                           "status",
+                          "hidden",
                           "acceptedCount",
                           "createdAt"
                         ]
@@ -14511,6 +14615,9 @@
                         "cancelled"
                       ]
                     },
+                    "hidden": {
+                      "type": "boolean"
+                    },
                     "acceptedCount": {
                       "type": "integer"
                     },
@@ -14531,6 +14638,7 @@
                     "city",
                     "trackTitle",
                     "status",
+                    "hidden",
                     "acceptedCount",
                     "createdAt"
                   ]
@@ -17117,6 +17225,9 @@
                         "cancelled"
                       ]
                     },
+                    "hidden": {
+                      "type": "boolean"
+                    },
                     "acceptedCount": {
                       "type": "integer"
                     },
@@ -17137,6 +17248,7 @@
                     "city",
                     "trackTitle",
                     "status",
+                    "hidden",
                     "acceptedCount",
                     "createdAt"
                   ]
@@ -20714,7 +20826,8 @@
                     "enum": [
                       "post",
                       "location",
-                      "track"
+                      "track",
+                      "ride"
                     ]
                   },
                   "targetId": {
@@ -20770,7 +20883,8 @@
                       "enum": [
                         "post",
                         "location",
-                        "track"
+                        "track",
+                        "ride"
                       ]
                     },
                     "targetId": {
@@ -21178,7 +21292,8 @@
                             "enum": [
                               "post",
                               "location",
-                              "track"
+                              "track",
+                              "ride"
                             ]
                           },
                           "targetId": {
@@ -21598,7 +21713,8 @@
                       "enum": [
                         "post",
                         "location",
-                        "track"
+                        "track",
+                        "ride"
                       ]
                     },
                     "targetId": {

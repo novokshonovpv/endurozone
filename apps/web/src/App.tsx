@@ -19,6 +19,7 @@ import { Tracks, TrackDetail, Rides, RideDetail } from "./adventure.tsx";
 import { Locations, Moderation } from "./locations.tsx";
 import { go } from "./routing.ts";
 import { Account, Recovery, Notifications } from "./pilot.tsx";
+import { AccountData } from "./account-rights.tsx";
 
 const nav: { path: string; label: string; icon: IconName }[] = [
   { path: "feed", label: "Сообщество", icon: "feed" },
@@ -179,7 +180,7 @@ export default function App() {
           <div className="top-actions">
             <span className="version">
               <span className="tiny-dot" />
-              Разработка · 0.6
+              Разработка · 0.7
             </span>
             {session ? (
               <>
@@ -240,11 +241,20 @@ export default function App() {
             </section>
           ) : route === "account" ? (
             session ? (
-              <Account
-                key={session.user.id}
-                session={session}
-                refresh={updateSession}
-              />
+              <>
+                <Account
+                  key={session.user.id}
+                  session={session}
+                  refresh={updateSession}
+                />
+                <AccountData
+                  deleted={() => {
+                    updateSession(null);
+                    go("feed");
+                    setNotice("Аккаунт и данные в основной базе удалены.");
+                  }}
+                />
+              </>
             ) : (
               <JoinGate />
             )

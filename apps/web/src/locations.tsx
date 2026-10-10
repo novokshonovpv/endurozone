@@ -608,13 +608,17 @@ export function Moderation({ session, notify }: Props) {
               ? "Бортжурнал"
               : r.targetType === "track"
                 ? "Трек"
-                : "Локация"}
+                : r.targetType === "ride"
+                  ? "Покатушка"
+                  : "Локация"}
           </h3>
           <p className="plain-text">{r.details}</p>
           {r.targetType === "post" ? (
             <a href={`#post/${r.targetId}`}>Открыть запись</a>
           ) : r.targetType === "track" ? (
             <a href={`#track/${r.targetId}`}>Открыть трек</a>
+          ) : r.targetType === "ride" ? (
+            <a href={`#ride/${r.targetId}`}>Открыть покатушку</a>
           ) : (
             <LocationReview id={r.targetId} />
           )}

@@ -189,7 +189,7 @@ export function ReportButton({
   targetId,
   notify,
 }: {
-  targetType: "post" | "location" | "track";
+  targetType: "post" | "location" | "track" | "ride";
   targetId: string;
   notify: Props["notify"];
 }) {

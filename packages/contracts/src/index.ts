@@ -147,7 +147,7 @@ export const schemas = {
     expectedStatus: { type: "string", enum: ["pending", "published"] },
   }),
   report: obj({
-    targetType: { type: "string", enum: ["post", "location", "track"] },
+    targetType: { type: "string", enum: ["post", "location", "track", "ride"] },
     targetId: { type: "string", format: "uuid" },
     reason: {
       type: "string",
@@ -237,7 +237,7 @@ const locationResponse = obj({
 });
 const reportResponse = obj({
   id: uuid,
-  targetType: { type: "string", enum: ["post", "location", "track"] },
+  targetType: { type: "string", enum: ["post", "location", "track", "ride"] },
   targetId: uuid,
   reason: text(20),
   details: text(2000),
@@ -308,7 +308,7 @@ export interface EnduroLocation extends Omit<
 }
 export interface Report {
   id: string;
-  targetType: "post" | "location" | "track";
+  targetType: "post" | "location" | "track" | "ride";
   targetId: string;
   reason: string;
   details: string;

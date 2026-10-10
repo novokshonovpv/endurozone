@@ -901,7 +901,9 @@ export function RideDetail({ id, session, notify }: Props & { id: string }) {
     }
   }
   const upcoming =
-    ride?.status === "open" && new Date(ride.startsAt) > new Date();
+    ride?.status === "open" &&
+    !ride.hidden &&
+    new Date(ride.startsAt) > new Date();
   return (
     <>
       <a className="text-button" href="#rides">
@@ -920,7 +922,11 @@ export function RideDetail({ id, session, notify }: Props & { id: string }) {
                 </p>
                 <h1>{ride.title}</h1>
                 <span className="tag">
-                  {ride.status === "cancelled" ? "Отменена" : rideDate(ride)}
+                  {ride.hidden
+                    ? "Скрыта модератором"
+                    : ride.status === "cancelled"
+                      ? "Отменена"
+                      : rideDate(ride)}
                 </span>
               </div>
               <span className="tag green">
@@ -930,6 +936,13 @@ export function RideDetail({ id, session, notify }: Props & { id: string }) {
             <article className="card location-editor">
               <p className="plain-text">{ride.description}</p>
               <p>Организатор: {ride.organizer.displayName}</p>
+              {session && !ride.hidden && ride.status === "open" && (
+                <ReportButton
+                  targetType="ride"
+                  targetId={ride.id}
+                  notify={notify}
+                />
+              )}
               <a href={`#track/${ride.trackId}`}>Маршрут: {ride.trackTitle}</a>
               <p className="muted">{stateNames[status]}</p>
               {meeting ? (

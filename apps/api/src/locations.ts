@@ -261,7 +261,7 @@ export function locationRoutes(
   );
   app.post<{
     Body: {
-      targetType: "post" | "location" | "track";
+      targetType: "post" | "location" | "track" | "ride";
       targetId: string;
       reason: string;
       details: string;
@@ -285,11 +285,15 @@ export function locationRoutes(
             ? "posts"
             : b.targetType === "track"
               ? "tracks"
-              : "locations";
+              : b.targetType === "ride"
+                ? "rides"
+                : "locations";
         const visible =
           b.targetType === "post"
             ? "visibility='public' AND NOT hidden"
-            : "status='published'";
+            : b.targetType === "ride"
+              ? "status='open' AND NOT hidden AND EXISTS(SELECT 1 FROM tracks t WHERE t.id=rides.track_id AND t.status='published')"
+              : "status='published'";
         const [target] = await tx.query(
           `SELECT id FROM ${table} WHERE id=$1 AND ${visible} FOR UPDATE`,
           [b.targetId],
@@ -377,14 +381,31 @@ export function locationRoutes(
               ? "posts"
               : r.target_type === "track"
                 ? "tracks"
-                : "locations";
+                : r.target_type === "ride"
+                  ? "rides"
+                  : "locations";
           const assignment =
             r.target_type === "post"
               ? "hidden=true,updated_at=now()"
-              : "status='hidden',updated_at=now()";
+              : r.target_type === "ride"
+                ? "hidden=true"
+                : "status='hidden',updated_at=now()";
           await tx.query(`UPDATE ${table} SET ${assignment} WHERE id=$1`, [
             r.target_id,
           ]);
+          if (r.target_type === "ride") {
+            const members = await tx.query(
+              "SELECT organizer_id AS user_id FROM rides WHERE id=$1 UNION SELECT user_id FROM ride_members WHERE ride_id=$1 AND status IN ('pending','accepted')",
+              [r.target_id],
+            );
+            for (const m of members)
+              await notify(
+                tx,
+                m.user_id,
+                "Покатушка скрыта модератором",
+                "rides",
+              );
+          }
           await tx.query(
             "INSERT INTO moderation_actions(id,actor_id,target_type,target_id,action,reason) VALUES ($1,$2,$3,$4,'hide',$5)",
             [

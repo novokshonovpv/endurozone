@@ -52,7 +52,7 @@ const trackOf = (r: Row) => ({
   updatedAt: iso(r.updated_at),
   author: profileOf({ ...r, id: r.author_id, city: r.author_city }),
 });
-const rideSelect = `SELECT r.id,r.organizer_id,r.track_id,r.title,r.description,r.starts_at,r.timezone,r.capacity,r.status,r.created_at,t.city,t.title AS track_title,t.status AS track_status,u.handle,u.display_name,u.level,u.bio,u.city AS organizer_city,1+(SELECT count(*) FROM ride_members m WHERE m.ride_id=r.id AND m.status='accepted') AS accepted_count FROM rides r JOIN tracks t ON t.id=r.track_id JOIN users u ON u.id=r.organizer_id`;
+const rideSelect = `SELECT r.id,r.organizer_id,r.track_id,r.title,r.description,r.starts_at,r.timezone,r.capacity,r.status,r.hidden,r.created_at,t.city,t.title AS track_title,t.status AS track_status,u.handle,u.display_name,u.level,u.bio,u.city AS organizer_city,1+(SELECT count(*) FROM ride_members m WHERE m.ride_id=r.id AND m.status='accepted') AS accepted_count FROM rides r JOIN tracks t ON t.id=r.track_id JOIN users u ON u.id=r.organizer_id`;
 const rideOf = (r: Row) => ({
   id: r.id,
   trackId: r.track_id,
@@ -62,6 +62,7 @@ const rideOf = (r: Row) => ({
   timezone: r.timezone,
   capacity: r.capacity,
   status: r.status,
+  hidden: r.hidden,
   city: r.city,
   trackTitle: r.track_title,
   createdAt: iso(r.created_at),
@@ -330,8 +331,12 @@ export function adventureRoutes(
   );
   async function ride(id: string, req: FastifyRequest) {
     const [r] = await db.query(
-      `${rideSelect} WHERE r.id=$1 AND (t.status='published' OR r.organizer_id=$2)`,
-      [id, req.authContext?.user.id ?? null],
+      `${rideSelect} WHERE r.id=$1 AND ((t.status='published' AND NOT r.hidden) OR r.organizer_id=$2 OR $3)`,
+      [
+        id,
+        req.authContext?.user.id ?? null,
+        req.authContext?.user.role === "moderator",
+      ],
     );
     if (!r) throw notFound();
     return rideOf(r);
@@ -357,7 +362,7 @@ export function adventureRoutes(
     { schema: { querystring: schemas.locationPage, tags: ["Rides"] } },
     (req) =>
       rides(
-        "r.status='open' AND r.starts_at>now() AND t.status='published'",
+        "r.status='open' AND NOT r.hidden AND r.starts_at>now() AND t.status='published'",
         [],
         req.query,
       ),
@@ -449,6 +454,7 @@ export function adventureRoutes(
   const open = (r: Row) => {
     if (
       r.status !== "open" ||
+      r.hidden ||
       r.track_status !== "published" ||
       new Date(r.starts_at).getTime() <= Date.now()
     )
@@ -527,7 +533,7 @@ export function adventureRoutes(
     async (req) => {
       const a = requireAuth(req);
       const [r] = await db.query(
-        "SELECT r.meeting_notes FROM rides r JOIN tracks t ON t.id=r.track_id WHERE r.id=$1 AND (r.organizer_id=$2 OR (r.status='open' AND r.starts_at>now() AND t.status='published' AND EXISTS(SELECT 1 FROM ride_members m WHERE m.ride_id=r.id AND m.user_id=$2 AND m.status='accepted')))",
+        "SELECT r.meeting_notes FROM rides r JOIN tracks t ON t.id=r.track_id WHERE r.id=$1 AND (r.organizer_id=$2 OR (r.status='open' AND NOT r.hidden AND r.starts_at>now() AND t.status='published' AND EXISTS(SELECT 1 FROM ride_members m WHERE m.ride_id=r.id AND m.user_id=$2 AND m.status='accepted')))",
         [req.params.id, a.user.id],
       );
       if (!r) throw notFound();
