@@ -27,6 +27,8 @@ jobs:
           version: 11.25.0
       - run: pnpm install --frozen-lockfile
       - run: pnpm check
+      - run: python3 deploy/test_backup.py
+        name: Stand backup safety checks
       - run: pnpm test
       - run: pnpm test
         name: Same access tests against PostgreSQL
