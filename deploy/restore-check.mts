@@ -21,7 +21,7 @@ try {
   app = await buildApp({ db, origin: 'http://localhost:3299', logger: false });
   const health = await app.inject({ method: 'GET', url: '/api/health' });
   const me = await app.inject({ method: 'GET', url: '/api/me' });
-  if (health.statusCode !== 200 || !health.json().ok || me.statusCode !== 200) {
+  if (health.statusCode !== 200 || !health.json().ok || me.statusCode !== 401) {
     throw new Error('Restored API probe failed');
   }
   console.log(JSON.stringify({ result: 'RESTORE_OPEN_OK', version: health.json().version, counts, guest_me_status: me.statusCode, network_listener: false, mail_worker: false }));
