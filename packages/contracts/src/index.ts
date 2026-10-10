@@ -363,3 +363,4 @@ export const reportReasons = {
 export * from "./adventure.ts";
 export * from "./nearby.ts";
 export * from "./ride-chat.ts";
+export * from "./feedback.ts";

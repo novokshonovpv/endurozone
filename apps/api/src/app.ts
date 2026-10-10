@@ -38,6 +38,8 @@ import { adventureRoutes, adventureOutputs } from "./adventure.ts";
 import { locationRoutes, locationOutputs } from "./locations.ts";
 import { nearbyRoutes } from "./nearby.ts";
 import { rideChatRoutes } from "./ride-chat.ts";
+import { feedbackRoutes } from "./feedback.ts";
+import { appVersion } from "./version.ts";
 
 interface AuthContext {
   user: Row;
@@ -193,7 +195,7 @@ export async function buildApp(options: {
     openapi: {
       info: {
         title: "Enduro.Zone API",
-        version: "0.16.0",
+        version: appVersion,
         description:
           "Аккаунт, гараж, бортжурнал, локации и модерация. Для cookie-сессии запросить /api/me и передать csrfToken в X-CSRF-Token при изменении данных. Все изменения требуют X-Enduro-Client: web. Подтверждение email, восстановление доступа и личные уведомления. Проверка email перед публикацией включается REQUIRE_VERIFIED_EMAIL=true.",
       },
@@ -335,7 +337,7 @@ export async function buildApp(options: {
 
   app.get("/api/health", { schema: { tags: ["System"] } }, () => ({
     ok: true,
-    version: "0.16.0",
+    version: appVersion,
   }));
   app.get("/api/openapi.json", { schema: { hide: true } }, () => app.swagger());
   app.post<{ Body: RegisterInput }>(
@@ -887,6 +889,7 @@ export async function buildApp(options: {
     notFound,
   });
   nearbyRoutes(app, db);
+  feedbackRoutes(app, db, { requireAuth, requireWrite, notFound, HttpError });
   rideChatRoutes(app, db, {
     requireAuth,
     requireWrite: verifiedWrite,

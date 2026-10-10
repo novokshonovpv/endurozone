@@ -26,6 +26,7 @@ import { Mechanic } from "./mechanic.tsx";
 import { Learning } from "./learning.tsx";
 import { Following, Favorites } from "./follows.tsx";
 import { Nearby } from "./nearby.tsx";
+import { FeedbackButton, MyFeedback, PilotFeedback } from "./feedback.tsx";
 
 const nav: { path: string; label: string; icon: IconName }[] = [
   { path: "feed", label: "Сообщество", icon: "feed" },
@@ -133,10 +134,22 @@ export default function App() {
           ))}
         </nav>
         {session?.user.role === "moderator" && (
-          <a className="nav-item" href="#moderation">
-            <Icon name="check" />
-            Модерация
-          </a>
+          <>
+            <a
+              className={`nav-item ${route === "moderation" ? "active" : ""}`}
+              href="#moderation"
+            >
+              <Icon name="check" />
+              Модерация
+            </a>
+            <a
+              className={`nav-item ${route === "pilot-feedback" ? "active" : ""}`}
+              href="#pilot-feedback"
+            >
+              <Icon name="message" />
+              Отзывы пилота
+            </a>
+          </>
         )}
         <a
           className={`nav-item roadmap-link ${route === "roadmap" ? "active" : ""}`}
@@ -182,12 +195,16 @@ export default function App() {
                             ? "Ход разработки"
                             : route === "moderation"
                               ? "Модерация"
-                              : "Добро пожаловать"))}
+                              : route === "pilot-feedback"
+                                ? "Отзывы пилота"
+                                : route === "feedback"
+                                  ? "Мои отзывы"
+                                  : "Добро пожаловать"))}
           </span>
           <div className="top-actions">
             <span className="version">
               <span className="tiny-dot" />
-              Разработка · 0.16
+              Разработка · 0.17
             </span>
             {session ? (
               <>
@@ -268,6 +285,18 @@ export default function App() {
           ) : route === "notifications" ? (
             session ? (
               <Notifications key={session.user.id} />
+            ) : (
+              <JoinGate />
+            )
+          ) : route === "feedback" ? (
+            session ? (
+              <MyFeedback key={session.user.id} />
+            ) : (
+              <JoinGate />
+            )
+          ) : route === "pilot-feedback" ? (
+            session?.user.role === "moderator" ? (
+              <PilotFeedback key={session.user.id} notify={setNotice} />
             ) : (
               <JoinGate />
             )
@@ -382,6 +411,7 @@ export default function App() {
           </a>
         </footer>
       </div>
+      {session && <FeedbackButton route={route} notify={setNotice} />}
       {notice && (
         <div className="toast" role="status">
           {notice}

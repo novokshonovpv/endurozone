@@ -3092,3 +3092,84 @@ a.nearby-item:hover {
 .reported-message .tag {
   margin-left: 8px;
 }
+.feedback-fab {
+  position: fixed;
+  right: 18px;
+  bottom: 18px;
+  z-index: 40;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 14px;
+  border: 0;
+  border-radius: 999px;
+  background: var(--green);
+  color: #fff;
+  font-size: 12px;
+  font-weight: 700;
+  box-shadow: 0 4px 14px rgba(24, 60, 43, 0.3);
+  cursor: pointer;
+}
+.feedback-fab:focus-visible {
+  outline: 3px solid var(--orange);
+  outline-offset: 2px;
+}
+.feedback-kinds {
+  border: 0;
+  padding: 0;
+  margin: 0 0 12px;
+  display: grid;
+  gap: 6px;
+}
+.feedback-kinds legend {
+  font-weight: 700;
+  margin-bottom: 6px;
+}
+.feedback-kinds label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+  font-weight: 500;
+}
+.feedback-kinds input[type="radio"] {
+  width: auto;
+  height: auto;
+  flex: none;
+  margin: 0;
+  accent-color: var(--green);
+}
+.feedback-kinds label {
+  justify-content: flex-start;
+  text-align: left;
+}
+.feedback-list {
+  display: grid;
+  gap: 12px;
+}
+.feedback-card {
+  padding: 16px 20px;
+  min-width: 0;
+}
+.feedback-card .plain-text,
+.feedback-agent {
+  overflow-wrap: anywhere;
+}
+.feedback-meta {
+  font-size: 11px;
+}
+.feedback-reply {
+  margin: 10px 0 0;
+  padding: 10px 14px;
+  border-left: 3px solid var(--green);
+  background: #edf4e9;
+  border-radius: 6px;
+}
+@media (max-width: 760px) {
+  .feedback-fab span {
+    display: none;
+  }
+  .feedback-fab {
+    padding: 12px;
+  }
+}

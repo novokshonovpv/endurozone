@@ -124,6 +124,8 @@ export function accountRightsRoutes(
             "SELECT post_id,created_at FROM favorites WHERE user_id=$1",
           rideMessages:
             "SELECT id,ride_id,body,hidden_by,created_at FROM ride_messages WHERE author_id=$1",
+          feedback:
+            "SELECT id,kind,body,section,viewport,user_agent,app_version,status,reply,created_at,updated_at FROM feedback WHERE author_id=$1",
           moderationAuthored:
             "SELECT target_type,target_id,action,reason,created_at FROM moderation_actions WHERE actor_id=$1",
         };
