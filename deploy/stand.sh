@@ -75,6 +75,9 @@ setup() {
   install -d -m 700 -o "$APP_USER" -g "$APP_USER" "$APP/.data"
   build
 
+  # AI mechanic keys added by hand survive a repeated setup.
+  local kept=""
+  [ -f "$ENV_FILE" ] && kept="$(grep -E '^(MECHANIC_|OPENAI_|YANDEX_|GIGACHAT_|NODE_EXTRA_CA_CERTS=)' "$ENV_FILE" || true)"
   cat > "$ENV_FILE" <<EOF
 HOST=127.0.0.1
 PORT=$PORT
@@ -84,6 +87,7 @@ TRUST_PROXY=true
 MAIL_MODE=file
 REQUIRE_VERIFIED_EMAIL=false
 EOF
+  [ -n "$kept" ] && printf '%s\n' "$kept" >> "$ENV_FILE"
   chmod 640 "$ENV_FILE" && chgrp "$APP_USER" "$ENV_FILE"
 
   cat > /etc/systemd/system/endurozone.service <<EOF

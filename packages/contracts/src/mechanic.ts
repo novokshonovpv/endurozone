@@ -16,9 +16,17 @@ export interface MechanicHistory {
   items: MechanicConsultation[];
   total: number;
 }
+export type MechanicProvider = "openai" | "yandex" | "gigachat";
+// Shown to riders in the consent text: the company that receives the question.
+export const mechanicProviders: Record<MechanicProvider, string> = {
+  openai: "OpenAI",
+  yandex: "YandexGPT (Яндекс)",
+  gigachat: "GigaChat (Сбер)",
+};
 export interface MechanicStatus {
   available: boolean;
   dailyLimit: number;
+  provider: MechanicProvider | null;
 }
 const obj = (properties: Record<string, unknown>) => ({
   type: "object",
@@ -69,5 +77,11 @@ export const mechanicResponses = {
   status: obj({
     available: { type: "boolean" },
     dailyLimit: { type: "integer" },
+    provider: {
+      anyOf: [
+        { type: "string", enum: ["openai", "yandex", "gigachat"] },
+        { type: "null" },
+      ],
+    },
   }),
 };

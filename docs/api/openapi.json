@@ -8819,11 +8819,21 @@
                     },
                     "dailyLimit": {
                       "type": "integer"
+                    },
+                    "provider": {
+                      "type": "string",
+                      "enum": [
+                        "openai",
+                        "yandex",
+                        "gigachat"
+                      ],
+                      "nullable": true
                     }
                   },
                   "required": [
                     "available",
-                    "dailyLimit"
+                    "dailyLimit",
+                    "provider"
                   ]
                 }
               }

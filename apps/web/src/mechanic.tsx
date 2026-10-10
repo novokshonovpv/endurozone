@@ -1,11 +1,12 @@
 import { useEffect, useState, type FormEvent } from "react";
-import type {
-  Bike,
-  Page,
-  Session,
-  MechanicStatus,
-  MechanicHistory,
-  MechanicConsultation,
+import {
+  mechanicProviders,
+  type Bike,
+  type Page,
+  type Session,
+  type MechanicStatus,
+  type MechanicHistory,
+  type MechanicConsultation,
 } from "@enduro/contracts";
 import { api } from "./api.ts";
 import { ErrorBox, Icon, Loading } from "./ui.tsx";
@@ -194,10 +195,13 @@ export function Mechanic({ session }: { session: Session | null }) {
                   disabled={busy || !status?.available}
                 />{" "}
                 <span>
-                  Согласен передать в OpenAI текст вопроса и основные данные
-                  выбранного мотоцикла: марку, модель, год, двигатель и
-                  исполнение. История ТО и заметки гаража автоматически не
-                  передаются.
+                  Согласен передать{" "}
+                  {status?.provider
+                    ? `в ${mechanicProviders[status.provider]}`
+                    : "ИИ-провайдеру"}{" "}
+                  текст вопроса и основные данные выбранного мотоцикла: марку,
+                  модель, год, двигатель и исполнение. История ТО и заметки
+                  гаража автоматически не передаются.
                 </span>
               </label>
               <button
