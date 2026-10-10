@@ -81,8 +81,20 @@ export function accountRightsRoutes(
             "EXPORT_TOO_LARGE",
             "Выгрузка превышает лимит текущей версии. Обратитесь к оператору за полной выгрузкой.",
           );
+        const [photoSize] = await tx.query(
+          "SELECT COALESCE(sum(octet_length(image)),0) bytes FROM photos WHERE owner_id=$1",
+          [u.id],
+        );
+        if (Number(photoSize.bytes) > 18 * 1024 * 1024)
+          throw new HttpError(
+            409,
+            "EXPORT_TOO_LARGE",
+            "Для полной выгрузки большого аккаунта с фотографиями обратитесь к оператору.",
+          );
         const selections: Record<string, string> = {
           bikes: "SELECT * FROM bikes WHERE owner_id=$1",
+          photos:
+            "SELECT id,bike_id,post_id,width,height,created_at,encode(image,'base64') AS jpeg_base64 FROM photos WHERE owner_id=$1",
           mechanicConsultations:
             "SELECT id,question,answer,bike_snapshot,status,created_at FROM mechanic_consultations WHERE user_id=$1",
           mechanicUsage:

@@ -23,6 +23,7 @@ import {
 import { ReportButton } from "./locations.tsx";
 import { go } from "./routing.ts";
 import { GarageJournal, BikeServicePanel } from "./garage.tsx";
+import { Photos } from "./photos.tsx";
 
 const noteError = (e: unknown) => (e as Error).message;
 export function PostCard({ post }: { post: Post }) {
@@ -46,6 +47,7 @@ export function PostCard({ post }: { post: Post }) {
           <h2>{post.title}</h2>
           <p className="post-excerpt">{post.body}</p>
         </a>
+        <Photos kind="posts" id={post.id} compact label={post.title} />
         <div className="post-card-bottom">
           <span className="bike-label">
             <Icon name="bike" size={18} />
@@ -459,6 +461,13 @@ export function Garage({
                     <Icon name="bike" size={94} />
                   </div>
                 </div>
+                <Photos
+                  key={currentBike.id}
+                  kind="bikes"
+                  id={currentBike.id}
+                  editable
+                  label={`${currentBike.make} ${currentBike.model}`}
+                />
                 <div className="bike-stats">
                   <div>
                     <small>МОТОЧАСЫ</small>
@@ -832,8 +841,7 @@ function PostEditor({
           />
         </label>
         <p className="form-note">
-          Пока доступны текстовые записи. Фото появятся вместе с защищённым
-          хранилищем.
+          После сохранения записи можно добавить до 6 фотографий на её странице.
         </p>
         <div className="button-row">
           <button className="button" disabled={busy}>
@@ -1011,6 +1019,14 @@ export function PostDetail({
                 )}
               </div>
               <div className="article-body">{post.body}</div>
+              <Photos
+                key={post.id}
+                kind="posts"
+                id={post.id}
+                editable={session?.user.id === post.author.id}
+                label={post.title}
+                revision={revision}
+              />
               {post.hidden && (
                 <div className="callout">
                   Запись скрыта модератором. Изменение текста не возвращает её в

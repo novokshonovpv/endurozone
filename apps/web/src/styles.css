@@ -2761,6 +2761,67 @@ footer > a {
   border-color: #6e8d52;
   box-shadow: 0 0 0 1px #6e8d52;
 }
+.photos-panel {
+  margin: 20px 0;
+  min-width: 0;
+}
+.photo-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+.photo-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(190px, 100%), 1fr));
+  gap: 12px;
+}
+.photo-item {
+  min-width: 0;
+}
+.photo-view,
+.photo-preview button {
+  display: block;
+  padding: 0;
+  border: 0;
+  background: #eff2e9;
+  border-radius: 12px;
+  overflow: hidden;
+  width: 100%;
+  cursor: zoom-in;
+}
+.photo-view img,
+.photo-preview img {
+  display: block;
+  width: 100%;
+  height: 180px;
+  object-fit: cover;
+}
+.photo-preview {
+  width: 100%;
+  margin: 12px 0;
+}
+.photo-expanded {
+  width: 100%;
+  height: auto;
+  max-height: 70vh;
+  object-fit: contain;
+  display: block;
+}
+.photo-upload {
+  margin-top: 16px;
+  max-width: 100%;
+}
+.photo-upload input {
+  max-width: 100%;
+  width: 100%;
+}
+.bike-photos {
+  grid-column: 1 / -1;
+}
+.post-card-bottom > .photo-preview {
+  flex-basis: 100%;
+}
 .rider-bike h3,
 .rider-bike p {
   overflow-wrap: anywhere;

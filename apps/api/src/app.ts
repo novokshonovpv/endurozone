@@ -30,6 +30,7 @@ import { catalogRoutes } from "./catalog.ts";
 import { garageRoutes } from "./garage.ts";
 import { mechanicRoutes, type MechanicResponder } from "./mechanic.ts";
 import { riderRoutes } from "./riders.ts";
+import { photoRoutes } from "./photos.ts";
 import { learningRoutes } from "./learning.ts";
 import { GpxError } from "./gpx.ts";
 import { adventureRoutes, adventureOutputs } from "./adventure.ts";
@@ -178,7 +179,7 @@ export async function buildApp(options: {
     openapi: {
       info: {
         title: "Enduro.Zone API",
-        version: "0.12.0",
+        version: "0.13.0",
         description:
           "Аккаунт, гараж, бортжурнал, локации и модерация. Для cookie-сессии запросить /api/me и передать csrfToken в X-CSRF-Token при изменении данных. Все изменения требуют X-Enduro-Client: web. Подтверждение email, восстановление доступа и личные уведомления. Проверка email перед публикацией включается REQUIRE_VERIFIED_EMAIL=true.",
       },
@@ -278,7 +279,10 @@ export async function buildApp(options: {
       !e.validation
     )
       message = "Не удалось прочитать запрос. Проверьте заполнение полей.";
-    if (status === 413) message = "Запрос слишком большой. Сократите текст.";
+    if (status === 413)
+      message = req.url.endsWith("/photos")
+        ? "Файл слишком большой. Выберите фото до 5 МБ."
+        : "Запрос слишком большой. Сократите текст.";
     if (status >= 500) {
       req.log.error({ err: error }, "Request failed");
       code = "INTERNAL_ERROR";
@@ -317,7 +321,7 @@ export async function buildApp(options: {
 
   app.get("/api/health", { schema: { tags: ["System"] } }, () => ({
     ok: true,
-    version: "0.12.0",
+    version: "0.13.0",
   }));
   app.get("/api/openapi.json", { schema: { hide: true } }, () => app.swagger());
   app.post<{ Body: RegisterInput }>(
@@ -839,6 +843,7 @@ export async function buildApp(options: {
     HttpError,
   });
   riderRoutes(app, db, { listPosts, notFound });
+  photoRoutes(app, db, { requireWrite: verifiedWrite, notFound, HttpError });
   catalogRoutes(app);
   learningRoutes(app, db, { requireAuth, requireWrite, notFound, HttpError });
   garageRoutes(app, db, {

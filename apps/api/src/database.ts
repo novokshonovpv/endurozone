@@ -80,6 +80,7 @@ export async function openDatabase(
         "006-garage-service.sql",
         "007-learning.sql",
         "008-mechanic.sql",
+        "009-photos.sql",
       ].entries()) {
         const version = index + 1;
         const applied = await tx.query(

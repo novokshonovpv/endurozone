@@ -12,6 +12,7 @@ import {
 import { api } from "./api.ts";
 import { Icon, Avatar, ErrorBox, Loading } from "./ui.tsx";
 import { PostCard } from "./community.tsx";
+import { Photos } from "./photos.tsx";
 const counted = (n: number, words: [string, string, string]) =>
   `${n} ${words[n % 100 >= 11 && n % 100 <= 14 ? 2 : n % 10 === 1 ? 0 : n % 10 >= 2 && n % 10 <= 4 ? 1 : 2]}`;
 const postCount = (n: number) =>
@@ -284,6 +285,12 @@ export function RiderProfile({
                       key={b.id}
                     >
                       <Icon name="bike" size={28} />
+                      <Photos
+                        kind="bikes"
+                        id={b.id}
+                        compact
+                        label={`${b.make} ${b.model}`}
+                      />
                       <h3>
                         {b.make} {b.model}
                       </h3>
