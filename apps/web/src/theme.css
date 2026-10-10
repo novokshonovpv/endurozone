@@ -406,8 +406,22 @@ select:focus {
   z-index: -1;
   pointer-events: none;
 }
+/* The bike group's origin is the rear axle: the wheelie pivots on the tyre that stays on the ground. */
 .scene-bike {
-  animation: ez-float 3.4s ease-in-out infinite;
+  transform-origin: 0 0;
+  animation: ez-wheelie 2.8s ease-in-out infinite;
+}
+@keyframes ez-wheelie {
+  0%,
+  100% {
+    transform: rotate(0deg);
+  }
+  45% {
+    transform: rotate(-5deg);
+  }
+  70% {
+    transform: rotate(-2deg);
+  }
 }
 .scene-spin {
   transform-box: fill-box;
@@ -820,8 +834,11 @@ footer {
   .hero-label {
     display: none;
   }
+  .hero {
+    padding-bottom: 180px;
+  }
   .hero .trail-scene {
-    opacity: 0.45;
+    opacity: 1;
   }
   .hero {
     clip-path: polygon(

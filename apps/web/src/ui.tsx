@@ -205,11 +205,11 @@ export function TrailScene() {
     <svg
       className="trail-scene"
       viewBox="0 0 800 420"
-      preserveAspectRatio="xMaxYMax slice"
+      preserveAspectRatio="xMaxYMax meet"
       aria-hidden="true"
     >
-      <circle cx="668" cy="150" r="96" fill="#4d4f35" opacity="0.55" />
-      <circle cx="668" cy="150" r="70" fill="#5c5e40" opacity="0.5" />
+      <circle cx="596" cy="214" r="86" fill="#4d4f35" opacity="0.55" />
+      <circle cx="596" cy="214" r="62" fill="#5c5e40" opacity="0.5" />
       <path
         className="scene-far"
         d="M180 330 C300 250 380 280 470 240 S650 200 820 230 L820 420 L180 420Z"
@@ -236,12 +236,12 @@ export function TrailScene() {
         strokeLinecap="round"
       />
       <g className="scene-dust" fill="#a8a27e">
-        <circle cx="520" cy="300" r="6" />
-        <circle cx="505" cy="318" r="4" />
-        <circle cx="530" cy="322" r="3" />
-        <circle cx="495" cy="300" r="2.5" />
+        <circle cx="522" cy="344" r="6" />
+        <circle cx="510" cy="350" r="4" />
+        <circle cx="530" cy="338" r="3" />
+        <circle cx="500" cy="342" r="2.5" />
       </g>
-      <g transform="translate(594 250) rotate(-16) scale(0.8)">
+      <g transform="translate(548 323) rotate(-14) scale(0.86)">
         <g className="scene-bike">
           <g
             fill="#111209"
@@ -257,18 +257,18 @@ export function TrailScene() {
             <line x1="128" y1="-90" x2="150" y2="-6" strokeWidth="8" />
             <line x1="120" y1="-106" x2="140" y2="-113" strokeWidth="5" />
             <polyline
-              points="72,-22 98,-58 70,-94"
+              points="74,-24 96,-56 62,-86"
               fill="none"
               strokeWidth="14"
             />
-            <line x1="70" y1="-94" x2="102" y2="-130" strokeWidth="19" />
+            <line x1="62" y1="-86" x2="86" y2="-124" strokeWidth="19" />
             <polyline
-              points="102,-128 124,-118 134,-108"
+              points="86,-122 112,-118 134,-108"
               fill="none"
               strokeWidth="10"
             />
-            <circle cx="114" cy="-150" r="15" />
-            <path d="M118 -163 L144 -160 L128 -150Z" />
+            <circle cx="96" cy="-142" r="15" />
+            <path d="M100 -155 L126 -152 L110 -143Z" />
           </g>
           <path
             d="M118 -60 Q 150 -74 184 -54 L180 -47 Q 150 -63 122 -51Z"
@@ -276,10 +276,10 @@ export function TrailScene() {
           />
           <polygon points="116,-106 140,-102 146,-80 122,-84" fill="#c2541f" />
           <line
-            x1="101"
-            y1="-152"
-            x2="125"
-            y2="-150"
+            x1="83"
+            y1="-144"
+            x2="107"
+            y2="-142"
             stroke="#c2541f"
             strokeWidth="3"
           />
