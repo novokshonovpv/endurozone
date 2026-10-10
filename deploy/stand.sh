@@ -52,6 +52,19 @@ health() {
 
 setup() {
   : "${STAND_HOST:?Укажите STAND_HOST}"
+  local stand_user="" stand_password=""
+  # Пароль стенда: со stdin (STAND_PASSWORD_STDIN=1) — читается до любых других команд — или генерируется.
+  if [ "${STAND_PASSWORD_STDIN:-}" = 1 ]; then
+    IFS= read -r stand_user
+    IFS= read -r stand_password
+  elif [ "${STAND_GENERATE_PASSWORD:-}" = 1 ] && [ ! -s /etc/nginx/endurozone.htpasswd ]; then
+    stand_user=enduro
+    stand_password="$(openssl rand -base64 18 | tr -d '/+=' | cut -c1-16)"
+  fi
+  if ss -ltn "sport = :$PORT" | grep -q LISTEN && ! systemctl is-active --quiet endurozone; then
+    echo "Порт $PORT занят другим процессом. Укажите STAND_PORT." >&2
+    exit 1
+  fi
   apt-get update -y
   apt-get install -y nginx certbot python3-certbot-nginx git curl xz-utils openssl sudo
   install_node
@@ -100,12 +113,11 @@ EOF
   systemctl restart endurozone
   health
 
-  # Пароль стенда передаётся на stdin (STAND_PASSWORD_STDIN=1), в аргументы и журнал не попадает.
-  if [ "${STAND_PASSWORD_STDIN:-}" = 1 ]; then
-    local user hash
-    IFS= read -r user
-    hash="$(openssl passwd -apr1 -stdin)"
-    printf '%s:%s\n' "$user" "$hash" > /etc/nginx/endurozone.htpasswd
+  # В файл попадает только хеш; пароль не передаётся в аргументах команд.
+  if [ -n "$stand_password" ]; then
+    local hash
+    hash="$(printf '%s' "$stand_password" | openssl passwd -apr1 -stdin)"
+    printf '%s:%s\n' "$stand_user" "$hash" > /etc/nginx/endurozone.htpasswd
     chmod 640 /etc/nginx/endurozone.htpasswd && chgrp www-data /etc/nginx/endurozone.htpasswd
   fi
   [ -s /etc/nginx/endurozone.htpasswd ] || { echo "Нет /etc/nginx/endurozone.htpasswd" >&2; exit 1; }
@@ -133,9 +145,16 @@ EOF
   fi
   nginx -t
   systemctl reload nginx
+  # Аккаунт Let's Encrypt на сервере уже есть (laminat.sale); без него certbot попросит согласие с условиями.
   certbot --nginx --non-interactive --redirect -d "$STAND_HOST"
   nginx -t && systemctl reload nginx
+  echo
   echo "Готово: https://$STAND_HOST"
+  if [ "${STAND_GENERATE_PASSWORD:-}" = 1 ] && [ -n "$stand_password" ]; then
+    echo "Логин стенда: $stand_user"
+    echo "Пароль стенда: $stand_password"
+    echo "Сохраните их: повторно пароль не показывается (хранится только хеш)."
+  fi
 }
 
 update() {

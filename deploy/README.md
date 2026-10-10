@@ -38,4 +38,12 @@ ssh timeweb "systemctl stop endurozone && cd /opt/endurozone/app && sudo -u endu
 
 Письма подтверждения и восстановления пароля стенд не отправляет — они лежат в `/opt/endurozone/app/.data/mail`.
 
-Первичная настройка (уже выполнена): `STAND_HOST=enduro.200-165-236-78.sslip.io STAND_PASSWORD_STDIN=1 bash stand.sh setup`, на stdin — логин и пароль стенда.
+## Первичная настройка
+
+Из веб-консоли Timeweb (root) одной командой — пароль стенда сгенерируется и будет показан в конце:
+
+```sh
+curl -fsSL https://raw.githubusercontent.com/novokshonovpv/endurozone/feat/timeweb-stand/deploy/console-setup.sh | bash
+```
+
+Или по SSH: `STAND_HOST=enduro.200-165-236-78.sslip.io STAND_PASSWORD_STDIN=1 bash stand.sh setup`, на stdin — логин и пароль стенда (две строки). Повторный запуск безопасен: база и пароль сохраняются.
