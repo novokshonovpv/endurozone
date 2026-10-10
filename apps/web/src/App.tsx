@@ -5,7 +5,7 @@ import {
   Avatar,
   ErrorBox,
   Loading,
-  Contours,
+  TrailScene,
   type IconName,
 } from "./ui.tsx";
 import { Feed, Garage, PostDetail } from "./community.tsx";
@@ -26,15 +26,13 @@ import { Mechanic } from "./mechanic.tsx";
 import { Learning } from "./learning.tsx";
 import { Following, Favorites } from "./follows.tsx";
 import { Nearby } from "./nearby.tsx";
+import { ExploreTabs, isExplore, exploreLabel } from "./explore.tsx";
 import { FeedbackButton, MyFeedback, PilotFeedback } from "./feedback.tsx";
 
 const nav: { path: string; label: string; icon: IconName }[] = [
   { path: "feed", label: "Сообщество", icon: "feed" },
   { path: "riders", label: "Райдеры", icon: "user" },
-  { path: "nearby", label: "Рядом", icon: "mountain" },
-  { path: "map", label: "Карта локаций", icon: "route" },
-  { path: "tracks", label: "GPX-треки", icon: "mountain" },
-  { path: "rides", label: "Покатушки", icon: "route" },
+  { path: "nearby", label: "Карта и выезды", icon: "route" },
   { path: "shop", label: "Магазин", icon: "shop" },
   { path: "mechanic", label: "ИИ-механик", icon: "wrench" },
   { path: "learning", label: "Обучение", icon: "book" },
@@ -125,7 +123,7 @@ export default function App() {
             <a
               key={n.path}
               href={`#${n.path}`}
-              className={`nav-item ${route === n.path || (n.path === "feed" && route.startsWith("post/")) || (n.path === "riders" && route.startsWith("rider/")) || (n.path === "shop" && route.startsWith("shop/")) || (n.path === "learning" && route.startsWith("learning/")) ? "active" : ""}`}
+              className={`nav-item ${route === n.path || (n.path === "feed" && route.startsWith("post/")) || (n.path === "nearby" && isExplore(route)) || (n.path === "riders" && route.startsWith("rider/")) || (n.path === "shop" && route.startsWith("shop/")) || (n.path === "learning" && route.startsWith("learning/")) ? "active" : ""}`}
             >
               <Icon name={n.icon} />
               {n.label}
@@ -191,7 +189,12 @@ export default function App() {
                       ? "GPX-трек"
                       : route.startsWith("ride/")
                         ? "Покатушка"
-                        : (nav.find((n) => n.path === route)?.label ??
+                        : (nav.find(
+                            (n) => n.path === route && !isExplore(route),
+                          )?.label ??
+                          (isExplore(route)
+                            ? `Карта и выезды · ${exploreLabel(route)}`
+                            : undefined) ??
                           (route === "roadmap"
                             ? "Ход разработки"
                             : route === "moderation"
@@ -240,6 +243,7 @@ export default function App() {
                 <a href="#account">Доступ к аккаунту</a>
               </p>
             )}
+          {ready && isExplore(route) && <ExploreTabs route={route} />}
           {!ready ? (
             <Loading />
           ) : route === "login" || route === "register" ? (
@@ -487,7 +491,7 @@ function AuthForm({
   return (
     <div className="auth-layout">
       <div className="auth-story">
-        <Contours />
+        <TrailScene />
         <p className="eyebrow light">МЕНЬШЕ ПЕРЕПИСОК. БОЛЬШЕ ЭНДУРО.</p>
         <h1>
           Здесь начинается

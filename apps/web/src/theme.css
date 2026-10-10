@@ -396,27 +396,72 @@ select:focus {
   min-height: 380px;
 }
 .hero::after {
-  content: "";
-  position: absolute;
-  right: -40px;
-  top: 34px;
-  width: 34%;
-  height: 26px;
-  z-index: 0;
-  opacity: 0.85;
-  background: repeating-linear-gradient(
-    -55deg,
-    var(--rust) 0 14px,
-    transparent 14px 28px
-  );
-  background-size: 200% 100%;
-  transform: skewX(-12deg);
-  animation: ez-stripes 6s linear infinite;
+  content: none;
 }
-.hero .contours {
-  color: var(--khaki);
-  opacity: 0.32;
-  animation: ez-drift 16s ease-in-out infinite alternate;
+.trail-scene {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  z-index: -1;
+  pointer-events: none;
+}
+.scene-bike {
+  animation: ez-float 3.4s ease-in-out infinite;
+}
+.scene-spin {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: ez-spin 0.7s linear infinite;
+}
+.scene-far {
+  animation: ez-far 24s ease-in-out infinite alternate;
+}
+.scene-dust circle {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: ez-dust 1.8s ease-out infinite;
+}
+.scene-dust circle:nth-child(2) {
+  animation-delay: 0.4s;
+}
+.scene-dust circle:nth-child(3) {
+  animation-delay: 0.8s;
+}
+.scene-dust circle:nth-child(4) {
+  animation-delay: 1.2s;
+}
+@keyframes ez-float {
+  0%,
+  100% {
+    transform: translateY(0) rotate(0deg);
+  }
+  50% {
+    transform: translateY(-9px) rotate(-1.5deg);
+  }
+}
+@keyframes ez-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+@keyframes ez-far {
+  to {
+    transform: translateX(-18px);
+  }
+}
+@keyframes ez-dust {
+  0% {
+    opacity: 0;
+    transform: translate(0, 0) scale(0.6);
+  }
+  25% {
+    opacity: 0.8;
+  }
+  100% {
+    opacity: 0;
+    transform: translate(-46px, -18px) scale(1.6);
+  }
 }
 .hero h1 {
   font-size: clamp(34px, 4.4vw, 58px);
@@ -775,9 +820,8 @@ footer {
   .hero-label {
     display: none;
   }
-  .hero::after {
-    width: 26%;
-    top: 22px;
+  .hero .trail-scene {
+    opacity: 0.45;
   }
   .hero {
     clip-path: polygon(
@@ -801,6 +845,91 @@ footer {
 }
 .report-button {
   margin-right: 16px;
+}
+/* Map and rides: one section, four tabs */
+.explore-tabs {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 2px;
+  margin-bottom: 26px;
+  background: var(--olive);
+  padding: 4px;
+  border-radius: 4px;
+  clip-path: polygon(
+    0 0,
+    calc(100% - 14px) 0,
+    100% 14px,
+    100% 100%,
+    14px 100%,
+    0 calc(100% - 14px)
+  );
+}
+.explore-tabs a {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 14px;
+  color: var(--sand);
+  border-radius: 2px;
+  transition:
+    background 0.2s ease,
+    color 0.2s ease;
+}
+.explore-tabs a span {
+  display: flex;
+  flex-direction: column;
+  font-family: var(--display);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  font-size: 13px;
+  line-height: 1.2;
+}
+.explore-tabs small {
+  font-family: Onest, sans-serif;
+  text-transform: none;
+  letter-spacing: 0;
+  font-size: 11px;
+  color: var(--khaki);
+}
+.explore-tabs a:hover {
+  background: rgba(244, 241, 228, 0.07);
+  color: var(--paper);
+}
+.explore-tabs a.active {
+  background: rgba(194, 84, 31, 0.22);
+  color: var(--paper);
+}
+.explore-tabs a::after {
+  content: "";
+  position: absolute;
+  left: 10px;
+  right: 10px;
+  bottom: 0;
+  height: 3px;
+  background: var(--rust);
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 0.35s var(--ease-out);
+}
+.explore-tabs a.active::after {
+  transform: scaleX(1);
+}
+.explore-tabs a.active svg {
+  color: #e98a52;
+}
+@media (max-width: 760px) {
+  .explore-tabs {
+    display: flex;
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+  .explore-tabs a {
+    flex: none;
+  }
+  .explore-tabs small {
+    display: none;
+  }
 }
 /* Riders who reduce motion get a calm, instant interface */
 @media (prefers-reduced-motion: reduce) {

@@ -160,29 +160,153 @@ export const formatDate = (value: string) =>
     month: "long",
     year: "numeric",
   }).format(new Date(value));
-export function Contours() {
+
+// Deterministic pine silhouette: tiers narrow towards the top, a short trunk below.
+const pine = (x: number, base: number, h: number) => {
+  const w = h * 0.55;
+  const p = (dx: number, dy: number) => `${x + dx * w},${base - dy * h}`;
+  return [
+    p(0, 1),
+    p(0.28, 0.66),
+    p(0.16, 0.66),
+    p(0.4, 0.36),
+    p(0.24, 0.36),
+    p(0.5, 0.08),
+    p(0.05, 0.08),
+    p(0.05, 0),
+    p(-0.05, 0),
+    p(-0.05, 0.08),
+    p(-0.5, 0.08),
+    p(-0.24, 0.36),
+    p(-0.4, 0.36),
+    p(-0.16, 0.66),
+    p(-0.28, 0.66),
+  ].join(" ");
+};
+const row = (
+  from: number,
+  to: number,
+  step: number,
+  base: number,
+  min: number,
+  spread: number,
+) =>
+  Array.from({ length: Math.ceil((to - from) / step) }, (_, i) => {
+    const jitter = ((i * 37) % 11) / 10;
+    return pine(
+      from + i * step + jitter * step * 0.4,
+      base + ((i * 13) % 5) * 3,
+      min + jitter * spread,
+    );
+  });
+// Forest and an airborne enduro bike: the hero and sign-in backdrop.
+export function TrailScene() {
   return (
     <svg
-      className="contours"
-      viewBox="0 0 650 450"
-      fill="none"
+      className="trail-scene"
+      viewBox="0 0 800 420"
+      preserveAspectRatio="xMaxYMax slice"
       aria-hidden="true"
     >
-      <g stroke="currentColor" strokeWidth="1.2">
-        {Array.from({ length: 16 }, (_, i) => (
-          <path
-            key={i}
-            d={`M${240 + i * 14} -40C${220 + i * 22} 60 ${190 - i * 8} 125 ${345 - i * 5} 205S${570 + i * 13} 335 ${420 + i * 21} 500`}
-          />
+      <circle cx="668" cy="150" r="96" fill="#4d4f35" opacity="0.55" />
+      <circle cx="668" cy="150" r="70" fill="#5c5e40" opacity="0.5" />
+      <path
+        className="scene-far"
+        d="M180 330 C300 250 380 280 470 240 S650 200 820 230 L820 420 L180 420Z"
+        fill="#34361f"
+      />
+      <g className="scene-far" fill="#4a4c33" opacity="0.75">
+        {row(250, 820, 21, 312, 34, 30).map((d, i) => (
+          <polygon key={i} points={d} />
         ))}
-        <path
-          strokeWidth="3"
-          strokeDasharray="5 9"
-          d="M490 30c-240 100 60 150-160 240S230 365 320 420"
-        />
       </g>
-      <circle cx="490" cy="30" r="8" fill="currentColor" />
-      <circle cx="320" cy="420" r="8" fill="currentColor" />
+      <g fill="#202216">
+        {row(330, 820, 34, 352, 62, 52).map((d, i) => (
+          <polygon key={i} points={d} />
+        ))}
+      </g>
+      <path
+        d="M260 420 L260 382 C360 378 430 372 470 352 L512 340 L520 350 C600 360 700 372 820 380 L820 420Z"
+        fill="#17180f"
+      />
+      <path
+        d="M470 352 L512 340"
+        stroke="#c2541f"
+        strokeWidth="3"
+        strokeLinecap="round"
+      />
+      <g className="scene-dust" fill="#a8a27e">
+        <circle cx="520" cy="300" r="6" />
+        <circle cx="505" cy="318" r="4" />
+        <circle cx="530" cy="322" r="3" />
+        <circle cx="495" cy="300" r="2.5" />
+      </g>
+      <g transform="translate(594 250) rotate(-16) scale(0.8)">
+        <g className="scene-bike">
+          <g
+            fill="#111209"
+            stroke="#111209"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
+            <line x1="0" y1="0" x2="62" y2="-30" strokeWidth="7" />
+            <polygon points="-22,-66 40,-80 40,-72 -10,-60" />
+            <polygon points="28,-78 100,-88 126,-86 100,-40 70,-26 52,-60" />
+            <rect x="62" y="-54" width="38" height="28" rx="4" />
+            <path d="M84 -30 Q 44 -40 18 -64" fill="none" strokeWidth="7" />
+            <line x1="128" y1="-90" x2="150" y2="-6" strokeWidth="8" />
+            <line x1="120" y1="-106" x2="140" y2="-113" strokeWidth="5" />
+            <polyline
+              points="72,-22 98,-58 70,-94"
+              fill="none"
+              strokeWidth="14"
+            />
+            <line x1="70" y1="-94" x2="102" y2="-130" strokeWidth="19" />
+            <polyline
+              points="102,-128 124,-118 134,-108"
+              fill="none"
+              strokeWidth="10"
+            />
+            <circle cx="114" cy="-150" r="15" />
+            <path d="M118 -163 L144 -160 L128 -150Z" />
+          </g>
+          <path
+            d="M118 -60 Q 150 -74 184 -54 L180 -47 Q 150 -63 122 -51Z"
+            fill="#c2541f"
+          />
+          <polygon points="116,-106 140,-102 146,-80 122,-84" fill="#c2541f" />
+          <line
+            x1="101"
+            y1="-152"
+            x2="125"
+            y2="-150"
+            stroke="#c2541f"
+            strokeWidth="3"
+          />
+          {[0, 150].map((cx) => (
+            <g key={cx} transform={`translate(${cx} ${cx ? -6 : 0})`}>
+              <circle r="33" fill="none" stroke="#111209" strokeWidth="9" />
+              <circle
+                className="scene-spin"
+                r="38"
+                fill="none"
+                stroke="#111209"
+                strokeWidth="5"
+                strokeDasharray="3 6"
+              />
+              <circle r="23" fill="none" stroke="#4a4c33" strokeWidth="2.5" />
+              <circle r="5" fill="#4a4c33" />
+            </g>
+          ))}
+        </g>
+      </g>
+      <g fill="#111209">
+        {[pine(772, 424, 300), pine(818, 424, 250), pine(742, 424, 210)].map(
+          (d, i) => (
+            <polygon key={i} points={d} />
+          ),
+        )}
+      </g>
     </svg>
   );
 }

@@ -17,7 +17,7 @@ import {
   Modal,
   ErrorBox,
   Loading,
-  Contours,
+  TrailScene,
   formatDate,
 } from "./ui.tsx";
 import { ReportButton } from "./locations.tsx";
@@ -141,7 +141,7 @@ export function Feed({ session }: { session: Session | null }) {
   return (
     <>
       <section className="hero">
-        <Contours />
+        <TrailScene />
         <div className="hero-content">
           <p className="eyebrow light">
             <span className="hero-dash" />
