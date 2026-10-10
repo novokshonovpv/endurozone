@@ -122,6 +122,8 @@ export function accountRightsRoutes(
             "SELECT u.handle,f.created_at FROM follows f JOIN users u ON u.id=f.follower_id WHERE f.followee_id=$1",
           favorites:
             "SELECT post_id,created_at FROM favorites WHERE user_id=$1",
+          rideMessages:
+            "SELECT id,ride_id,body,hidden_by,created_at FROM ride_messages WHERE author_id=$1",
           moderationAuthored:
             "SELECT target_type,target_id,action,reason,created_at FROM moderation_actions WHERE actor_id=$1",
         };
@@ -202,7 +204,7 @@ export function accountRightsRoutes(
           );
         // Reports/audit attached to removed objects must not keep descriptions of those objects.
         const targets = await tx.query(
-          "SELECT id FROM posts WHERE author_id=$1 UNION SELECT id FROM tracks WHERE author_id=$1 UNION SELECT id FROM locations WHERE author_id=$1 UNION SELECT r.id FROM rides r JOIN tracks t ON t.id=r.track_id WHERE r.organizer_id=$1 OR t.author_id=$1",
+          "SELECT id FROM posts WHERE author_id=$1 UNION SELECT id FROM tracks WHERE author_id=$1 UNION SELECT id FROM locations WHERE author_id=$1 UNION SELECT r.id FROM rides r JOIN tracks t ON t.id=r.track_id WHERE r.organizer_id=$1 OR t.author_id=$1 UNION SELECT m.id FROM ride_messages m WHERE m.author_id=$1 OR m.ride_id IN (SELECT r.id FROM rides r JOIN tracks t ON t.id=r.track_id WHERE r.organizer_id=$1 OR t.author_id=$1)",
           [u.id],
         );
         if (targets.length) {

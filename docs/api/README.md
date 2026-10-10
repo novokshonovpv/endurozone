@@ -160,3 +160,7 @@ GET/POST `/api/bikes/:id/photos` и `/api/posts/:id/photos` читают фот�
 ## Поиск рядом · 0.15
 
 `GET /api/nearby?latitude=&longitude=&radiusKm=` (радиус 25/50/100/200, по умолчанию 100) доступен гостям. Центр округляется до 0,01° и возвращается в `center`; журнал сервера пишет адрес без параметров. Ответ содержит до 30 ближайших `locations` (с `distanceKm`), `tracks` (`id, title, city, difficulty, distanceM, author, distanceKm, anchor`) и `rides` (как `/api/rides` плюс `distanceKm`, `anchor`), а также `truncated` по каждому списку. `anchor` — точка публичной очищенной линии трека; точка сбора, геометрия и исходный GPX не возвращаются. Видимость — как в `/api/locations`, `/api/tracks` и `/api/rides`. [Решения и приёмка](../sprint-13.md).
+
+## Чат покатушки · 0.16
+
+`GET /api/rides/:id/messages?limit=30&offset=0` (сначала новые) и `POST /api/rides/:id/messages` `{body}` доступны только организатору и принятым участникам; остальным — 404. Ответ списка содержит `canWrite` (ложь после отмены или скрытия) и `canModerate` (организатор). Скрытые сообщения приходят с пустым `body` и `hiddenBy`. `DELETE /api/ride-messages/:id` удаляет своё, `POST /api/ride-messages/:id/hide` скрывает сообщение в своей покатушке. Жалоба `targetType: "ride_message"` принимается только от читающего чат; `GET /api/moderation/ride-messages/:id` отдаёт модератору только сообщение с жалобой. Ошибки: 409 `CHAT_READ_ONLY`, `CHAT_FULL` (5000 сообщений). Создание покатушки отправляет подписчикам организатора уведомление со ссылкой `ride/:id`. [Решения и приёмка](../sprint-14.md).

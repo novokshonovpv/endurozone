@@ -261,7 +261,7 @@ export function locationRoutes(
   );
   app.post<{
     Body: {
-      targetType: "post" | "location" | "track" | "ride";
+      targetType: "post" | "location" | "track" | "ride" | "ride_message";
       targetId: string;
       reason: string;
       details: string;
@@ -287,16 +287,21 @@ export function locationRoutes(
               ? "tracks"
               : b.targetType === "ride"
                 ? "rides"
-                : "locations";
+                : b.targetType === "ride_message"
+                  ? "ride_messages"
+                  : "locations";
+        // A chat message can be reported only by someone who can currently read that chat.
         const visible =
           b.targetType === "post"
             ? "visibility='public' AND NOT hidden"
             : b.targetType === "ride"
               ? "status='open' AND NOT hidden AND EXISTS(SELECT 1 FROM tracks t WHERE t.id=rides.track_id AND t.status='published')"
-              : "status='published'";
+              : b.targetType === "ride_message"
+                ? "hidden_by IS NULL AND EXISTS(SELECT 1 FROM rides r JOIN tracks t ON t.id=r.track_id WHERE r.id=ride_messages.ride_id AND (r.organizer_id=$2 OR (NOT r.hidden AND t.status='published' AND EXISTS(SELECT 1 FROM ride_members m WHERE m.ride_id=r.id AND m.user_id=$2 AND m.status='accepted'))))"
+                : "status='published'";
         const [target] = await tx.query(
-          `SELECT id FROM ${table} WHERE id=$1 AND ${visible} FOR UPDATE`,
-          [b.targetId],
+          `SELECT id FROM ${table} WHERE id=$1 AND ${visible} AND $2::uuid IS NOT NULL FOR UPDATE`,
+          [b.targetId, auth.user.id],
         );
         if (!target) throw notFound();
         const [r] = await tx.query(
@@ -383,13 +388,17 @@ export function locationRoutes(
                 ? "tracks"
                 : r.target_type === "ride"
                   ? "rides"
-                  : "locations";
+                  : r.target_type === "ride_message"
+                    ? "ride_messages"
+                    : "locations";
           const assignment =
             r.target_type === "post"
               ? "hidden=true,updated_at=now()"
               : r.target_type === "ride"
                 ? "hidden=true"
-                : "status='hidden',updated_at=now()";
+                : r.target_type === "ride_message"
+                  ? "hidden_by='moderator'"
+                  : "status='hidden',updated_at=now()";
           await tx.query(`UPDATE ${table} SET ${assignment} WHERE id=$1`, [
             r.target_id,
           ]);

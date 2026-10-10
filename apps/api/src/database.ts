@@ -83,6 +83,7 @@ export async function openDatabase(
         "009-photos.sql",
         "010-follows-favorites.sql",
         "011-nearby.sql",
+        "012-ride-chat.sql",
       ].entries()) {
         const version = index + 1;
         const applied = await tx.query(

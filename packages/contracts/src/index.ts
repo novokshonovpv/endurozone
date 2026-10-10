@@ -154,7 +154,10 @@ export const schemas = {
     expectedStatus: { type: "string", enum: ["pending", "published"] },
   }),
   report: obj({
-    targetType: { type: "string", enum: ["post", "location", "track", "ride"] },
+    targetType: {
+      type: "string",
+      enum: ["post", "location", "track", "ride", "ride_message"],
+    },
     targetId: { type: "string", format: "uuid" },
     reason: {
       type: "string",
@@ -253,7 +256,10 @@ const locationResponse = obj({
 });
 const reportResponse = obj({
   id: uuid,
-  targetType: { type: "string", enum: ["post", "location", "track", "ride"] },
+  targetType: {
+    type: "string",
+    enum: ["post", "location", "track", "ride", "ride_message"],
+  },
   targetId: uuid,
   reason: text(20),
   details: text(2000),
@@ -322,7 +328,7 @@ export interface EnduroLocation
 }
 export interface Report {
   id: string;
-  targetType: "post" | "location" | "track" | "ride";
+  targetType: "post" | "location" | "track" | "ride" | "ride_message";
   targetId: string;
   reason: string;
   details: string;
@@ -356,3 +362,4 @@ export const reportReasons = {
 
 export * from "./adventure.ts";
 export * from "./nearby.ts";
+export * from "./ride-chat.ts";

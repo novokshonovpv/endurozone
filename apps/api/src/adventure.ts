@@ -439,6 +439,11 @@ export function adventureRoutes(
             b.capacity,
           ],
         );
+        // One generic notice per follower and ride: no names or ride text kept in notifications.
+        await tx.query(
+          "INSERT INTO notifications(id,user_id,message,path) SELECT gen_random_uuid(),f.follower_id,'Новая покатушка от райдера из ваших подписок','ride/'||$1 FROM follows f WHERE f.followee_id=$2",
+          [id, a.user.id],
+        );
       });
       reply.code(201);
       return ride(id, req);

@@ -12,6 +12,7 @@ import {
   type Session,
   type Report,
   type ModerationAction,
+  type RideMessage,
 } from "@enduro/contracts";
 import { api } from "./api.ts";
 import { ErrorBox, Loading, Modal, Icon } from "./ui.tsx";
@@ -610,7 +611,9 @@ export function Moderation({ session, notify }: Props) {
                 ? "Трек"
                 : r.targetType === "ride"
                   ? "Покатушка"
-                  : "Локация"}
+                  : r.targetType === "ride_message"
+                    ? "Сообщение в чате покатушки"
+                    : "Локация"}
           </h3>
           <p className="plain-text">{r.details}</p>
           {r.targetType === "post" ? (
@@ -619,6 +622,8 @@ export function Moderation({ session, notify }: Props) {
             <a href={`#track/${r.targetId}`}>Открыть трек</a>
           ) : r.targetType === "ride" ? (
             <a href={`#ride/${r.targetId}`}>Открыть покатушку</a>
+          ) : r.targetType === "ride_message" ? (
+            <MessageReview id={r.targetId} />
           ) : (
             <LocationReview id={r.targetId} />
           )}
@@ -656,6 +661,38 @@ export function Moderation({ session, notify }: Props) {
         >
           Ещё жалобы
         </button>
+      )}
+    </>
+  );
+}
+// Only the reported message; the rest of the chat and the meeting point stay private.
+function MessageReview({ id }: { id: string }) {
+  const [m, set] = useState<RideMessage | null>(null),
+    [error, setError] = useState("");
+  useEffect(() => {
+    let alive = true;
+    api<RideMessage>(`/moderation/ride-messages/${id}`)
+      .then((m) => {
+        if (alive) set(m);
+      })
+      .catch((e) => {
+        if (alive) setError(errorOf(e));
+      });
+    return () => {
+      alive = false;
+    };
+  }, [id]);
+  return (
+    <>
+      <ErrorBox message={error} />
+      {m && (
+        <blockquote className="reported-message">
+          <strong>
+            {m.author.displayName} (@{m.author.handle})
+          </strong>
+          {m.hiddenBy && <span className="tag">Уже скрыто</span>}
+          <p className="plain-text">{m.body}</p>
+        </blockquote>
       )}
     </>
   );

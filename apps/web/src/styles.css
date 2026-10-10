@@ -3033,3 +3033,62 @@ a.nearby-item:hover {
     flex: 1 1 100%;
   }
 }
+.track-pin {
+  background: #e77332;
+}
+.ride-pin {
+  background: #3b6fb6;
+}
+.ride-chat .section-heading {
+  margin-bottom: 8px;
+}
+.chat-list {
+  list-style: none;
+  margin: 12px 0;
+  padding: 0;
+  display: grid;
+  gap: 12px;
+  max-height: 520px;
+  overflow-y: auto;
+}
+.chat-message {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  min-width: 0;
+}
+.chat-message > div {
+  min-width: 0;
+  flex: 1;
+  background: #f4f6f1;
+  border-radius: 10px;
+  padding: 8px 12px;
+}
+.chat-message.mine > div {
+  background: #edf4e9;
+}
+.chat-message p {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+.chat-meta small {
+  color: var(--muted);
+}
+.chat-hidden {
+  font-style: italic;
+}
+.chat-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 14px;
+}
+.reported-message {
+  margin: 10px 0;
+  padding: 10px 14px;
+  border-left: 3px solid #e77332;
+  background: #fbf6f1;
+  border-radius: 6px;
+}
+.reported-message .tag {
+  margin-left: 8px;
+}

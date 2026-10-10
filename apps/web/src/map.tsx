@@ -10,8 +10,15 @@ import {
 import { api } from "./api.ts";
 import { ErrorBox, Modal } from "./ui.tsx";
 type Point = { latitude: number; longitude: number };
+export type MapPin = {
+  id: string;
+  kind: "track" | "ride";
+  title: string;
+  coordinate: [number, number];
+};
 type Props = { notify: (message: string) => void };
 const errorOf = (e: unknown) => (e as Error).message;
+const noPins: MapPin[] = [];
 export function MapCanvas({
   items,
   center,
@@ -19,6 +26,7 @@ export function MapCanvas({
   onPoint,
   onSelect,
   geometry,
+  pins = noPins,
 }: {
   items: EnduroLocation[];
   center: Point;
@@ -26,6 +34,7 @@ export function MapCanvas({
   onPoint: (point: Point) => void;
   onSelect: (id: string) => void;
   geometry?: TrackGeometry;
+  pins?: MapPin[];
 }) {
   const container = useRef<HTMLDivElement>(null),
     map = useRef<GLMap | null>(null),
@@ -112,33 +121,57 @@ export function MapCanvas({
     import("maplibre-gl").then((gl) => {
       if (!alive || !map.current) return;
       markers.current.forEach((m) => m.remove());
-      markers.current = items
-        .filter((l) => l.status === "published")
-        .map((l) => {
-          const button = document.createElement("button");
-          button.className = "location-pin";
-          button.type = "button";
-          button.textContent = "EZ";
-          button.setAttribute("aria-label", l.title);
-          button.addEventListener("click", (e) => {
-            e.stopPropagation();
-            actions.current.onSelect(l.id);
-          });
-          return new gl.Marker({ element: button })
-            .setLngLat([l.longitude, l.latitude])
-            .addTo(map.current!);
+      const marker = (
+        id: string,
+        label: string,
+        text: string,
+        className: string,
+        at: [number, number],
+      ) => {
+        const button = document.createElement("button");
+        button.className = className;
+        button.type = "button";
+        button.textContent = text;
+        button.setAttribute("aria-label", label);
+        button.addEventListener("click", (e) => {
+          e.stopPropagation();
+          actions.current.onSelect(id);
         });
+        return new gl.Marker({ element: button })
+          .setLngLat(at)
+          .addTo(map.current!);
+      };
+      markers.current = [
+        ...items
+          .filter((l) => l.status === "published")
+          .map((l) =>
+            marker(l.id, l.title, "EZ", "location-pin", [
+              l.longitude,
+              l.latitude,
+            ]),
+          ),
+        ...pins.map((p) =>
+          marker(
+            p.id,
+            `${p.kind === "ride" ? "Покатушка" : "Трек"}: ${p.title}`,
+            p.kind === "ride" ? "П" : "Т",
+            `location-pin ${p.kind}-pin`,
+            p.coordinate,
+          ),
+        ),
+      ];
     });
     return () => {
       alive = false;
     };
-  }, [items, ready]);
+  }, [items, pins, ready]);
   useEffect(() => {
     const m = map.current;
     if (!m || !geometry) return;
     const draw = () => {
       const source = m.getSource("track") as
-        import("maplibre-gl").GeoJSONSource | undefined;
+        | import("maplibre-gl").GeoJSONSource
+        | undefined;
       const data = { type: "Feature" as const, properties: {}, geometry };
       if (source) source.setData(data);
       else {
@@ -189,7 +222,7 @@ export function ReportButton({
   targetId,
   notify,
 }: {
-  targetType: "post" | "location" | "track" | "ride";
+  targetType: "post" | "location" | "track" | "ride" | "ride_message";
   targetId: string;
   notify: Props["notify"];
 }) {

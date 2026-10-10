@@ -18,6 +18,7 @@ import { api } from "./api.ts";
 import { ErrorBox, Loading, Modal, Icon } from "./ui.tsx";
 import { MapCanvas, ReportButton } from "./map.tsx";
 import { go } from "./routing.ts";
+import { RideChat } from "./ride-chat.tsx";
 type Props = { session: Session | null; notify: (text: string) => void };
 const emptyLocations: never[] = [];
 const message = (e: unknown) => (e as Error).message;
@@ -998,6 +999,14 @@ export function RideDetail({ id, session, notify }: Props & { id: string }) {
                 )}
               </div>
             </article>
+            {session && (status === "organizer" || status === "accepted") && (
+              <RideChat
+                key={ride.id + status}
+                rideId={ride.id}
+                session={session}
+                notify={notify}
+              />
+            )}
             {status === "organizer" && (
               <section className="card location-editor">
                 <h2>Заявки участников</h2>

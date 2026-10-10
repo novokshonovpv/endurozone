@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, type ReactNode } from "react";
+import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import {
   cityCenters,
   defaultNearbyRadius,
@@ -11,7 +11,7 @@ import {
 } from "@enduro/contracts";
 import { api } from "./api.ts";
 import { Icon, ErrorBox, Loading } from "./ui.tsx";
-import { MapCanvas } from "./map.tsx";
+import { MapCanvas, type MapPin } from "./map.tsx";
 import { rideDate } from "./adventure.tsx";
 // The browser never keeps or sends a centre more precise than about 1 km.
 const coarse = (p: GeoPoint): GeoPoint => ({
@@ -38,6 +38,23 @@ export function Nearby({ session }: { session: Session | null }) {
     [selected, setSelected] = useState(""),
     [retry, setRetry] = useState(0);
   const cards = useRef<Record<string, HTMLElement | null>>({});
+  const pins = useMemo<MapPin[]>(
+    () => [
+      ...(result?.tracks ?? []).map((t) => ({
+        id: t.id,
+        kind: "track" as const,
+        title: t.title,
+        coordinate: t.anchor,
+      })),
+      ...(result?.rides ?? []).map((r) => ({
+        id: r.id,
+        kind: "ride" as const,
+        title: r.title,
+        coordinate: r.anchor,
+      })),
+    ],
+    [result],
+  );
   useEffect(() => {
     let alive = true;
     setBusy(true);
@@ -168,6 +185,7 @@ export function Nearby({ session }: { session: Session | null }) {
       <div className="card map-card">
         <MapCanvas
           items={result?.locations ?? []}
+          pins={pins}
           center={center}
           choosing={choosing}
           onPoint={(p) => {
@@ -184,8 +202,8 @@ export function Nearby({ session }: { session: Session | null }) {
           }}
         />
         <p className="map-caption">
-          Центр: {center.label} · {radius} км. На карте отмечены места; треки и
-          покатушки — в списке ниже.
+          Центр: {center.label} · {radius} км. «EZ» — места, «Т» — треки, «П» —
+          покатушки (по ближайшей точке публичной линии трека).
         </p>
       </div>
       <ErrorBox message={error} />
@@ -222,9 +240,12 @@ export function Nearby({ session }: { session: Session | null }) {
                 >
                   {result.rides.map((r) => (
                     <a
-                      className="card nearby-item"
+                      className={`card nearby-item ${selected === r.id ? "selected" : ""}`}
                       href={`#ride/${r.id}`}
                       key={r.id}
+                      ref={(el) => {
+                        cards.current[r.id] = el;
+                      }}
                     >
                       <span className="nearby-distance">
                         {km(r.distanceKm)}
@@ -271,9 +292,12 @@ export function Nearby({ session }: { session: Session | null }) {
                 >
                   {result.tracks.map((t) => (
                     <a
-                      className="card nearby-item"
+                      className={`card nearby-item ${selected === t.id ? "selected" : ""}`}
                       href={`#track/${t.id}`}
                       key={t.id}
+                      ref={(el) => {
+                        cards.current[t.id] = el;
+                      }}
                     >
                       <span className="nearby-distance">
                         {km(t.distanceKm)}
