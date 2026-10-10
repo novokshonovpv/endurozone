@@ -168,3 +168,7 @@ GET/POST `/api/bikes/:id/photos` и `/api/posts/:id/photos` читают фот�
 ## Обратная связь пилота · 0.17
 
 `POST /api/feedback` `{kind: "bug"|"confusing"|"idea", body, section, viewport}` — сессия и CSRF, подтверждённый email не требуется. `section` — только первый сегмент адреса (`^[a-z][a-z-]{0,29}$`), `viewport` — `ШиринаxВысота`; браузер сервер берёт из `User-Agent`, версию — из `apps/api/src/version.ts`. `GET /api/me/feedback` — свои отзывы со статусом и ответом. Модератор: `GET /api/moderation/feedback?status=` и `POST /api/moderation/feedback/:id` `{status, reply}`; автор получает уведомление `feedback`, когда отзыв закрыт или появился новый ответ. Ошибки: 409 `FEEDBACK_LIMIT` (100 открытых), 429 (10 отправок в минуту). [Решения и приёмка](../sprint-15.md).
+
+## Первые шаги и активация · 0.18
+
+`GET /api/me/onboarding` → `{steps:[{id:"bike"|"post"|"follow"|"social", done}], complete, dismissed}` — по сохранённым данным; действия со своим контентом не считаются социальным шагом. `PUT /api/me/onboarding` `{dismissed: boolean}` (сессия и CSRF, без проверки email). Модератор: `GET /api/moderation/activation` — только агрегаты `participants, bike, post, follow, social, activated, eligibleForReturn, returned, excludedModerators, excludedSynthetic`; участники — не модераторы и не `@example.test`; возврат — полезное действие через 7+ дней после регистрации. [Решения и приёмка](../sprint-16.md).

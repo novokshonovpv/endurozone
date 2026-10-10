@@ -9,6 +9,7 @@ import {
   type Page,
 } from "@enduro/contracts";
 import { api } from "./api.ts";
+import { ActivationCard } from "./onboarding.tsx";
 import { ErrorBox, Icon, Loading, Modal, formatDate } from "./ui.tsx";
 const sectionNames: Record<string, string> = {
   feed: "Сообщество",
@@ -293,6 +294,7 @@ export function PilotFeedback({ notify }: { notify: (s: string) => void }) {
           </p>
         </div>
       </div>
+      <ActivationCard />
       <div className="scope-tabs" role="tablist" aria-label="Статус отзывов">
         {(
           [["", "Все"], ...Object.entries(feedbackStatuses)] as [

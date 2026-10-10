@@ -3173,3 +3173,115 @@ a.nearby-item:hover {
     padding: 12px;
   }
 }
+.first-steps {
+  padding: 20px 22px;
+  margin-bottom: 22px;
+  border-color: #cfdcc6;
+  background: #fbfdf9;
+}
+.first-steps .section-heading {
+  margin-bottom: 10px;
+}
+.first-steps-progress {
+  height: 6px;
+  border-radius: 999px;
+  background: #e6ece1;
+  overflow: hidden;
+  margin-bottom: 14px;
+}
+.first-steps-progress span {
+  display: block;
+  height: 100%;
+  background: var(--green);
+  transition: width 0.3s ease;
+}
+.first-steps-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 10px;
+}
+.first-steps-list li {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+}
+.first-steps-list li > div {
+  flex: 1;
+  min-width: 0;
+}
+.first-steps-list strong,
+.first-steps-list small {
+  display: block;
+  overflow-wrap: anywhere;
+}
+.first-steps-list small {
+  color: var(--muted);
+}
+.first-steps-list li.done strong {
+  color: var(--muted);
+  text-decoration: line-through;
+}
+.first-steps-mark {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  border: 1px solid #cfdcc6;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--green);
+}
+.first-steps-list li.done .first-steps-mark {
+  background: var(--green);
+  border-color: var(--green);
+  color: #fff;
+}
+.first-steps-tip {
+  margin: 12px 0 0;
+  font-size: 12px;
+}
+.activation-card {
+  padding: 18px 22px;
+  margin-bottom: 20px;
+}
+.activation-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(170px, 100%), 1fr));
+  gap: 10px;
+  margin: 12px 0;
+}
+.activation-grid > div {
+  background: #f4f6f1;
+  border-radius: 8px;
+  padding: 10px 12px;
+}
+.activation-grid dt {
+  font-size: 11px;
+  color: var(--muted);
+}
+.activation-grid dd {
+  margin: 4px 0 0;
+  font-size: 22px;
+  font-weight: 800;
+  color: var(--green);
+}
+.activation-grid dd small {
+  font-size: 12px;
+  font-weight: 600;
+  margin-left: 4px;
+  color: var(--muted);
+}
+@media (max-width: 760px) {
+  .first-steps-list li {
+    flex-wrap: wrap;
+  }
+  .first-steps-list li > .button {
+    margin-left: 40px;
+  }
+}

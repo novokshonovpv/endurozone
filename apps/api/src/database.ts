@@ -85,6 +85,7 @@ export async function openDatabase(
         "011-nearby.sql",
         "012-ride-chat.sql",
         "013-feedback.sql",
+        "014-onboarding.sql",
       ].entries()) {
         const version = index + 1;
         const applied = await tx.query(

@@ -25,6 +25,7 @@ import { go } from "./routing.ts";
 import { GarageJournal, BikeServicePanel } from "./garage.tsx";
 import { Photos } from "./photos.tsx";
 import { FavoriteButton } from "./follows.tsx";
+import { FirstSteps } from "./onboarding.tsx";
 
 const noteError = (e: unknown) => (e as Error).message;
 export function PostCard({ post }: { post: Post }) {
@@ -172,6 +173,7 @@ export function Feed({ session }: { session: Session | null }) {
       </section>
       <div className="feed-layout">
         <section className="feed-main">
+          {session && <FirstSteps key={session.user.id} current="feed" />}
           <div className="section-heading">
             <div>
               <p className="eyebrow">ОПЫТ СООБЩЕСТВА</p>
@@ -420,6 +422,9 @@ export function Garage({
           Добавить мотоцикл
         </button>
       </div>
+      {!busy && (
+        <FirstSteps key={`${bikes.length}/${revision}`} current="garage" />
+      )}
       <ErrorBox message={error} />
       {error && (
         <button
