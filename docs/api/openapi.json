@@ -2,7 +2,7 @@
   "openapi": "3.0.3",
   "info": {
     "title": "Enduro.Zone API",
-    "version": "0.7.0",
+    "version": "0.8.0",
     "description": "Аккаунт, гараж, бортжурнал, локации и модерация. Для cookie-сессии запросить /api/me и передать csrfToken в X-CSRF-Token при изменении данных. Все изменения требуют X-Enduro-Client: web. Подтверждение email, восстановление доступа и личные уведомления. Проверка email перед публикацией включается REQUIRE_VERIFIED_EMAIL=true."
   },
   "components": {
@@ -8780,6 +8780,147 @@
         "responses": {
           "200": {
             "description": "Default Response"
+          }
+        }
+      }
+    },
+    "/api/catalog": {
+      "get": {
+        "tags": [
+          "Catalog"
+        ],
+        "description": "Fictional demo catalog. Prices and fitments are not supplier data.",
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "demo",
+                    "items"
+                  ],
+                  "additionalProperties": false,
+                  "properties": {
+                    "demo": {
+                      "type": "boolean",
+                      "enum": [
+                        true
+                      ]
+                    },
+                    "items": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "additionalProperties": false,
+                        "properties": {
+                          "id": {
+                            "type": "string"
+                          },
+                          "title": {
+                            "type": "string"
+                          },
+                          "category": {
+                            "type": "string",
+                            "enum": [
+                              "parts",
+                              "gear",
+                              "bikes"
+                            ]
+                          },
+                          "section": {
+                            "type": "string"
+                          },
+                          "sku": {
+                            "type": "string"
+                          },
+                          "description": {
+                            "type": "string"
+                          },
+                          "priceRub": {
+                            "type": "integer",
+                            "minimum": 0
+                          },
+                          "demo": {
+                            "type": "boolean",
+                            "enum": [
+                              true
+                            ]
+                          },
+                          "specs": {
+                            "type": "array",
+                            "items": {
+                              "type": "object",
+                              "additionalProperties": false,
+                              "properties": {
+                                "name": {
+                                  "type": "string"
+                                },
+                                "value": {
+                                  "type": "string"
+                                }
+                              },
+                              "required": [
+                                "name",
+                                "value"
+                              ]
+                            }
+                          },
+                          "fitments": {
+                            "type": "array",
+                            "items": {
+                              "type": "object",
+                              "additionalProperties": false,
+                              "properties": {
+                                "make": {
+                                  "type": "string"
+                                },
+                                "model": {
+                                  "type": "string"
+                                },
+                                "fromYear": {
+                                  "type": "integer"
+                                },
+                                "toYear": {
+                                  "type": "integer"
+                                },
+                                "modification": {
+                                  "type": "string"
+                                },
+                                "engine": {
+                                  "type": "string"
+                                }
+                              },
+                              "required": [
+                                "make",
+                                "model",
+                                "fromYear",
+                                "toYear",
+                                "modification",
+                                "engine"
+                              ]
+                            }
+                          }
+                        },
+                        "required": [
+                          "id",
+                          "title",
+                          "category",
+                          "section",
+                          "sku",
+                          "description",
+                          "priceRub",
+                          "demo",
+                          "specs",
+                          "fitments"
+                        ]
+                      }
+                    }
+                  }
+                }
+              }
+            }
           }
         }
       }

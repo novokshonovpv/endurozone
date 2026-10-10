@@ -10,6 +10,7 @@ export interface Profile {
   bio: string;
 }
 export * from "./pilot.ts";
+export * from "./catalog.ts";
 export interface Session {
   user: Profile & {
     email: string;

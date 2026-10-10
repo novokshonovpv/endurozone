@@ -20,19 +20,20 @@ import { Locations, Moderation } from "./locations.tsx";
 import { go } from "./routing.ts";
 import { Account, Recovery, Notifications } from "./pilot.tsx";
 import { AccountData } from "./account-rights.tsx";
+import { Shop } from "./shop.tsx";
 
 const nav: { path: string; label: string; icon: IconName }[] = [
   { path: "feed", label: "Сообщество", icon: "feed" },
   { path: "map", label: "Карта локаций", icon: "route" },
   { path: "tracks", label: "GPX-треки", icon: "mountain" },
   { path: "rides", label: "Покатушки", icon: "route" },
+  { path: "shop", label: "Магазин", icon: "shop" },
   { path: "garage", label: "Мой гараж", icon: "bike" },
   { path: "profile", label: "Мой профиль", icon: "user" },
   { path: "account", label: "Доступ к аккаунту", icon: "user" },
   { path: "notifications", label: "Уведомления", icon: "feed" },
 ];
 const upcoming: { label: string; icon: IconName }[] = [
-  { label: "Магазин", icon: "shop" },
   { label: "Обучение", icon: "book" },
   { label: "ИИ-механик", icon: "wrench" },
 ];
@@ -113,7 +114,7 @@ export default function App() {
             <a
               key={n.path}
               href={`#${n.path}`}
-              className={`nav-item ${route === n.path || (n.path === "feed" && route.startsWith("post/")) ? "active" : ""}`}
+              className={`nav-item ${route === n.path || (n.path === "feed" && route.startsWith("post/")) || (n.path === "shop" && route.startsWith("shop/")) ? "active" : ""}`}
             >
               <Icon name={n.icon} />
               {n.label}
@@ -164,23 +165,25 @@ export default function App() {
       <div className="workspace">
         <header className="topbar">
           <span className="breadcrumb">
-            {route.startsWith("post/")
-              ? "Бортжурнал"
-              : route.startsWith("track/")
-                ? "GPX-трек"
-                : route.startsWith("ride/")
-                  ? "Покатушка"
-                  : (nav.find((n) => n.path === route)?.label ??
-                    (route === "roadmap"
-                      ? "Ход разработки"
-                      : route === "moderation"
-                        ? "Модерация"
-                        : "Добро пожаловать"))}
+            {route.startsWith("shop/")
+              ? "Карточка товара"
+              : route.startsWith("post/")
+                ? "Бортжурнал"
+                : route.startsWith("track/")
+                  ? "GPX-трек"
+                  : route.startsWith("ride/")
+                    ? "Покатушка"
+                    : (nav.find((n) => n.path === route)?.label ??
+                      (route === "roadmap"
+                        ? "Ход разработки"
+                        : route === "moderation"
+                          ? "Модерация"
+                          : "Добро пожаловать"))}
           </span>
           <div className="top-actions">
             <span className="version">
               <span className="tiny-dot" />
-              Разработка · 0.7
+              Разработка · 0.8
             </span>
             {session ? (
               <>
@@ -315,6 +318,12 @@ export default function App() {
               id={route.slice(5)}
               session={session}
               notify={setNotice}
+            />
+          ) : route === "shop" || route.startsWith("shop/") ? (
+            <Shop
+              key={session?.user.id ?? "guest"}
+              session={session}
+              productId={route.startsWith("shop/") ? route.slice(5) : undefined}
             />
           ) : route === "moderation" ? (
             <Moderation session={session} notify={setNotice} />
@@ -662,14 +671,14 @@ function Roadmap() {
       n: "02",
       title: "Карта и совместные выезды",
       state: "В работе",
-      body: "Локации, очищенные GPX-треки и модерация, выезды с заявками, лимитом участников и личными уведомлениями. Дальше — закрытый стенд и модерация событий.",
+      body: "Локации, очищенные GPX-треки и модерация, выезды с заявками, лимитом участников и личными уведомлениями. Модерация событий готова; общий стенд отложен.",
       tasks: "W05–W09. Реальные разрешённые маршруты для Смоленска и Сочи.",
     },
     {
       n: "03",
       title: "Магазин, обучение и механик",
-      state: "После ядра",
-      body: "Выгрузки партнёров и подтверждённая совместимость деталей, витрины мотоциклов и экипировки, тренеры и ИИ с источниками.",
+      state: "В работе",
+      body: "Демо-магазин запчастей, экипировки и мотоциклов готов. Дальше — выгрузки партнёров и подтверждённая совместимость, тренеры и ИИ с источниками.",
       tasks:
         "C01–C03, L01, A01–A02. Нужны данные и договорённости с партнёрами.",
     },
