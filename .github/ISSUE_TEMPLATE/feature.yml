@@ -1,0 +1,24 @@
+name: Задача продукта
+description: Небольшой результат на 1–3 дня
+title: "[ID] "
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: Проблема пользователя
+    validations:
+      required: true
+  - type: textarea
+    id: outcome
+    attributes:
+      label: Работающий результат и критерии приёмки
+    validations:
+      required: true
+  - type: input
+    id: owner
+    attributes:
+      label: Владелец задачи
+  - type: textarea
+    id: dependencies
+    attributes:
+      label: Зависимости, макет и API

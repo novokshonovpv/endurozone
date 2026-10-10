@@ -1,0 +1,23 @@
+{
+  "name": "enduro-zone",
+  "version": "0.3.0",
+  "private": true,
+  "packageManager": "pnpm@11.25.0",
+  "engines": {
+    "node": ">=24.0.0"
+  },
+  "scripts": {
+    "dev": "node scripts/dev.mjs",
+    "dev:api": "pnpm --filter @enduro/api dev",
+    "dev:web": "pnpm --filter @enduro/web dev",
+    "check": "pnpm -r typecheck",
+    "test": "pnpm --filter @enduro/api test",
+    "build": "pnpm --filter @enduro/web build",
+    "start": "pnpm --filter @enduro/api start",
+    "api:export": "pnpm --filter @enduro/api export:api"
+  },
+  "devDependencies": {
+    "@types/node": "^24.0.0",
+    "typescript": "^5.9.0"
+  }
+}

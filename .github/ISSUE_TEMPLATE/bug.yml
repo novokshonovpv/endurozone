@@ -1,0 +1,18 @@
+name: Ошибка
+description: Что произошло и как повторить
+title: "Ошибка: "
+body:
+  - type: textarea
+    id: steps
+    attributes:
+      label: Шаги, фактический и ожидаемый результат
+    validations:
+      required: true
+  - type: input
+    id: environment
+    attributes:
+      label: Устройство, браузер и версия
+  - type: textarea
+    id: evidence
+    attributes:
+      label: Пример или снимок без личных данных и секретов

@@ -1,0 +1,18 @@
+services:
+  postgres:
+    image: postgres:17-alpine
+    ports:
+      - "127.0.0.1:5432:5432"
+    environment:
+      POSTGRES_USER: enduro
+      POSTGRES_PASSWORD: enduro-dev-only
+      POSTGRES_DB: enduro
+    volumes:
+      - enduro_pg:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U enduro -d enduro"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+volumes:
+  enduro_pg:
