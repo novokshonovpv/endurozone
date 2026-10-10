@@ -29,6 +29,8 @@ jobs:
       - run: pnpm check
       - run: python3 deploy/test_backup.py
         name: Stand backup safety checks
+      - run: node apps/api/node_modules/tsx/dist/cli.mjs deploy/seed-pilot.mts --check
+        name: Synthetic pilot setup against an isolated database
       - run: pnpm test
       - run: pnpm test
         name: Same access tests against PostgreSQL
