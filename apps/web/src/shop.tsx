@@ -23,9 +23,11 @@ const productIcon = (category: ProductCategory) =>
 export function Shop({
   session,
   productId,
+  requestedBike = "",
 }: {
   session: Session | null;
   productId?: string;
+  requestedBike?: string;
 }) {
   const [catalog, setCatalog] = useState<Catalog | null>(null);
   const [bikes, setBikes] = useState<Bike[]>([]);
@@ -61,15 +63,25 @@ export function Shop({
     if (session)
       api<{ items: Bike[] }>("/me/bikes")
         .then((result) => {
-          if (alive) setBikes(result.items);
+          if (alive) {
+            setBikes(result.items);
+            setSelectedBike(
+              requestedBike === "demo"
+                ? "demo"
+                : result.items.some((b) => b.id === requestedBike)
+                  ? requestedBike
+                  : "",
+            );
+          }
         })
         .catch((e) => {
           if (alive) setGarageError(e.message);
         });
+    if (!session && requestedBike === "demo") setSelectedBike("demo");
     return () => {
       alive = false;
     };
-  }, [session?.user.id, retry]);
+  }, [session?.user.id, retry, requestedBike]);
   const bike =
     selectedBike === "demo"
       ? demoCatalogBike
@@ -192,7 +204,10 @@ export function Shop({
             </section>
             {productId ? (
               <section className="card shop-detail">
-                <a className="text-button" href="#shop">
+                <a
+                  className="text-button"
+                  href={`#shop${selectedBike ? `?bike=${encodeURIComponent(selectedBike)}` : ""}`}
+                >
                   ← Вернуться в каталог
                 </a>
                 {product ? (
@@ -341,7 +356,7 @@ export function Shop({
                     {filtered.map((p) => (
                       <article className="card shop-product" key={p.id}>
                         <a
-                          href={`#shop/${p.id}`}
+                          href={`#shop/${p.id}${selectedBike ? `?bike=${encodeURIComponent(selectedBike)}` : ""}`}
                           aria-label={`Подробнее: ${p.title}`}
                         >
                           <div className={`shop-visual ${p.category}`}>

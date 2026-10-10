@@ -77,6 +77,7 @@ export async function openDatabase(
         "003-tracks-rides.sql",
         "004-pilot.sql",
         "005-account-rights.sql",
+        "006-garage-service.sql",
       ].entries()) {
         const version = index + 1;
         const applied = await tx.query(

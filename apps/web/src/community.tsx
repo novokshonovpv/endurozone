@@ -22,6 +22,7 @@ import {
 } from "./ui.tsx";
 import { ReportButton } from "./locations.tsx";
 import { go } from "./routing.ts";
+import { GarageJournal, BikeServicePanel } from "./garage.tsx";
 
 const noteError = (e: unknown) => (e as Error).message;
 function PostCard({ post }: { post: Post }) {
@@ -310,8 +311,6 @@ export function Garage({
   notify: (s: string) => void;
 }) {
   const [bikes, setBikes] = useState<Bike[]>([]),
-    [posts, setPosts] = useState<Post[]>([]),
-    [next, setNext] = useState<number | null>(null),
     [active, setActive] = useState(""),
     [busy, setBusy] = useState(true),
     [error, setError] = useState(""),
@@ -322,15 +321,10 @@ export function Garage({
     let alive = true;
     setBusy(true);
     setError("");
-    Promise.all([
-      api<{ items: Bike[] }>("/me/bikes"),
-      api<Page<Post>>("/me/posts?limit=30"),
-    ])
-      .then(([b, p]) => {
+    api<{ items: Bike[] }>("/me/bikes")
+      .then((b) => {
         if (alive) {
           setBikes(b.items);
-          setPosts(p.items);
-          setNext(p.nextOffset);
           setActive((current) =>
             b.items.some((x) => x.id === current)
               ? current
@@ -348,18 +342,6 @@ export function Garage({
       alive = false;
     };
   }, [revision]);
-  const more = async () => {
-    setBusy(true);
-    try {
-      const p = await api<Page<Post>>(`/me/posts?limit=30&offset=${next}`);
-      setPosts((old) => [...old, ...p.items]);
-      setNext(p.nextOffset);
-    } catch (e) {
-      setError(noteError(e));
-    } finally {
-      setBusy(false);
-    }
-  };
   const currentBike = bikes.find((b) => b.id === active);
   return (
     <>
@@ -486,61 +468,43 @@ export function Garage({
                   <p className="bike-notes">{currentBike.notes}</p>
                 )}
                 <p className="form-note">
-                  Данные владельца. Версия ещё не подтверждена справочником;
-                  автоматический подбор запчастей появится после его
-                  подключения.
+                  Данные владельца. Для реального подбора запчастей понадобится
+                  подтверждённая версия из справочника.
                 </p>
+                <div className="garage-quick-actions">
+                  <a
+                    className="button outline"
+                    href={`#shop?bike=${currentBike.id}`}
+                  >
+                    <Icon name="shop" />
+                    Подобрать запчасти
+                  </a>
+                  <button
+                    className="button outline"
+                    onClick={() => setPostEditor(true)}
+                  >
+                    <Icon name="book" />
+                    Запись о мотоцикле
+                  </button>
+                </div>
               </section>
             )}
           </div>
-          <div className="section-heading journal-heading">
-            <div>
-              <p className="eyebrow">ИСТОРИЯ МОТОЦИКЛА</p>
-              <h2>Мой бортжурнал</h2>
-            </div>
-            <button
-              className="button"
-              onClick={() => setPostEditor(true)}
-              disabled={!bikes.length}
-            >
-              <Icon name="plus" />
-              Написать запись
-            </button>
-          </div>
-          <p className="muted journal-note">
-            Публичные записи попадают в сообщество. Закрытые видны только вам.
-          </p>
-          <div className="post-list">
-            {posts
-              .filter((p) => !active || p.bikeId === active)
-              .map((p) => (
-                <PostCard key={p.id} post={p} />
-              ))}
-            {!posts.some((p) => p.bikeId === active) && (
-              <div className="card empty-state">
-                <Icon name="book" size={30} />
-                <h3>Первая запись — начало истории</h3>
-                <p>
-                  Расскажите о мотоцикле, последнем обслуживании или выезде.
-                </p>
-                <button
-                  className="button outline"
-                  onClick={() => setPostEditor(true)}
-                >
-                  Написать первую запись
-                  <Icon name="plus" size={16} />
-                </button>
-              </div>
-            )}
-          </div>
-          {next !== null && (
-            <button
-              className="button outline load-more"
-              disabled={busy}
-              onClick={more}
-            >
-              {busy ? "Загружаем…" : "Загрузить более ранние записи"}
-            </button>
+          {currentBike && (
+            <>
+              <BikeServicePanel
+                key={currentBike.id}
+                bike={currentBike}
+                changed={() => setRevision((x) => x + 1)}
+                notify={notify}
+              />
+              <GarageJournal
+                key={currentBike.id}
+                bikeId={currentBike.id}
+                write={() => setPostEditor(true)}
+                renderPost={(p) => <PostCard key={p.id} post={p} />}
+              />
+            </>
           )}
         </>
       )}
@@ -726,8 +690,8 @@ function BikeEditor({
           {confirmDelete ? (
             <>
               <p>
-                Удалить мотоцикл из гаража? Если у него есть записи, сначала
-                удалите их.
+                Удалить мотоцикл из гаража? Техника с бортжурналом или планом ТО
+                защищена от удаления вместе с историей.
               </p>
               <button
                 className="button danger small"

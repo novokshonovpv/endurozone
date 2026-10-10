@@ -50,7 +50,10 @@ function useRoute() {
   return route;
 }
 export default function App() {
-  const route = useRoute();
+  const rawRoute = useRoute();
+  const route = rawRoute.split("?")[0];
+  const shopBike =
+    new URLSearchParams(rawRoute.split("?")[1] ?? "").get("bike") ?? "";
   const [session, setSession] = useState<Session | null>(null),
     [ready, setReady] = useState(false),
     [connectionError, setConnectionError] = useState(""),
@@ -183,7 +186,7 @@ export default function App() {
           <div className="top-actions">
             <span className="version">
               <span className="tiny-dot" />
-              Разработка · 0.8
+              Разработка · 0.9
             </span>
             {session ? (
               <>
@@ -269,7 +272,11 @@ export default function App() {
             )
           ) : route === "garage" ? (
             session ? (
-              <Garage session={session} notify={setNotice} />
+              <Garage
+                key={session.user.id}
+                session={session}
+                notify={setNotice}
+              />
             ) : (
               <JoinGate />
             )
@@ -324,6 +331,7 @@ export default function App() {
               key={session?.user.id ?? "guest"}
               session={session}
               productId={route.startsWith("shop/") ? route.slice(5) : undefined}
+              requestedBike={shopBike}
             />
           ) : route === "moderation" ? (
             <Moderation session={session} notify={setNotice} />

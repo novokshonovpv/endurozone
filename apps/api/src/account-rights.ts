@@ -83,6 +83,10 @@ export function accountRightsRoutes(
           );
         const selections: Record<string, string> = {
           bikes: "SELECT * FROM bikes WHERE owner_id=$1",
+          servicePlans:
+            "SELECT p.* FROM bike_service_plans p JOIN bikes b ON b.id=p.bike_id WHERE b.owner_id=$1",
+          serviceRecords:
+            "SELECT r.*,r.performed_on::text AS performed_on FROM bike_service_records r JOIN bike_service_plans p ON p.id=r.plan_id JOIN bikes b ON b.id=p.bike_id WHERE b.owner_id=$1",
           posts: "SELECT * FROM posts WHERE author_id=$1",
           comments: "SELECT * FROM comments WHERE author_id=$1",
           locations: "SELECT * FROM locations WHERE author_id=$1",

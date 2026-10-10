@@ -11,6 +11,7 @@ export interface Profile {
 }
 export * from "./pilot.ts";
 export * from "./catalog.ts";
+export * from "./garage.ts";
 export interface Session {
   user: Profile & {
     email: string;
@@ -163,6 +164,15 @@ export const schemas = {
   comment: obj({ body: text(2000, 1) }),
   id: obj({ id: { type: "string", format: "uuid" } }),
   handle: obj({ handle: { ...text(24, 3), pattern: "^[a-z0-9_]+$" } }),
+  myPosts: obj(
+    {
+      limit: { type: "integer", minimum: 1, maximum: 30, default: 12 },
+      offset: { type: "integer", minimum: 0, maximum: 10000, default: 0 },
+      bikeId: { type: "string", format: "uuid" },
+      kind: { type: "string", enum: Object.keys(postKinds) },
+    },
+    [],
+  ),
   page: obj(
     {
       limit: { type: "integer", minimum: 1, maximum: 30, default: 12 },

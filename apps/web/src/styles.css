@@ -2124,6 +2124,108 @@ footer > a {
   margin-bottom: 24px;
   background: #eef3e9;
 }
+
+.garage-quick-actions,
+.service-actions {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-top: 20px;
+}
+.garage-journal-filter {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  flex-wrap: wrap;
+  margin-bottom: 24px;
+}
+.garage-journal-filter label {
+  display: grid;
+  gap: 8px;
+  min-width: 200px;
+}
+.garage-journal-filter p {
+  flex: 1;
+  min-width: 220px;
+}
+.service-plan-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 20px;
+  margin: 24px 0;
+}
+.service-plan {
+  padding: 24px;
+}
+.service-plan-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+}
+.service-plan h3 {
+  margin: 20px 0 10px;
+}
+.service-plan p {
+  font-size: 14px;
+}
+.service-due {
+  background: #faeedc;
+  color: #8b571b;
+}
+.service-notes {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  color: #687168;
+}
+.service-history {
+  display: grid;
+  gap: 12px;
+  margin-bottom: 20px;
+}
+.service-history-title {
+  margin: 32px 0 20px;
+}
+.service-record,
+.service-archive-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  padding: 24px;
+}
+.service-record > div {
+  min-width: 0;
+}
+.service-record > strong {
+  white-space: nowrap;
+}
+.service-record h3 {
+  margin: 10px 0;
+}
+.service-archive-row {
+  margin-top: 12px;
+}
+@media (max-width: 650px) {
+  .service-plan-grid {
+    grid-template-columns: 1fr;
+  }
+  .service-record,
+  .service-archive-row {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+  .garage-quick-actions .button,
+  .service-actions .button {
+    width: 100%;
+  }
+  .garage-journal-filter label {
+    width: 100%;
+  }
+  .service-plan {
+    padding: 20px;
+  }
+}
 .shop-demo svg {
   flex-shrink: 0;
 }
