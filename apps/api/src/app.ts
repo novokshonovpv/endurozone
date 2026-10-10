@@ -24,6 +24,7 @@ import {
   profileOf,
 } from "./auth.ts";
 
+import { pilotRoutes, pilotOutputs, queueAccountMail } from "./pilot.ts";
 import { GpxError } from "./gpx.ts";
 import { adventureRoutes, adventureOutputs } from "./adventure.ts";
 import { locationRoutes, locationOutputs } from "./locations.ts";
@@ -132,6 +133,7 @@ export async function buildApp(options: {
   logger?: boolean;
   rateMax?: number;
   webRoot?: string;
+  requireVerifiedEmail?: boolean;
 }): Promise<FastifyInstance> {
   const { db } = options;
   const origin = options.origin ?? "http://localhost:5173";
@@ -169,9 +171,9 @@ export async function buildApp(options: {
     openapi: {
       info: {
         title: "Enduro.Zone API",
-        version: "0.5.0",
+        version: "0.6.0",
         description:
-          "Аккаунт, гараж, бортжурнал, локации и модерация. Для cookie-сессии запросить /api/me и передать csrfToken в X-CSRF-Token при изменении данных. Все изменения требуют X-Enduro-Client: web. Вход для внутреннего тестирования без проверки email.",
+          "Аккаунт, гараж, бортжурнал, локации и модерация. Для cookie-сессии запросить /api/me и передать csrfToken в X-CSRF-Token при изменении данных. Все изменения требуют X-Enduro-Client: web. Подтверждение email, восстановление доступа и личные уведомления. Проверка email перед публикацией включается REQUIRE_VERIFIED_EMAIL=true.",
       },
       components: {
         securitySchemes: {
@@ -183,6 +185,7 @@ export async function buildApp(options: {
   const output: Record<string, [number, unknown]> = {
     ...locationOutputs,
     ...adventureOutputs,
+    ...pilotOutputs,
     "POST /api/auth/register": [201, responses.session],
     "POST /api/auth/login": [200, responses.session],
     "GET /api/me": [200, responses.session],
@@ -280,6 +283,22 @@ export async function buildApp(options: {
     }
     reply.code(status).send({ error: { code, message, requestId: req.id } });
   });
+  const verifiedWrite = (req: FastifyRequest) => {
+    const auth = requireWrite(req);
+    if (
+      options.requireVerifiedEmail &&
+      !auth.user.email_verified_at &&
+      !req.url.startsWith("/api/auth/") &&
+      !req.url.startsWith("/api/me/notifications")
+    )
+      throw new HttpError(
+        403,
+        "EMAIL_UNVERIFIED",
+        "Подтвердите email в разделе аккаунта.",
+      );
+    return auth;
+  };
+  pilotRoutes(app, db, origin, { requireAuth, requireWrite, HttpError });
   const protectedSchema = { security: [{ cookieSession: [] }] };
   const authRate = { rateLimit: { max: 10, timeWindow: "1 minute" } };
   // Fake credentials perform the same expensive derivation on unknown-email login.
@@ -287,7 +306,7 @@ export async function buildApp(options: {
 
   app.get("/api/health", { schema: { tags: ["System"] } }, () => ({
     ok: true,
-    version: "0.5.0",
+    version: "0.6.0",
   }));
   app.get("/api/openapi.json", { schema: { hide: true } }, () => app.swagger());
   app.post<{ Body: RegisterInput }>(
@@ -313,6 +332,7 @@ export async function buildApp(options: {
               b.level,
             ],
           );
+          await queueAccountMail(tx, r, "verify", origin);
           const csrfToken = await newSession(
             tx,
             reply,
@@ -321,7 +341,12 @@ export async function buildApp(options: {
           );
           reply.code(201);
           return {
-            user: { ...profileOf(r), email: r.email, role: r.role },
+            user: {
+              ...profileOf(r),
+              email: r.email,
+              role: r.role,
+              emailVerified: Boolean(r.email_verified_at),
+            },
             csrfToken,
           };
         });
@@ -340,37 +365,49 @@ export async function buildApp(options: {
     "/api/auth/login",
     { schema: { body: schemas.login, tags: ["Auth"] }, config: authRate },
     async (req, reply) => {
-      const [r] = await db.query("SELECT * FROM users WHERE email=$1", [
-        clean(req.body.email).toLowerCase(),
-      ]);
-      const valid = await verifyPassword(
-        req.body.password,
-        r?.password_hash ?? dummyHash,
-      );
-      if (!r || !valid)
-        throw new HttpError(401, "LOGIN_FAILED", "Неверный email или пароль.");
-      // Rotate the currently presented session instead of accepting a pre-login identifier.
-      if (req.authContext)
-        await db.query("DELETE FROM sessions WHERE token_hash=$1", [
-          req.authContext.tokenHash,
-        ]);
-      const csrfToken = await newSession(
-        db,
-        reply,
-        r.id,
-        options.secureCookie ?? false,
-      );
-      return {
-        user: { ...profileOf(r), email: r.email, role: r.role },
-        csrfToken,
-      };
+      return db.transaction(async (tx) => {
+        const [r] = await tx.query(
+          "SELECT * FROM users WHERE email=$1 FOR UPDATE",
+          [clean(req.body.email).toLowerCase()],
+        );
+        const valid = await verifyPassword(
+          req.body.password,
+          r?.password_hash ?? dummyHash,
+        );
+        if (!r || !valid)
+          throw new HttpError(
+            401,
+            "LOGIN_FAILED",
+            "Неверный email или пароль.",
+          );
+        // Rotate the currently presented session instead of accepting a pre-login identifier.
+        if (req.authContext)
+          await tx.query("DELETE FROM sessions WHERE token_hash=$1", [
+            req.authContext.tokenHash,
+          ]);
+        const csrfToken = await newSession(
+          tx,
+          reply,
+          r.id,
+          options.secureCookie ?? false,
+        );
+        return {
+          user: {
+            ...profileOf(r),
+            email: r.email,
+            role: r.role,
+            emailVerified: Boolean(r.email_verified_at),
+          },
+          csrfToken,
+        };
+      });
     },
   );
   app.post(
     "/api/auth/logout",
     { schema: { ...protectedSchema, tags: ["Auth"] } },
     async (req, reply) => {
-      const auth = requireWrite(req);
+      const auth = verifiedWrite(req);
       await db.query("DELETE FROM sessions WHERE token_hash=$1", [
         auth.tokenHash,
       ]);
@@ -393,6 +430,7 @@ export async function buildApp(options: {
           ...profileOf(auth.user),
           email: auth.user.email,
           role: auth.user.role,
+          emailVerified: Boolean(auth.user.email_verified_at),
         },
         csrfToken: auth.csrfToken,
       };
@@ -404,7 +442,7 @@ export async function buildApp(options: {
       schema: { body: schemas.profile, ...protectedSchema, tags: ["Profile"] },
     },
     async (req) => {
-      const auth = requireWrite(req);
+      const auth = verifiedWrite(req);
       nonblank([req.body.displayName, req.body.city]);
       const b = req.body;
       const [r] = await db.query(
@@ -418,7 +456,12 @@ export async function buildApp(options: {
         ],
       );
       return {
-        user: { ...profileOf(r), email: r.email, role: r.role },
+        user: {
+          ...profileOf(r),
+          email: r.email,
+          role: r.role,
+          emailVerified: Boolean(r.email_verified_at),
+        },
         csrfToken: auth.csrfToken,
       };
     },
@@ -454,7 +497,7 @@ export async function buildApp(options: {
     "/api/me/bikes",
     { schema: { body: schemas.bike, ...protectedSchema, tags: ["Garage"] } },
     async (req, reply) => {
-      const auth = requireWrite(req);
+      const auth = verifiedWrite(req);
       const b = req.body;
       nonblank([b.make, b.model]);
       const [r] = await db.query(
@@ -486,7 +529,7 @@ export async function buildApp(options: {
       },
     },
     async (req) => {
-      const auth = requireWrite(req),
+      const auth = verifiedWrite(req),
         b = req.body;
       nonblank([b.make, b.model]);
       const [r] = await db.query(
@@ -511,7 +554,7 @@ export async function buildApp(options: {
     "/api/me/bikes/:id",
     { schema: { params: schemas.id, ...protectedSchema, tags: ["Garage"] } },
     async (req, reply) => {
-      const auth = requireWrite(req);
+      const auth = verifiedWrite(req);
       try {
         const rows = await db.query(
           "DELETE FROM bikes WHERE id=$1 AND owner_id=$2 RETURNING id",
@@ -606,7 +649,7 @@ export async function buildApp(options: {
     "/api/posts",
     { schema: { body: schemas.post, ...protectedSchema, tags: ["Journal"] } },
     async (req, reply) => {
-      const auth = requireWrite(req),
+      const auth = verifiedWrite(req),
         b = req.body;
       nonblank([b.title, b.body]);
       if (clean(b.title).length < 3 || clean(b.body).length < 10)
@@ -644,7 +687,7 @@ export async function buildApp(options: {
       },
     },
     async (req) => {
-      const auth = requireWrite(req),
+      const auth = verifiedWrite(req),
         b = req.body;
       nonblank([b.title, b.body]);
       if (clean(b.title).length < 3 || clean(b.body).length < 10)
@@ -675,7 +718,7 @@ export async function buildApp(options: {
     async (req, reply) => {
       const rows = await db.query(
         "DELETE FROM posts WHERE id=$1 AND author_id=$2 RETURNING id",
-        [req.params.id, requireWrite(req).user.id],
+        [req.params.id, verifiedWrite(req).user.id],
       );
       if (!rows.length) throw notFound();
       return reply.code(204).send();
@@ -720,7 +763,7 @@ export async function buildApp(options: {
       },
     },
     async (req, reply) => {
-      const auth = requireWrite(req);
+      const auth = verifiedWrite(req);
       nonblank([req.body.body]);
       // Access and insertion share one SQL statement, including a concurrent privacy change.
       const [r] = await db.query(
@@ -741,7 +784,7 @@ export async function buildApp(options: {
     "/api/comments/:id",
     { schema: { params: schemas.id, ...protectedSchema, tags: ["Comments"] } },
     async (req, reply) => {
-      const auth = requireWrite(req);
+      const auth = verifiedWrite(req);
       const rows = await db.query(
         "DELETE FROM comments WHERE id=$1 AND author_id=$2 RETURNING id",
         [req.params.id, auth.user.id],
@@ -750,8 +793,18 @@ export async function buildApp(options: {
       return reply.code(204).send();
     },
   );
-  adventureRoutes(app, db, { requireAuth, requireWrite, HttpError, notFound });
-  locationRoutes(app, db, { requireAuth, requireWrite, HttpError, notFound });
+  adventureRoutes(app, db, {
+    requireAuth,
+    requireWrite: verifiedWrite,
+    HttpError,
+    notFound,
+  });
+  locationRoutes(app, db, {
+    requireAuth,
+    requireWrite: verifiedWrite,
+    HttpError,
+    notFound,
+  });
   if (options.webRoot)
     await app.register(staticFiles, { root: options.webRoot });
   app.setNotFoundHandler((req, reply) => {

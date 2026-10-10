@@ -483,4 +483,30 @@ describe("Tracks → moderation → ride membership and capacity", () => {
       409,
     );
   });
+  it("creates private notifications for real ride and moderation decisions without meeting data", async () => {
+    const organizer = (await req("GET", "/api/me/notifications", org)).json();
+    assert.ok(
+      organizer.items.some((n: { message: string }) =>
+        n.message.includes("Новая заявка"),
+      ),
+    );
+    assert.ok(
+      organizer.items.some((n: { message: string }) =>
+        n.message.includes("GPX"),
+      ),
+    );
+    const participants = [
+      ...(await req("GET", "/api/me/notifications", a)).json().items,
+      ...(await req("GET", "/api/me/notifications", b)).json().items,
+    ];
+    assert.ok(participants.some((n) => n.message.includes("подтверждена")));
+    assert.ok(participants.some((n) => n.message.includes("отменена")));
+    assert.ok(
+      !JSON.stringify([organizer, participants]).includes("PRIVATE MEETING"),
+    );
+    assert.equal(
+      (await req("GET", "/api/me/notifications", mod)).json().items.length,
+      0,
+    );
+  });
 });

@@ -2083,3 +2083,20 @@ footer > a {
     width: 100%;
   }
 }
+.notifications-list {
+  display: grid;
+  gap: 16px;
+  margin: 24px 0;
+}
+.notification-card {
+  padding: 24px;
+}
+.notification-card h3 {
+  margin: 12px 0;
+}
+.notification-actions {
+  display: flex;
+  gap: 20px;
+  flex-wrap: wrap;
+  margin-top: 16px;
+}

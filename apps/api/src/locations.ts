@@ -1,4 +1,5 @@
 import type { FastifyInstance, FastifyRequest } from "fastify";
+import { notify } from "./pilot.ts";
 import { randomUUID } from "node:crypto";
 import { schemas, responses, type LocationInput } from "@enduro/contracts";
 import type { Database, Row } from "./database.ts";
@@ -234,6 +235,16 @@ export function locationRoutes(
           ],
         );
         if (!r) throw conflict();
+        const [owner] = await tx.query(
+          "SELECT author_id FROM locations WHERE id=$1",
+          [r.id],
+        );
+        await notify(
+          tx,
+          owner.author_id,
+          "Результат проверки вашей локации обновлён",
+          "map",
+        );
         await tx.query(
           "INSERT INTO moderation_actions(id,actor_id,target_type,target_id,action,reason) VALUES ($1,$2,'location',$3,$4,$5)",
           [

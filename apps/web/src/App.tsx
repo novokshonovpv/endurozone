@@ -18,6 +18,7 @@ import {
 import { Tracks, TrackDetail, Rides, RideDetail } from "./adventure.tsx";
 import { Locations, Moderation } from "./locations.tsx";
 import { go } from "./routing.ts";
+import { Account, Recovery, Notifications } from "./pilot.tsx";
 
 const nav: { path: string; label: string; icon: IconName }[] = [
   { path: "feed", label: "Сообщество", icon: "feed" },
@@ -26,6 +27,8 @@ const nav: { path: string; label: string; icon: IconName }[] = [
   { path: "rides", label: "Покатушки", icon: "route" },
   { path: "garage", label: "Мой гараж", icon: "bike" },
   { path: "profile", label: "Мой профиль", icon: "user" },
+  { path: "account", label: "Доступ к аккаунту", icon: "user" },
+  { path: "notifications", label: "Уведомления", icon: "feed" },
 ];
 const upcoming: { label: string; icon: IconName }[] = [
   { label: "Магазин", icon: "shop" },
@@ -176,7 +179,7 @@ export default function App() {
           <div className="top-actions">
             <span className="version">
               <span className="tiny-dot" />
-              Разработка · 0.5
+              Разработка · 0.6
             </span>
             {session ? (
               <>
@@ -203,6 +206,14 @@ export default function App() {
         </header>
         <main>
           <ErrorBox message={connectionError} />
+          {session &&
+            !session.user.emailVerified &&
+            !route.startsWith("verify/") && (
+              <p className="card form-note">
+                Подтвердите email для участия в закрытом пилоте.{" "}
+                <a href="#account">Доступ к аккаунту</a>
+              </p>
+            )}
           {!ready ? (
             <Loading />
           ) : route === "login" || route === "register" ? (
@@ -218,6 +229,31 @@ export default function App() {
                 );
               }}
             />
+          ) : route === "forgot" ||
+            route.startsWith("reset/") ||
+            route.startsWith("verify/") ? (
+            <Recovery key={route} route={route} refresh={updateSession} />
+          ) : route === "reset-done" || route === "verify-done" ? (
+            <section className="card">
+              <h1>Готово</h1>
+              <a href="#login">Вернуться ко входу</a>
+            </section>
+          ) : route === "account" ? (
+            session ? (
+              <Account
+                key={session.user.id}
+                session={session}
+                refresh={updateSession}
+              />
+            ) : (
+              <JoinGate />
+            )
+          ) : route === "notifications" ? (
+            session ? (
+              <Notifications key={session.user.id} />
+            ) : (
+              <JoinGate />
+            )
           ) : route === "garage" ? (
             session ? (
               <Garage session={session} notify={setNotice} />
@@ -472,13 +508,18 @@ function AuthForm({
           </label>
           <p className="form-note">
             Версия для внутреннего тестирования. Используйте тестовые данные;
-            подтверждение email и восстановление пароля появятся перед пилотом.
+            письма локальной версии сохраняются на компьютере для проверки.
           </p>
           <button className="button full" disabled={busy}>
             {busy ? "Сохраняем…" : registration ? "Создать аккаунт" : "Войти"}
             <Icon name="arrow" />
           </button>
         </form>
+        {!registration && (
+          <p>
+            <a href="#forgot">Забыли пароль?</a>
+          </p>
+        )}
         <p className="auth-switch">
           {registration ? "Уже с нами?" : "Ещё нет аккаунта?"}{" "}
           <a href={registration ? "#login" : "#register"}>
@@ -603,7 +644,7 @@ function Roadmap() {
       n: "01",
       title: "Рабочая основа",
       state: "Сейчас",
-      body: "Регистрация и вход, профиль, несколько мотоциклов, публичный и закрытый бортжурнал, комментарии. Сервер сохраняет данные.",
+      body: "Регистрация и вход, подтверждение email, восстановление доступа, гараж и бортжурнал. Сервер сохраняет данные.",
       tasks:
         "W01–W04: первая часть готова. Проверка основателями и интервью с райдерами.",
     },
@@ -611,7 +652,7 @@ function Roadmap() {
       n: "02",
       title: "Карта и совместные выезды",
       state: "В работе",
-      body: "Локации, очищенные GPX-треки и модерация, выезды с заявками и лимитом участников. Дальше — приёмка и подготовка пилота.",
+      body: "Локации, очищенные GPX-треки и модерация, выезды с заявками, лимитом участников и личными уведомлениями. Дальше — закрытый стенд и модерация событий.",
       tasks: "W05–W09. Реальные разрешённые маршруты для Смоленска и Сочи.",
     },
     {

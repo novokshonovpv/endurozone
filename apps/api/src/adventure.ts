@@ -1,4 +1,5 @@
 import type { FastifyInstance, FastifyRequest } from "fastify";
+import { notify } from "./pilot.ts";
 import { randomUUID } from "node:crypto";
 import {
   schemas,
@@ -309,6 +310,16 @@ export function adventureRoutes(
           ],
         );
         if (!r) throw conflict();
+        const [owner] = await tx.query(
+          "SELECT author_id FROM tracks WHERE id=$1",
+          [r.id],
+        );
+        await notify(
+          tx,
+          owner.author_id,
+          "Результат проверки вашего GPX-трека обновлён",
+          `track/${r.id}`,
+        );
         await tx.query(
           "INSERT INTO moderation_actions(id,actor_id,target_type,target_id,action,reason) VALUES ($1,$2,'track',$3,$4,$5)",
           [randomUUID(), a.user.id, r.id, b.action, b.reason.trim()],
@@ -483,6 +494,12 @@ export function adventureRoutes(
           "INSERT INTO ride_members(ride_id,user_id,status) VALUES ($1,$2,'pending') ON CONFLICT(ride_id,user_id) DO UPDATE SET status='pending',created_at=now() RETURNING status",
           [r.id, a.user.id],
         );
+        await notify(
+          tx,
+          r.organizer_id,
+          "Новая заявка на вашу покатушку",
+          `ride/${r.id}`,
+        );
         return m;
       });
     },
@@ -579,6 +596,14 @@ export function adventureRoutes(
           "UPDATE ride_members SET status=$3 WHERE ride_id=$1 AND user_id=$2",
           [r.id, req.params.userId, desired],
         );
+        await notify(
+          tx,
+          req.params.userId,
+          desired === "accepted"
+            ? "Ваша заявка на покатушку подтверждена"
+            : "Ваша заявка на покатушку отклонена",
+          `ride/${r.id}`,
+        );
         return { status: desired };
       });
     },
@@ -591,6 +616,18 @@ export function adventureRoutes(
       await db.transaction(async (tx) => {
         const r = await lockedRide(tx, req.params.id);
         if (r.organizer_id !== a.user.id) throw notFound();
+        if (r.status === "cancelled") return;
+        const members = await tx.query(
+          "SELECT user_id FROM ride_members WHERE ride_id=$1 AND status IN ('pending','accepted')",
+          [r.id],
+        );
+        for (const member of members)
+          await notify(
+            tx,
+            member.user_id,
+            "Покатушка отменена организатором",
+            `ride/${r.id}`,
+          );
         await tx.query("UPDATE rides SET status='cancelled' WHERE id=$1", [
           r.id,
         ]);

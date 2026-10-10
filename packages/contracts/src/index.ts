@@ -9,8 +9,13 @@ export interface Profile {
   level: Level;
   bio: string;
 }
+export * from "./pilot.ts";
 export interface Session {
-  user: Profile & { email: string; role: "member" | "moderator" };
+  user: Profile & {
+    email: string;
+    emailVerified: boolean;
+    role: "member" | "moderator";
+  };
   csrfToken: string;
 }
 export interface BikeInput {
@@ -264,6 +269,7 @@ export const responses = {
       ...profileProperties,
       email: { ...text(254, 3), format: "email" },
       role: { type: "string", enum: ["member", "moderator"] },
+      emailVerified: { type: "boolean" },
     }),
     csrfToken: text(100, 1),
   }),
