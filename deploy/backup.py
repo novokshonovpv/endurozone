@@ -74,7 +74,7 @@ def snapshot(app, destination, service=subprocess.run):
             checksum = digest(temp)
             temp.with_suffix('.gz.sha256').write_text(checksum + '\n')
             verify(temp)
-            version = service(['git', '-C', str(app), 'rev-parse', 'HEAD'], capture_output=True, text=True, check=True).stdout.strip()
+            version = service(['runuser', '-u', 'enduro', '--', 'git', '-C', str(app), 'rev-parse', 'HEAD'], capture_output=True, text=True, check=True).stdout.strip()
             stamp = datetime.now(timezone.utc).strftime('%Y%m%dT%H%M%S%fZ')
             final = destination / (stamp + '.tar.gz')
             # Metadata last: its presence marks a completed archive set.
