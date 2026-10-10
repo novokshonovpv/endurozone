@@ -1,0 +1,9 @@
+[Unit]
+Description=Enduro.Zone private offline PGlite backup
+
+[Service]
+Type=oneshot
+User=root
+UMask=0077
+ExecStart=/usr/bin/python3 /opt/endurozone/ops/backup.py create
+TimeoutStartSec=0

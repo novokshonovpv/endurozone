@@ -9,6 +9,8 @@ import subprocess
 import sys
 import tarfile
 import tempfile
+import signal
+import shutil
 from datetime import datetime, timezone
 
 APP = Path('/opt/endurozone/app')
@@ -62,6 +64,8 @@ def snapshot(app, destination, service=subprocess.run):
     if destination.is_symlink():
         raise ValueError('Backup directory must not be a link')
     destination.chmod(0o700)
+    if shutil.disk_usage(destination).free < 256 * 1024 * 1024:
+        raise ValueError('Insufficient free space for a safe backup; nothing was stopped')
     active = service(['systemctl', 'is-active', '--quiet', 'endurozone']).returncode == 0
     restart = False
     try:
@@ -107,6 +111,9 @@ def main():
     if any(line.strip().startswith('DATABASE_URL=') and line.strip().split('=', 1)[1] for line in config.splitlines()):
         parser.error('PostgreSQL requires a separate pg_dump backup procedure')
     os.umask(0o077)
+    def interrupted(signum, frame):
+        raise RuntimeError('Backup interrupted; restarting previously active app')
+    signal.signal(signal.SIGTERM, interrupted)
     import fcntl
     with open('/var/lock/endurozone-backup.lock', 'w') as lock:
         fcntl.flock(lock, fcntl.LOCK_EX | fcntl.LOCK_NB)

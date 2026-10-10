@@ -1,0 +1,10 @@
+[Unit]
+Description=Enduro.Zone daily database backup before the provider disk backup
+
+[Timer]
+OnCalendar=*-*-* 23:30:00 Europe/Moscow
+Persistent=true
+Unit=endurozone-backup.service
+
+[Install]
+WantedBy=timers.target
