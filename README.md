@@ -1,6 +1,6 @@
 # Enduro.Zone
 
-[Актуальный план, состояние и передача работы в Claude](docs/project-status.md) — единый документ версии 0.16. Исходные документы `docs/plan` сохраняются как архив концепции.
+[Актуальный план, состояние и передача работы в Claude](docs/project-status.md) — единый документ версии 0.16. Исходные документы `docs/plan` сохраняются как архив концепции. [Проверка 0.16 и очередь пилота](docs/pilot-readiness.md), [требования к поставщику](docs/supplier-catalog.md).
 
 Рабочая версия, 0.16.0. Сайт и отдельный сервер для сообщества эндуро. Проект двух основателей: Смоленск и Сочи.
 
@@ -32,7 +32,7 @@
 ```sh
 git clone https://github.com/novokshonovpv/endurozone.git
 cd endurozone
-git switch feat/community-foundation
+git switch feat/timeweb-stand
 pnpm install --frozen-lockfile
 pnpm dev
 ```
