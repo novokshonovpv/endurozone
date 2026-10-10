@@ -152,6 +152,8 @@ export async function buildApp(options: {
   webRoot?: string;
   requireVerifiedEmail?: boolean;
   mechanicResponder?: MechanicResponder;
+  // Only behind a local reverse proxy: client IPs for rate limits come from X-Forwarded-For.
+  trustProxy?: boolean;
 }): Promise<FastifyInstance> {
   const { db } = options;
   const origin = options.origin ?? "http://localhost:5173";
@@ -178,6 +180,7 @@ export async function buildApp(options: {
         }
       : false,
     bodyLimit: 64 * 1024,
+    trustProxy: options.trustProxy ? "127.0.0.1" : false,
     ajv: { customOptions: { removeAdditional: false, allErrors: false } },
   });
   app.decorateRequest("authContext", null);

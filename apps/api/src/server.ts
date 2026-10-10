@@ -36,6 +36,7 @@ const app = await buildApp({
   secureCookie: process.env.COOKIE_SECURE === "true",
   logger: true,
   requireVerifiedEmail: process.env.REQUIRE_VERIFIED_EMAIL === "true",
+  trustProxy: process.env.TRUST_PROXY === "true",
   webRoot: existsSync(webRoot) ? webRoot : undefined,
 });
 let closing = false;
