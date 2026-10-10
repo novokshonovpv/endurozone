@@ -12,6 +12,7 @@ export interface Profile {
 export * from "./pilot.ts";
 export * from "./catalog.ts";
 export * from "./garage.ts";
+export * from "./learning.ts";
 export interface Session {
   user: Profile & {
     email: string;

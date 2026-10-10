@@ -83,6 +83,8 @@ export function accountRightsRoutes(
           );
         const selections: Record<string, string> = {
           bikes: "SELECT * FROM bikes WHERE owner_id=$1",
+          learningProgress:
+            "SELECT lesson_id,version,read_at,updated_at FROM learning_progress WHERE user_id=$1",
           servicePlans:
             "SELECT p.* FROM bike_service_plans p JOIN bikes b ON b.id=p.bike_id WHERE b.owner_id=$1",
           serviceRecords:

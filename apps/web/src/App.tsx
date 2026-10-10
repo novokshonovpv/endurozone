@@ -21,6 +21,7 @@ import { go } from "./routing.ts";
 import { Account, Recovery, Notifications } from "./pilot.tsx";
 import { AccountData } from "./account-rights.tsx";
 import { Shop } from "./shop.tsx";
+import { Learning } from "./learning.tsx";
 
 const nav: { path: string; label: string; icon: IconName }[] = [
   { path: "feed", label: "Сообщество", icon: "feed" },
@@ -28,13 +29,13 @@ const nav: { path: string; label: string; icon: IconName }[] = [
   { path: "tracks", label: "GPX-треки", icon: "mountain" },
   { path: "rides", label: "Покатушки", icon: "route" },
   { path: "shop", label: "Магазин", icon: "shop" },
+  { path: "learning", label: "Обучение", icon: "book" },
   { path: "garage", label: "Мой гараж", icon: "bike" },
   { path: "profile", label: "Мой профиль", icon: "user" },
   { path: "account", label: "Доступ к аккаунту", icon: "user" },
   { path: "notifications", label: "Уведомления", icon: "feed" },
 ];
 const upcoming: { label: string; icon: IconName }[] = [
-  { label: "Обучение", icon: "book" },
   { label: "ИИ-механик", icon: "wrench" },
 ];
 function useRoute() {
@@ -117,7 +118,7 @@ export default function App() {
             <a
               key={n.path}
               href={`#${n.path}`}
-              className={`nav-item ${route === n.path || (n.path === "feed" && route.startsWith("post/")) || (n.path === "shop" && route.startsWith("shop/")) ? "active" : ""}`}
+              className={`nav-item ${route === n.path || (n.path === "feed" && route.startsWith("post/")) || (n.path === "shop" && route.startsWith("shop/")) || (n.path === "learning" && route.startsWith("learning/")) ? "active" : ""}`}
             >
               <Icon name={n.icon} />
               {n.label}
@@ -168,25 +169,27 @@ export default function App() {
       <div className="workspace">
         <header className="topbar">
           <span className="breadcrumb">
-            {route.startsWith("shop/")
-              ? "Карточка товара"
-              : route.startsWith("post/")
-                ? "Бортжурнал"
-                : route.startsWith("track/")
-                  ? "GPX-трек"
-                  : route.startsWith("ride/")
-                    ? "Покатушка"
-                    : (nav.find((n) => n.path === route)?.label ??
-                      (route === "roadmap"
-                        ? "Ход разработки"
-                        : route === "moderation"
-                          ? "Модерация"
-                          : "Добро пожаловать"))}
+            {route.startsWith("learning/")
+              ? "Урок"
+              : route.startsWith("shop/")
+                ? "Карточка товара"
+                : route.startsWith("post/")
+                  ? "Бортжурнал"
+                  : route.startsWith("track/")
+                    ? "GPX-трек"
+                    : route.startsWith("ride/")
+                      ? "Покатушка"
+                      : (nav.find((n) => n.path === route)?.label ??
+                        (route === "roadmap"
+                          ? "Ход разработки"
+                          : route === "moderation"
+                            ? "Модерация"
+                            : "Добро пожаловать"))}
           </span>
           <div className="top-actions">
             <span className="version">
               <span className="tiny-dot" />
-              Разработка · 0.9
+              Разработка · 0.10
             </span>
             {session ? (
               <>
@@ -332,6 +335,14 @@ export default function App() {
               session={session}
               productId={route.startsWith("shop/") ? route.slice(5) : undefined}
               requestedBike={shopBike}
+            />
+          ) : route === "learning" || route.startsWith("learning/") ? (
+            <Learning
+              key={session?.user.id ?? "guest"}
+              session={session}
+              lessonId={
+                route.startsWith("learning/") ? route.slice(9) : undefined
+              }
             />
           ) : route === "moderation" ? (
             <Moderation session={session} notify={setNotice} />
@@ -686,7 +697,7 @@ function Roadmap() {
       n: "03",
       title: "Магазин, обучение и механик",
       state: "В работе",
-      body: "Демо-магазин запчастей, экипировки и мотоциклов готов. Дальше — выгрузки партнёров и подтверждённая совместимость, тренеры и ИИ с источниками.",
+      body: "Демо-магазин запчастей, экипировки и мотоциклов готов. Вводные уроки с личным прогрессом готовы. Дальше — реальные партнёры, подтверждённая совместимость, школы и ИИ с источниками.",
       tasks:
         "C01–C03, L01, A01–A02. Нужны данные и договорённости с партнёрами.",
     },

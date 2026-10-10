@@ -28,6 +28,7 @@ import { pilotRoutes, pilotOutputs, queueAccountMail } from "./pilot.ts";
 import { accountRightsRoutes } from "./account-rights.ts";
 import { catalogRoutes } from "./catalog.ts";
 import { garageRoutes } from "./garage.ts";
+import { learningRoutes } from "./learning.ts";
 import { GpxError } from "./gpx.ts";
 import { adventureRoutes, adventureOutputs } from "./adventure.ts";
 import { locationRoutes, locationOutputs } from "./locations.ts";
@@ -174,7 +175,7 @@ export async function buildApp(options: {
     openapi: {
       info: {
         title: "Enduro.Zone API",
-        version: "0.9.0",
+        version: "0.10.0",
         description:
           "Аккаунт, гараж, бортжурнал, локации и модерация. Для cookie-сессии запросить /api/me и передать csrfToken в X-CSRF-Token при изменении данных. Все изменения требуют X-Enduro-Client: web. Подтверждение email, восстановление доступа и личные уведомления. Проверка email перед публикацией включается REQUIRE_VERIFIED_EMAIL=true.",
       },
@@ -313,7 +314,7 @@ export async function buildApp(options: {
 
   app.get("/api/health", { schema: { tags: ["System"] } }, () => ({
     ok: true,
-    version: "0.9.0",
+    version: "0.10.0",
   }));
   app.get("/api/openapi.json", { schema: { hide: true } }, () => app.swagger());
   app.post<{ Body: RegisterInput }>(
@@ -829,6 +830,7 @@ export async function buildApp(options: {
     },
   );
   catalogRoutes(app);
+  learningRoutes(app, db, { requireAuth, requireWrite, notFound, HttpError });
   garageRoutes(app, db, {
     requireAuth,
     requireWrite: verifiedWrite,

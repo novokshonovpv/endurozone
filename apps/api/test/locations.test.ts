@@ -128,7 +128,7 @@ describe("Locations, reports and explicit moderator access", () => {
           "SELECT version FROM schema_migrations ORDER BY version",
         )
       ).length,
-      6,
+      7,
     );
     await restored.close();
     assert.ok(dir.startsWith(join(tmpdir(), "enduro-locations-")));
