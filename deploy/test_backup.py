@@ -4,6 +4,8 @@ import subprocess
 import tarfile
 import tempfile
 import unittest
+from unittest.mock import patch
+from types import SimpleNamespace
 
 spec = importlib.util.spec_from_file_location('backup', Path(__file__).with_name('backup.py'))
 backup = importlib.util.module_from_spec(spec)
@@ -11,6 +13,17 @@ spec.loader.exec_module(backup)
 
 
 class BackupTests(unittest.TestCase):
+    def test_low_disk_space_does_not_stop_the_app(self):
+        with tempfile.TemporaryDirectory() as d:
+            calls = []
+            def service(args, **kwargs):
+                calls.append(args)
+                return subprocess.CompletedProcess(args, 0)
+            with patch.object(backup.shutil, 'disk_usage', return_value=SimpleNamespace(free=1)):
+                with self.assertRaisesRegex(ValueError, 'free space'):
+                    backup.snapshot(Path(d), Path(d) / 'backups', service)
+            self.assertEqual(calls, [])
+
     def test_round_trip_preserves_binary_data(self):
         with tempfile.TemporaryDirectory() as d:
             root = Path(d)
