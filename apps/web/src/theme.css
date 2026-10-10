@@ -1011,6 +1011,136 @@ footer {
     transform: rotate(-4deg);
   }
 }
+/* Bell dropdown */
+.bell {
+  position: relative;
+}
+.bell-button {
+  border: 0;
+  background: none;
+  cursor: pointer;
+}
+.bell-panel {
+  position: absolute;
+  top: calc(100% + 10px);
+  right: -8px;
+  z-index: 60;
+  width: 340px;
+  max-width: calc(100vw - 24px);
+  background: var(--olive);
+  color: var(--paper);
+  border-radius: 4px;
+  clip-path: polygon(0 0, 100% 0, 100% 100%, 14px 100%, 0 calc(100% - 14px));
+  box-shadow: 0 18px 40px -16px rgba(23, 24, 15, 0.7);
+  transform-origin: top right;
+  animation: ez-pop 0.28s var(--ease-spring) both;
+  overflow: hidden;
+}
+.bell-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 16px 10px;
+  border-bottom: 1px solid rgba(244, 241, 228, 0.1);
+}
+.bell-head strong {
+  font-family: var(--display);
+  font-weight: 400;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  font-size: 13px;
+}
+.bell-head .text-button {
+  color: #e98a52;
+}
+.bell-list {
+  list-style: none;
+  margin: 0;
+  padding: 6px;
+  max-height: 360px;
+  overflow-y: auto;
+}
+.bell-list button {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  width: 100%;
+  padding: 10px;
+  border: 0;
+  border-radius: 3px;
+  background: none;
+  color: var(--sand);
+  text-align: left;
+  font: inherit;
+  font-size: 13px;
+  line-height: 1.4;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+.bell-list button:hover {
+  background: rgba(244, 241, 228, 0.07);
+}
+.bell-list button.unread {
+  color: var(--paper);
+  font-weight: 600;
+}
+.bell-list small {
+  display: block;
+  margin-top: 2px;
+  font-weight: 400;
+  color: var(--khaki);
+}
+.bell-dot {
+  flex: none;
+  width: 8px;
+  height: 8px;
+  margin-top: 6px;
+  border-radius: 50%;
+  background: transparent;
+}
+.bell-list button.unread .bell-dot {
+  background: var(--rust);
+}
+.bell-list li:nth-child(-n + 8) {
+  animation: ez-rise 0.3s var(--ease-out) both;
+}
+.bell-list li:nth-child(2) {
+  animation-delay: 0.03s;
+}
+.bell-list li:nth-child(3) {
+  animation-delay: 0.06s;
+}
+.bell-list li:nth-child(n + 4) {
+  animation-delay: 0.09s;
+}
+.bell-empty {
+  display: grid;
+  gap: 8px;
+  padding: 18px 16px;
+  margin: 0;
+  font-size: 13px;
+  color: var(--khaki);
+}
+.bell-all {
+  display: block;
+  padding: 12px 16px;
+  border-top: 1px solid rgba(244, 241, 228, 0.1);
+  color: #e98a52;
+  font-weight: 700;
+  font-size: 13px;
+}
+.bell-all:hover {
+  background: rgba(244, 241, 228, 0.05);
+}
+@media (max-width: 760px) {
+  .bell-panel {
+    position: fixed;
+    top: 64px;
+    left: 12px;
+    right: 12px;
+    width: auto;
+  }
+}
 /* Riders who reduce motion get a calm, instant interface */
 @media (prefers-reduced-motion: reduce) {
   html {

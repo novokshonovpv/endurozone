@@ -1,4 +1,4 @@
-import { useState, useEffect, type FormEvent } from "react";
+import { useState, useEffect, useRef, type FormEvent } from "react";
 import type { Notification, Session } from "@enduro/contracts";
 import { api } from "./api.ts";
 import { ErrorBox, Icon, Loading } from "./ui.tsx";
@@ -307,9 +307,24 @@ export function Notifications() {
   );
 }
 
-// Header bell: unread count refreshed on navigation, on returning to the tab and once a minute.
+const ago = (value: string) => {
+  const s = Math.max(0, (Date.now() - new Date(value).getTime()) / 1000);
+  if (s < 60) return "только что";
+  if (s < 3600) return `${Math.floor(s / 60)} мин назад`;
+  if (s < 86400) return `${Math.floor(s / 3600)} ч назад`;
+  return new Date(value).toLocaleDateString("ru-RU", {
+    day: "numeric",
+    month: "short",
+  });
+};
+// Header bell with a dropdown of the latest notifications, like social apps.
+// The count refreshes on navigation, on returning to the tab, once a minute and after reading.
 export function NotificationBell({ route }: { route: string }) {
-  const [unread, setUnread] = useState(0);
+  const [unread, setUnread] = useState(0),
+    [open, setOpen] = useState(false),
+    [items, setItems] = useState<Notification[] | null>(null),
+    [error, setError] = useState("");
+  const box = useRef<HTMLDivElement>(null);
   useEffect(() => {
     let alive = true;
     const load = () =>
@@ -334,20 +349,123 @@ export function NotificationBell({ route }: { route: string }) {
       window.removeEventListener("ez:notifications", load);
     };
   }, [route]);
+  useEffect(() => setOpen(false), [route]);
+  useEffect(() => {
+    if (!open) return;
+    const outside = (e: MouseEvent) => {
+      if (box.current && !box.current.contains(e.target as Node))
+        setOpen(false);
+    };
+    const escape = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setOpen(false);
+    };
+    document.addEventListener("mousedown", outside);
+    document.addEventListener("keydown", escape);
+    return () => {
+      document.removeEventListener("mousedown", outside);
+      document.removeEventListener("keydown", escape);
+    };
+  }, [open]);
+  async function toggle() {
+    if (open) return setOpen(false);
+    setOpen(true);
+    setError("");
+    try {
+      const r = await api<{ items: Notification[]; unreadCount: number }>(
+        "/me/notifications?limit=8",
+      );
+      setItems(r.items);
+      setUnread(r.unreadCount);
+    } catch (e) {
+      setError((e as Error).message);
+    }
+  }
+  async function openItem(n: Notification) {
+    setOpen(false);
+    if (!n.readAt)
+      try {
+        await api(`/me/notifications/${n.id}/read`, { method: "POST" });
+        window.dispatchEvent(new Event("ez:notifications"));
+      } catch {
+        /* Navigation still happens; the item stays unread. */
+      }
+    go(n.path);
+  }
+  async function readAll() {
+    setError("");
+    try {
+      await api("/me/notifications/read-all", { method: "POST" });
+      const now = new Date().toISOString();
+      setItems(
+        (old) => old?.map((n) => ({ ...n, readAt: n.readAt ?? now })) ?? old,
+      );
+      setUnread(0);
+      window.dispatchEvent(new Event("ez:notifications"));
+    } catch (e) {
+      setError((e as Error).message);
+    }
+  }
   const label = unread ? `Уведомления: ${unread} непрочитанных` : "Уведомления";
   return (
-    <a
-      href="#notifications"
-      className={`bell-button ${route === "notifications" ? "active" : ""}`}
-      aria-label={label}
-      title={label}
-    >
-      <Icon name="bell" size={21} />
-      {unread > 0 && (
-        <span className="bell-badge" aria-hidden="true">
-          {unread > 99 ? "99+" : unread}
-        </span>
+    <div className="bell" ref={box}>
+      <button
+        className={`bell-button ${open || route === "notifications" ? "active" : ""}`}
+        aria-label={label}
+        title={label}
+        aria-expanded={open}
+        aria-haspopup="true"
+        onClick={toggle}
+      >
+        <Icon name="bell" size={21} />
+        {unread > 0 && (
+          <span className="bell-badge" aria-hidden="true">
+            {unread > 99 ? "99+" : unread}
+          </span>
+        )}
+      </button>
+      {open && (
+        <div className="bell-panel" role="dialog" aria-label="Уведомления">
+          <div className="bell-head">
+            <strong>Уведомления</strong>
+            {unread > 0 && (
+              <button className="text-button" onClick={readAll}>
+                Прочитать все
+              </button>
+            )}
+          </div>
+          <ErrorBox message={error} />
+          {!items ? (
+            <div className="bell-empty">
+              <span className="skeleton" />
+              <span className="skeleton short" />
+            </div>
+          ) : !items.length ? (
+            <p className="bell-empty muted">
+              Пока тихо. Здесь появятся подписчики, заявки и ответы команды.
+            </p>
+          ) : (
+            <ul className="bell-list">
+              {items.map((n) => (
+                <li key={n.id}>
+                  <button
+                    className={n.readAt ? "" : "unread"}
+                    onClick={() => openItem(n)}
+                  >
+                    <span className="bell-dot" aria-hidden="true" />
+                    <span>
+                      {n.message}
+                      <small>{ago(n.createdAt)}</small>
+                    </span>
+                  </button>
+                </li>
+              ))}
+            </ul>
+          )}
+          <a className="bell-all" href="#notifications">
+            Все уведомления
+          </a>
+        </div>
       )}
-    </a>
+    </div>
   );
 }

@@ -201,15 +201,13 @@ export function pilotRoutes(
         [id],
       );
       return {
-        items: rows
-          .slice(0, limit)
-          .map((r) => ({
-            id: r.id,
-            message: r.message,
-            path: r.path,
-            createdAt: new Date(r.created_at).toISOString(),
-            readAt: r.read_at ? new Date(r.read_at).toISOString() : null,
-          })),
+        items: rows.slice(0, limit).map((r) => ({
+          id: r.id,
+          message: r.message,
+          path: r.path,
+          createdAt: new Date(r.created_at).toISOString(),
+          readAt: r.read_at ? new Date(r.read_at).toISOString() : null,
+        })),
         nextOffset: rows.length > limit ? offset + limit : null,
         unreadCount: Number(n.n),
       };
@@ -226,6 +224,19 @@ export function pilotRoutes(
       );
       if (!rows.length)
         throw new HttpError(404, "NOT_FOUND", "Уведомление недоступно.");
+      return reply.code(204).send();
+    },
+  );
+  // Only the caller's own notifications; already read ones keep their original time.
+  app.post(
+    "/api/me/notifications/read-all",
+    { schema: { ...auth, tags: ["Notifications"] } },
+    async (req, reply) => {
+      const id = requireWrite(req).user.id;
+      await db.query(
+        "UPDATE notifications SET read_at=now() WHERE user_id=$1 AND read_at IS NULL",
+        [id],
+      );
       return reply.code(204).send();
     },
   );
