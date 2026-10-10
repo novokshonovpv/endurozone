@@ -2552,3 +2552,118 @@ footer > a {
     text-align: left;
   }
 }
+.mechanic-hero {
+  display: flex;
+  gap: 24px;
+  padding: 30px;
+  border-radius: 12px;
+  background: #253820;
+  color: #f4f6ee;
+  margin-bottom: 22px;
+  align-items: flex-start;
+}
+.mechanic-hero > svg {
+  flex-shrink: 0;
+  width: 42px;
+  height: 42px;
+  color: #bde27c;
+}
+.mechanic-hero h2 {
+  margin: 12px 0;
+}
+.mechanic-hero p {
+  line-height: 1.8;
+  margin: 0;
+  max-width: 620px;
+}
+.mechanic-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.6fr) minmax(0, 1fr);
+  gap: 20px;
+  margin: 22px 0;
+}
+.mechanic-grid .panel,
+.mechanic-notice,
+.mechanic-history {
+  border: 1px solid #dbe2d5;
+  border-radius: 12px;
+  padding: 24px;
+  background: #fff;
+  min-width: 0;
+}
+.mechanic-notice {
+  background: #f3f6e9;
+  margin: 20px 0;
+}
+.mechanic-notice p,
+.mechanic-help p,
+.mechanic-help li {
+  line-height: 1.8;
+}
+.mechanic-help ol {
+  padding-left: 22px;
+}
+.mechanic-help a {
+  display: block;
+  margin-top: 16px;
+}
+.mechanic-form {
+  margin-top: 24px;
+}
+.mechanic-form > small {
+  display: block;
+  margin: 12px 0;
+  line-height: 1.7;
+}
+.mechanic-consent {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  margin: 24px 0;
+  font-weight: 400;
+  line-height: 1.8;
+}
+.mechanic-consent input {
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+.mechanic-entry {
+  padding: 24px 0;
+  border-top: 1px solid #e0e5da;
+}
+.mechanic-entry h3,
+.mechanic-answer {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  line-height: 1.8;
+}
+.mechanic-entry time {
+  font-size: 11px;
+  color: #718169;
+}
+.mechanic-pagination {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+@media (max-width: 760px) {
+  .mechanic-grid {
+    grid-template-columns: 1fr;
+  }
+  .mechanic-hero {
+    padding: 22px;
+    gap: 14px;
+  }
+  .mechanic-grid .panel,
+  .mechanic-notice,
+  .mechanic-history {
+    padding: 18px;
+  }
+  .mechanic-history .section-heading,
+  .mechanic-entry .section-heading {
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+}

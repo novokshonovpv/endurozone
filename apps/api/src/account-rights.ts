@@ -83,6 +83,10 @@ export function accountRightsRoutes(
           );
         const selections: Record<string, string> = {
           bikes: "SELECT * FROM bikes WHERE owner_id=$1",
+          mechanicConsultations:
+            "SELECT id,question,answer,bike_snapshot,status,created_at FROM mechanic_consultations WHERE user_id=$1",
+          mechanicUsage:
+            "SELECT day::text AS day,attempts FROM mechanic_usage WHERE user_id=$1",
           learningProgress:
             "SELECT lesson_id,version,read_at,updated_at FROM learning_progress WHERE user_id=$1",
           servicePlans:

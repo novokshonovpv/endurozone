@@ -13,6 +13,7 @@ export * from "./pilot.ts";
 export * from "./catalog.ts";
 export * from "./garage.ts";
 export * from "./learning.ts";
+export * from "./mechanic.ts";
 export interface Session {
   user: Profile & {
     email: string;
@@ -308,10 +309,8 @@ export interface LocationInput {
   accessNotes: string;
   publicationConsent: true;
 }
-export interface EnduroLocation extends Omit<
-  LocationInput,
-  "publicationConsent"
-> {
+export interface EnduroLocation
+  extends Omit<LocationInput, "publicationConsent"> {
   id: string;
   author: Profile;
   status: LocationStatus;

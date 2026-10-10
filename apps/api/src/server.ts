@@ -1,3 +1,4 @@
+import { createMechanicResponder } from "./mechanic.ts";
 import { buildApp } from "./app.ts";
 import { openDatabase } from "./database.ts";
 import { fileURLToPath } from "node:url";
@@ -30,6 +31,7 @@ const db = await openDatabase({ url: process.env.DATABASE_URL, dataDir });
 const webRoot = fileURLToPath(new URL("../../web/dist", import.meta.url));
 const app = await buildApp({
   db,
+  mechanicResponder: createMechanicResponder(process.env),
   origin,
   secureCookie: process.env.COOKIE_SECURE === "true",
   logger: true,

@@ -21,6 +21,7 @@ import { go } from "./routing.ts";
 import { Account, Recovery, Notifications } from "./pilot.tsx";
 import { AccountData } from "./account-rights.tsx";
 import { Shop } from "./shop.tsx";
+import { Mechanic } from "./mechanic.tsx";
 import { Learning } from "./learning.tsx";
 
 const nav: { path: string; label: string; icon: IconName }[] = [
@@ -29,14 +30,12 @@ const nav: { path: string; label: string; icon: IconName }[] = [
   { path: "tracks", label: "GPX-треки", icon: "mountain" },
   { path: "rides", label: "Покатушки", icon: "route" },
   { path: "shop", label: "Магазин", icon: "shop" },
+  { path: "mechanic", label: "ИИ-механик", icon: "wrench" },
   { path: "learning", label: "Обучение", icon: "book" },
   { path: "garage", label: "Мой гараж", icon: "bike" },
   { path: "profile", label: "Мой профиль", icon: "user" },
   { path: "account", label: "Доступ к аккаунту", icon: "user" },
   { path: "notifications", label: "Уведомления", icon: "feed" },
-];
-const upcoming: { label: string; icon: IconName }[] = [
-  { label: "ИИ-механик", icon: "wrench" },
 ];
 function useRoute() {
   const [route, set] = useState(window.location.hash.slice(1) || "feed");
@@ -132,16 +131,6 @@ export default function App() {
             Модерация
           </a>
         )}
-        <div className="nav-caption next-caption">ДАЛЬШЕ В ПРОЕКТЕ</div>
-        <nav aria-label="Будущие разделы">
-          {upcoming.map((n) => (
-            <a key={n.label} className="nav-item upcoming" href="#roadmap">
-              <Icon name={n.icon} />
-              {n.label}
-              <span className="soon-dot" />
-            </a>
-          ))}
-        </nav>
         <a
           className={`nav-item roadmap-link ${route === "roadmap" ? "active" : ""}`}
           href="#roadmap"
@@ -189,7 +178,7 @@ export default function App() {
           <div className="top-actions">
             <span className="version">
               <span className="tiny-dot" />
-              Разработка · 0.10
+              Разработка · 0.11
             </span>
             {session ? (
               <>
@@ -344,6 +333,8 @@ export default function App() {
                 route.startsWith("learning/") ? route.slice(9) : undefined
               }
             />
+          ) : route === "mechanic" ? (
+            <Mechanic key={session?.user.id ?? "guest"} session={session} />
           ) : route === "moderation" ? (
             <Moderation session={session} notify={setNotice} />
           ) : route === "roadmap" ? (
@@ -697,7 +688,7 @@ function Roadmap() {
       n: "03",
       title: "Магазин, обучение и механик",
       state: "В работе",
-      body: "Демо-магазин запчастей, экипировки и мотоциклов готов. Вводные уроки с личным прогрессом готовы. Дальше — реальные партнёры, подтверждённая совместимость, школы и ИИ с источниками.",
+      body: "Демо-магазин запчастей, экипировки и мотоциклов готов. Вводные уроки с личным прогрессом готовы. Раздел механика с личной историей готов к подключению ИИ. Дальше — реальные партнёры, подтверждённая совместимость, школы и ответы по проверенным руководствам.",
       tasks:
         "C01–C03, L01, A01–A02. Нужны данные и договорённости с партнёрами.",
     },
