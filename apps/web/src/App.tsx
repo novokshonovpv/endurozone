@@ -132,25 +132,26 @@ export default function App() {
               {n.path === "feed" && <span className="nav-dot" />}
             </a>
           ))}
+          {/* Inside the nav so the mobile horizontal menu keeps them in one row. */}
+          {session?.user.role === "moderator" && (
+            <>
+              <a
+                className={`nav-item ${route === "moderation" ? "active" : ""}`}
+                href="#moderation"
+              >
+                <Icon name="check" />
+                Модерация
+              </a>
+              <a
+                className={`nav-item ${route === "pilot-feedback" ? "active" : ""}`}
+                href="#pilot-feedback"
+              >
+                <Icon name="message" />
+                Отзывы пилота
+              </a>
+            </>
+          )}
         </nav>
-        {session?.user.role === "moderator" && (
-          <>
-            <a
-              className={`nav-item ${route === "moderation" ? "active" : ""}`}
-              href="#moderation"
-            >
-              <Icon name="check" />
-              Модерация
-            </a>
-            <a
-              className={`nav-item ${route === "pilot-feedback" ? "active" : ""}`}
-              href="#pilot-feedback"
-            >
-              <Icon name="message" />
-              Отзывы пилота
-            </a>
-          </>
-        )}
         <a
           className={`nav-item roadmap-link ${route === "roadmap" ? "active" : ""}`}
           href="#roadmap"

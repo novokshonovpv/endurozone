@@ -144,10 +144,14 @@ export const ErrorBox = ({ message }: { message: string }) =>
       {message}
     </div>
   ) : null;
+// A skeleton in the shape of content; the status text stays for screen readers.
 export const Loading = () => (
   <div className="loading" role="status">
-    <span className="spinner" />
-    Загружаем…
+    <span className="sr-only">Загружаем…</span>
+    <span className="skeleton wide" aria-hidden="true" />
+    <span className="skeleton" aria-hidden="true" />
+    <span className="skeleton" aria-hidden="true" />
+    <span className="skeleton short" aria-hidden="true" />
   </div>
 );
 export const formatDate = (value: string) =>
