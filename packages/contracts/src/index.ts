@@ -16,6 +16,7 @@ export * from "./learning.ts";
 export * from "./mechanic.ts";
 export * from "./riders.ts";
 export * from "./photos.ts";
+export * from "./follows.ts";
 export interface Session {
   user: Profile & {
     email: string;

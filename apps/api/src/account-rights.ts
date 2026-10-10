@@ -116,6 +116,12 @@ export function accountRightsRoutes(
             "SELECT id,target_type,target_id,reason,details,status,created_at FROM reports WHERE reporter_id=$1",
           notifications:
             "SELECT id,message,path,created_at,read_at FROM notifications WHERE user_id=$1",
+          following:
+            "SELECT u.handle,f.created_at FROM follows f JOIN users u ON u.id=f.followee_id WHERE f.follower_id=$1",
+          followers:
+            "SELECT u.handle,f.created_at FROM follows f JOIN users u ON u.id=f.follower_id WHERE f.followee_id=$1",
+          favorites:
+            "SELECT post_id,created_at FROM favorites WHERE user_id=$1",
           moderationAuthored:
             "SELECT target_type,target_id,action,reason,created_at FROM moderation_actions WHERE actor_id=$1",
         };

@@ -24,6 +24,7 @@ import { Shop } from "./shop.tsx";
 import { Riders, RiderProfile } from "./riders.tsx";
 import { Mechanic } from "./mechanic.tsx";
 import { Learning } from "./learning.tsx";
+import { Following, Favorites } from "./follows.tsx";
 
 const nav: { path: string; label: string; icon: IconName }[] = [
   { path: "feed", label: "Сообщество", icon: "feed" },
@@ -35,6 +36,8 @@ const nav: { path: string; label: string; icon: IconName }[] = [
   { path: "mechanic", label: "ИИ-механик", icon: "wrench" },
   { path: "learning", label: "Обучение", icon: "book" },
   { path: "garage", label: "Мой гараж", icon: "bike" },
+  { path: "following", label: "Подписки", icon: "user" },
+  { path: "saved", label: "Избранное", icon: "book" },
   { path: "profile", label: "Мой профиль", icon: "user" },
   { path: "account", label: "Доступ к аккаунту", icon: "user" },
   { path: "notifications", label: "Уведомления", icon: "feed" },
@@ -182,7 +185,7 @@ export default function App() {
           <div className="top-actions">
             <span className="version">
               <span className="tiny-dot" />
-              Разработка · 0.13
+              Разработка · 0.14
             </span>
             {session ? (
               <>
@@ -263,6 +266,18 @@ export default function App() {
           ) : route === "notifications" ? (
             session ? (
               <Notifications key={session.user.id} />
+            ) : (
+              <JoinGate />
+            )
+          ) : route === "following" ? (
+            session ? (
+              <Following key={session.user.id} notify={setNotice} />
+            ) : (
+              <JoinGate />
+            )
+          ) : route === "saved" ? (
+            session ? (
+              <Favorites key={session.user.id} />
             ) : (
               <JoinGate />
             )
@@ -692,7 +707,7 @@ function Roadmap() {
       n: "01",
       title: "Рабочая основа",
       state: "Сейчас",
-      body: "Регистрация и вход, подтверждение email, восстановление доступа, гараж, бортжурнал и публичные страницы райдеров. Фото мотоциклов и записей готовы. Дальше — подписки, избранное и лента подписок.",
+      body: "Регистрация и вход, подтверждение email, восстановление доступа, гараж, бортжурнал и публичные страницы райдеров. Фото, подписки на райдеров, лента подписок и личное избранное готовы. Дальше — поиск мест и покатушек рядом.",
       tasks:
         "W01–W04: первая часть готова. Проверка основателями и интервью с райдерами.",
     },

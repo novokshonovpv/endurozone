@@ -30,6 +30,7 @@ import { catalogRoutes } from "./catalog.ts";
 import { garageRoutes } from "./garage.ts";
 import { mechanicRoutes, type MechanicResponder } from "./mechanic.ts";
 import { riderRoutes } from "./riders.ts";
+import { followRoutes } from "./follows.ts";
 import { photoRoutes } from "./photos.ts";
 import { learningRoutes } from "./learning.ts";
 import { GpxError } from "./gpx.ts";
@@ -179,7 +180,7 @@ export async function buildApp(options: {
     openapi: {
       info: {
         title: "Enduro.Zone API",
-        version: "0.13.0",
+        version: "0.14.0",
         description:
           "Аккаунт, гараж, бортжурнал, локации и модерация. Для cookie-сессии запросить /api/me и передать csrfToken в X-CSRF-Token при изменении данных. Все изменения требуют X-Enduro-Client: web. Подтверждение email, восстановление доступа и личные уведомления. Проверка email перед публикацией включается REQUIRE_VERIFIED_EMAIL=true.",
       },
@@ -321,7 +322,7 @@ export async function buildApp(options: {
 
   app.get("/api/health", { schema: { tags: ["System"] } }, () => ({
     ok: true,
-    version: "0.13.0",
+    version: "0.14.0",
   }));
   app.get("/api/openapi.json", { schema: { hide: true } }, () => app.swagger());
   app.post<{ Body: RegisterInput }>(
@@ -609,9 +610,10 @@ export async function buildApp(options: {
     params: unknown[],
     limit = 12,
     offset = 0,
+    shape: { join?: string; order?: string } = {},
   ): Promise<Page<Post>> {
     const rows = await db.query(
-      `${postSelect} WHERE ${where} ORDER BY p.created_at DESC,p.id DESC LIMIT $${params.length + 1} OFFSET $${params.length + 2}`,
+      `${postSelect} ${shape.join ?? ""} WHERE ${where} ORDER BY ${shape.order ?? "p.created_at DESC,p.id DESC"} LIMIT $${params.length + 1} OFFSET $${params.length + 2}`,
       [...params, limit + 1, offset],
     );
     return {
@@ -843,6 +845,13 @@ export async function buildApp(options: {
     HttpError,
   });
   riderRoutes(app, db, { listPosts, notFound });
+  followRoutes(app, db, {
+    requireAuth,
+    requireWrite: verifiedWrite,
+    listPosts,
+    notFound,
+    HttpError,
+  });
   photoRoutes(app, db, { requireWrite: verifiedWrite, notFound, HttpError });
   catalogRoutes(app);
   learningRoutes(app, db, { requireAuth, requireWrite, notFound, HttpError });

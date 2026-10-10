@@ -13,6 +13,7 @@ import { api } from "./api.ts";
 import { Icon, Avatar, ErrorBox, Loading } from "./ui.tsx";
 import { PostCard } from "./community.tsx";
 import { Photos } from "./photos.tsx";
+import { FollowPanel } from "./follows.tsx";
 const counted = (n: number, words: [string, string, string]) =>
   `${n} ${words[n % 100 >= 11 && n % 100 <= 14 ? 2 : n % 10 === 1 ? 0 : n % 10 >= 2 && n % 10 <= 4 ? 1 : 2]}`;
 const postCount = (n: number) =>
@@ -250,6 +251,11 @@ export function RiderProfile({
                   {profile.city} · {levels[profile.level]}
                 </p>
                 {profile.bio && <p className="rider-bio">{profile.bio}</p>}
+                <FollowPanel
+                  handle={profile.handle}
+                  profileId={profile.id}
+                  session={session}
+                />
               </div>
               {session?.user.id === profile.id && (
                 <a className="button outline small" href="#profile">

@@ -24,6 +24,7 @@ import { ReportButton } from "./locations.tsx";
 import { go } from "./routing.ts";
 import { GarageJournal, BikeServicePanel } from "./garage.tsx";
 import { Photos } from "./photos.tsx";
+import { FavoriteButton } from "./follows.tsx";
 
 const noteError = (e: unknown) => (e as Error).message;
 export function PostCard({ post }: { post: Post }) {
@@ -86,16 +87,21 @@ export function Feed({ session }: { session: Session | null }) {
     [busy, setBusy] = useState(true),
     [error, setError] = useState(""),
     [city, setCity] = useState(""),
-    [kind, setKind] = useState("");
+    [kind, setKind] = useState(""),
+    [scope, setScope] = useState<"all" | "following">("all");
   const [retry, setRetry] = useState(0);
+  const following = Boolean(session) && scope === "following";
+  const source = following ? "/me/feed" : "/feed";
   useEffect(() => {
     let alive = true;
     setBusy(true);
     setError("");
+    setPosts([]);
+    setNext(null);
     const query = new URLSearchParams({ limit: "12" });
     if (city) query.set("city", city);
     if (kind) query.set("kind", kind);
-    api<Page<Post>>(`/feed?${query}`)
+    api<Page<Post>>(`${source}?${query}`)
       .then((p) => {
         if (alive) {
           setPosts(p.items);
@@ -111,7 +117,7 @@ export function Feed({ session }: { session: Session | null }) {
     return () => {
       alive = false;
     };
-  }, [city, kind, retry]);
+  }, [city, kind, source, retry]);
   const more = async () => {
     setBusy(true);
     setError("");
@@ -119,7 +125,7 @@ export function Feed({ session }: { session: Session | null }) {
     if (city) query.set("city", city);
     if (kind) query.set("kind", kind);
     try {
-      const p = await api<Page<Post>>(`/feed?${query}`);
+      const p = await api<Page<Post>>(`${source}?${query}`);
       setPosts((old) => [...old, ...p.items]);
       setNext(p.nextOffset);
     } catch (e) {
@@ -179,6 +185,26 @@ export function Feed({ session }: { session: Session | null }) {
               Написать запись
             </a>
           </div>
+          {session && (
+            <div className="scope-tabs" role="tablist" aria-label="Лента">
+              {(
+                [
+                  ["all", "Все райдеры"],
+                  ["following", "Мои подписки"],
+                ] as const
+              ).map(([value, label]) => (
+                <button
+                  key={value}
+                  role="tab"
+                  aria-selected={scope === value}
+                  className={scope === value ? "active" : ""}
+                  onClick={() => setScope(value)}
+                >
+                  {label}
+                </button>
+              ))}
+            </div>
+          )}
           <div className="filter-bar">
             <label>
               <span className="sr-only">Город в ленте</span>
@@ -200,7 +226,9 @@ export function Feed({ session }: { session: Session | null }) {
                 ))}
               </select>
             </label>
-            <span className="filter-note">Публичные записи</span>
+            <span className="filter-note">
+              {following ? "Открытые записи подписок" : "Публичные записи"}
+            </span>
           </div>
           <ErrorBox message={error} />
           {error && (
@@ -213,6 +241,26 @@ export function Feed({ session }: { session: Session | null }) {
           )}
           {busy && !posts.length ? (
             <Loading />
+          ) : !posts.length && !error && following ? (
+            <div className="card empty-state">
+              <span className="feature-icon">
+                <Icon name="user" size={30} />
+              </span>
+              <h3>
+                {city || kind
+                  ? "Здесь пока нет записей"
+                  : "В ленте подписок пока пусто"}
+              </h3>
+              <p>
+                {city || kind
+                  ? "Попробуйте другой город или тип записи."
+                  : "Подпишитесь на райдеров — здесь появятся их открытые записи. Закрытые и скрытые записи сюда не попадают."}
+              </p>
+              <a href="#riders" className="button outline">
+                Найти райдеров
+                <Icon name="arrow" size={17} />
+              </a>
+            </div>
           ) : !posts.length && !error ? (
             <div className="card empty-state">
               <span className="feature-icon">
@@ -1032,6 +1080,13 @@ export function PostDetail({
                   Запись скрыта модератором. Изменение текста не возвращает её в
                   ленту.
                 </div>
+              )}
+              {session && (
+                <FavoriteButton
+                  key={post.id + session.user.id}
+                  postId={post.id}
+                  notify={notify}
+                />
               )}
               {session && post.visibility === "public" && !post.hidden && (
                 <ReportButton

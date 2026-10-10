@@ -268,8 +268,8 @@ export function Notifications() {
       {busy && <Loading />}
       {!busy && !items.length && (
         <p>
-          Пока нет уведомлений. Здесь появятся заявки, решения и отмены
-          покатушек.
+          Пока нет уведомлений. Здесь появятся новые подписчики, заявки,
+          решения и отмены покатушек.
         </p>
       )}
       <div className="notifications-list">
