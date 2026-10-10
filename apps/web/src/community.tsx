@@ -20,6 +20,7 @@ import {
   Contours,
   formatDate,
 } from "./ui.tsx";
+import { ReportButton } from "./locations.tsx";
 import { go } from "./routing.ts";
 
 const noteError = (e: unknown) => (e as Error).message;
@@ -1031,6 +1032,19 @@ export function PostDetail({
                 )}
               </div>
               <div className="article-body">{post.body}</div>
+              {post.hidden && (
+                <div className="callout">
+                  Запись скрыта модератором. Изменение текста не возвращает её в
+                  ленту.
+                </div>
+              )}
+              {session && post.visibility === "public" && !post.hidden && (
+                <ReportButton
+                  targetType="post"
+                  targetId={post.id}
+                  notify={notify}
+                />
+              )}
               {session?.user.id === post.author.id && (
                 <div className="article-actions">
                   <button className="button outline small" onClick={edit}>
@@ -1069,7 +1083,7 @@ export function PostDetail({
                 Комментарии <span>{post.commentCount}</span>
               </h2>
               <ErrorBox message={commentError} />
-              {session ? (
+              {session && !post.hidden ? (
                 <form className="comment-form" onSubmit={addComment}>
                   <label>
                     <span className="sr-only">Ваш комментарий</span>

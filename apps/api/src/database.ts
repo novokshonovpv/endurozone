@@ -71,17 +71,25 @@ export async function openDatabase(
     await db.transaction(async (tx) => {
       // One migration runner at a time, for both embedded and server PostgreSQL.
       await tx.query("LOCK TABLE schema_migrations IN EXCLUSIVE MODE");
-      const applied = await tx.query(
-        "SELECT version FROM schema_migrations WHERE version = 1",
-      );
-      if (!applied.length) {
+      for (const [index, name] of [
+        "001-core.sql",
+        "002-locations.sql",
+      ].entries()) {
+        const version = index + 1;
+        const applied = await tx.query(
+          "SELECT version FROM schema_migrations WHERE version=$1",
+          [version],
+        );
+        if (applied.length) continue;
         const migration = await readFile(
-          new URL("../migrations/001-core.sql", import.meta.url),
+          new URL(`../migrations/${name}`, import.meta.url),
           "utf8",
         );
         for (const statement of migration.split(";").filter((x) => x.trim()))
           await tx.query(statement);
-        await tx.query("INSERT INTO schema_migrations(version) VALUES (1)");
+        await tx.query("INSERT INTO schema_migrations(version) VALUES ($1)", [
+          version,
+        ]);
       }
     });
     return db;

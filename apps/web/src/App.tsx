@@ -15,15 +15,17 @@ import {
   type RegisterInput,
   type Profile,
 } from "@enduro/contracts";
+import { Locations, Moderation } from "./locations.tsx";
 import { go } from "./routing.ts";
 
 const nav: { path: string; label: string; icon: IconName }[] = [
   { path: "feed", label: "Сообщество", icon: "feed" },
+  { path: "map", label: "Карта локаций", icon: "route" },
   { path: "garage", label: "Мой гараж", icon: "bike" },
   { path: "profile", label: "Мой профиль", icon: "user" },
 ];
 const upcoming: { label: string; icon: IconName }[] = [
-  { label: "Карта и покатушки", icon: "route" },
+  { label: "Совместные покатушки", icon: "route" },
   { label: "Магазин", icon: "shop" },
   { label: "Обучение", icon: "book" },
   { label: "ИИ-механик", icon: "wrench" },
@@ -113,6 +115,12 @@ export default function App() {
             </a>
           ))}
         </nav>
+        {session?.user.role === "moderator" && (
+          <a className="nav-item" href="#moderation">
+            <Icon name="check" />
+            Модерация
+          </a>
+        )}
         <div className="nav-caption next-caption">ДАЛЬШЕ В ПРОЕКТЕ</div>
         <nav aria-label="Будущие разделы">
           {upcoming.map((n) => (
@@ -153,12 +161,16 @@ export default function App() {
             {route.startsWith("post/")
               ? "Бортжурнал"
               : (nav.find((n) => n.path === route)?.label ??
-                (route === "roadmap" ? "Ход разработки" : "Добро пожаловать"))}
+                (route === "roadmap"
+                  ? "Ход разработки"
+                  : route === "moderation"
+                    ? "Модерация"
+                    : "Добро пожаловать"))}
           </span>
           <div className="top-actions">
             <span className="version">
               <span className="tiny-dot" />
-              Разработка · 0.3
+              Разработка · 0.4
             </span>
             {session ? (
               <>
@@ -224,6 +236,10 @@ export default function App() {
               session={session}
               notify={setNotice}
             />
+          ) : route === "map" ? (
+            <Locations session={session} notify={setNotice} />
+          ) : route === "moderation" ? (
+            <Moderation session={session} notify={setNotice} />
           ) : route === "roadmap" ? (
             <Roadmap />
           ) : (
@@ -231,7 +247,7 @@ export default function App() {
           )}
         </main>
         <footer>
-          Enduro.Zone <span>Первый этап: сообщество, гараж и бортжурнал.</span>
+          Enduro.Zone <span>Сообщество, гараж и карта локаций.</span>
           <a href="#roadmap">
             Что дальше <Icon name="arrow" size={15} />
           </a>
@@ -556,13 +572,14 @@ function Roadmap() {
       title: "Рабочая основа",
       state: "Сейчас",
       body: "Регистрация и вход, профиль, несколько мотоциклов, публичный и закрытый бортжурнал, комментарии. Сервер сохраняет данные.",
-      tasks: "В работе W01–W04. Проверка основателями и интервью с райдерами.",
+      tasks:
+        "W01–W04: первая часть готова. Проверка основателями и интервью с райдерами.",
     },
     {
       n: "02",
       title: "Карта и совместные выезды",
-      state: "Следующий этап",
-      body: "Локации, защищённая загрузка GPX, модерация маршрутов, события и заявки с лимитом участников.",
+      state: "В работе",
+      body: "Точки локаций и проверка модератором готовы. Дальше — загрузка GPX, события и заявки с лимитом участников.",
       tasks: "W05–W09. Реальные разрешённые маршруты для Смоленска и Сочи.",
     },
     {

@@ -24,6 +24,8 @@ import {
   profileOf,
 } from "./auth.ts";
 
+import { locationRoutes, locationOutputs } from "./locations.ts";
+
 interface AuthContext {
   user: Row;
   csrfToken: string;
@@ -65,6 +67,7 @@ const postOf = (r: Row): Post => ({
   body: r.body,
   kind: r.kind,
   visibility: r.visibility,
+  hidden: r.hidden,
   author: {
     id: r.author_id,
     handle: r.handle,
@@ -164,9 +167,9 @@ export async function buildApp(options: {
     openapi: {
       info: {
         title: "Enduro.Zone API",
-        version: "0.3.0",
+        version: "0.4.0",
         description:
-          "Первый срез: аккаунт, гараж, бортжурнал. Для cookie-сессии запросить /api/me и передать csrfToken в X-CSRF-Token при изменении данных. Все изменения требуют X-Enduro-Client: web. Вход для внутреннего тестирования без проверки email.",
+          "Аккаунт, гараж, бортжурнал, локации и модерация. Для cookie-сессии запросить /api/me и передать csrfToken в X-CSRF-Token при изменении данных. Все изменения требуют X-Enduro-Client: web. Вход для внутреннего тестирования без проверки email.",
       },
       components: {
         securitySchemes: {
@@ -176,6 +179,7 @@ export async function buildApp(options: {
     },
   });
   const output: Record<string, [number, unknown]> = {
+    ...locationOutputs,
     "POST /api/auth/register": [201, responses.session],
     "POST /api/auth/login": [200, responses.session],
     "GET /api/me": [200, responses.session],
@@ -213,7 +217,7 @@ export async function buildApp(options: {
   app.addHook("onRequest", async (req, reply) => {
     reply
       .header("X-Content-Type-Options", "nosniff")
-      .header("Referrer-Policy", "same-origin");
+      .header("Referrer-Policy", "strict-origin-when-cross-origin");
     if (req.url.startsWith("/api/")) reply.header("Cache-Control", "no-store");
     if (!["GET", "HEAD", "OPTIONS"].includes(req.method)) {
       if (req.headers.origin && !trustedOrigins.has(req.headers.origin))
@@ -275,7 +279,7 @@ export async function buildApp(options: {
 
   app.get("/api/health", { schema: { tags: ["System"] } }, () => ({
     ok: true,
-    version: "0.3.0",
+    version: "0.4.0",
   }));
   app.get("/api/openapi.json", { schema: { hide: true } }, () => app.swagger());
   app.post<{ Body: RegisterInput }>(
@@ -308,7 +312,10 @@ export async function buildApp(options: {
             options.secureCookie ?? false,
           );
           reply.code(201);
-          return { user: { ...profileOf(r), email: r.email }, csrfToken };
+          return {
+            user: { ...profileOf(r), email: r.email, role: r.role },
+            csrfToken,
+          };
         });
       } catch (e) {
         if ((e as { code?: string }).code === "23505")
@@ -345,7 +352,10 @@ export async function buildApp(options: {
         r.id,
         options.secureCookie ?? false,
       );
-      return { user: { ...profileOf(r), email: r.email }, csrfToken };
+      return {
+        user: { ...profileOf(r), email: r.email, role: r.role },
+        csrfToken,
+      };
     },
   );
   app.post(
@@ -371,7 +381,11 @@ export async function buildApp(options: {
     (req) => {
       const auth = requireAuth(req);
       return {
-        user: { ...profileOf(auth.user), email: auth.user.email },
+        user: {
+          ...profileOf(auth.user),
+          email: auth.user.email,
+          role: auth.user.role,
+        },
         csrfToken: auth.csrfToken,
       };
     },
@@ -396,7 +410,7 @@ export async function buildApp(options: {
         ],
       );
       return {
-        user: { ...profileOf(r), email: r.email },
+        user: { ...profileOf(r), email: r.email, role: r.role },
         csrfToken: auth.csrfToken,
       };
     },
@@ -528,7 +542,7 @@ export async function buildApp(options: {
     req: FastifyRequest,
   ): Promise<Post> {
     const [r] = await db.query(
-      `${postSelect} WHERE p.id=$1 AND (p.visibility='public' OR p.author_id=$2)`,
+      `${postSelect} WHERE p.id=$1 AND ((p.visibility='public' AND NOT p.hidden) OR p.author_id=$2)`,
       [id, req.authContext?.user.id ?? null],
     );
     if (!r) throw notFound();
@@ -545,7 +559,7 @@ export async function buildApp(options: {
     { schema: { querystring: schemas.page, tags: ["Journal"] } },
     async (req) => {
       const { limit, offset, city, kind } = req.query;
-      const parts = ["p.visibility='public'"];
+      const parts = ["p.visibility='public' AND NOT p.hidden"];
       const params: unknown[] = [];
       if (city) {
         params.push(city);
@@ -673,18 +687,16 @@ export async function buildApp(options: {
       const limit = req.query.limit ?? 12,
         offset = req.query.offset ?? 0;
       const rows = await db.query(
-        "SELECT c.*,u.handle,u.display_name,u.city,u.level,u.bio FROM comments c JOIN users u ON c.author_id=u.id JOIN posts p ON c.post_id=p.id WHERE c.post_id=$1 AND (p.visibility='public' OR p.author_id=$4) ORDER BY c.created_at,c.id LIMIT $2 OFFSET $3",
+        "SELECT c.*,u.handle,u.display_name,u.city,u.level,u.bio FROM comments c JOIN users u ON c.author_id=u.id JOIN posts p ON c.post_id=p.id WHERE c.post_id=$1 AND ((p.visibility='public' AND NOT p.hidden) OR p.author_id=$4) ORDER BY c.created_at,c.id LIMIT $2 OFFSET $3",
         [req.params.id, limit + 1, offset, req.authContext?.user.id ?? null],
       );
       return {
-        items: rows
-          .slice(0, limit)
-          .map((r) => ({
-            id: r.id,
-            body: r.body,
-            author: { ...profileOf({ ...r, id: r.author_id }) },
-            createdAt: date(r.created_at),
-          })),
+        items: rows.slice(0, limit).map((r) => ({
+          id: r.id,
+          body: r.body,
+          author: { ...profileOf({ ...r, id: r.author_id }) },
+          createdAt: date(r.created_at),
+        })),
         nextOffset: rows.length > limit ? offset + limit : null,
       };
     },
@@ -704,7 +716,7 @@ export async function buildApp(options: {
       nonblank([req.body.body]);
       // Access and insertion share one SQL statement, including a concurrent privacy change.
       const [r] = await db.query(
-        "INSERT INTO comments(id,post_id,author_id,body) SELECT $1,p.id,$3,$4 FROM posts p WHERE p.id=$2 AND (p.visibility='public' OR p.author_id=$3) RETURNING *",
+        "INSERT INTO comments(id,post_id,author_id,body) SELECT $1,p.id,$3,$4 FROM posts p WHERE p.id=$2 AND NOT p.hidden AND (p.visibility='public' OR p.author_id=$3) RETURNING *",
         [randomUUID(), req.params.id, auth.user.id, clean(req.body.body)],
       );
       if (!r) throw notFound();
@@ -730,20 +742,19 @@ export async function buildApp(options: {
       return reply.code(204).send();
     },
   );
+  locationRoutes(app, db, { requireAuth, requireWrite, HttpError, notFound });
   if (options.webRoot)
     await app.register(staticFiles, { root: options.webRoot });
   app.setNotFoundHandler((req, reply) => {
     if (options.webRoot && req.method === "GET" && !req.url.startsWith("/api/"))
       return reply.sendFile("index.html");
-    return reply
-      .code(404)
-      .send({
-        error: {
-          code: "NOT_FOUND",
-          message: "Адрес не найден.",
-          requestId: req.id,
-        },
-      });
+    return reply.code(404).send({
+      error: {
+        code: "NOT_FOUND",
+        message: "Адрес не найден.",
+        requestId: req.id,
+      },
+    });
   });
   return app;
 }

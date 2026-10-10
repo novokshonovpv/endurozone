@@ -1,6 +1,6 @@
 {
   "name": "enduro-zone",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "private": true,
   "packageManager": "pnpm@11.25.0",
   "engines": {
@@ -14,7 +14,8 @@
     "test": "pnpm --filter @enduro/api test",
     "build": "pnpm --filter @enduro/web build",
     "start": "pnpm --filter @enduro/api start",
-    "api:export": "pnpm --filter @enduro/api export:api"
+    "api:export": "pnpm --filter @enduro/api export:api",
+    "moderator": "pnpm --filter @enduro/api moderator"
   },
   "devDependencies": {
     "@types/node": "^24.0.0",
