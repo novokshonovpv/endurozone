@@ -167,7 +167,7 @@ export function Feed({ session }: { session: Session | null }) {
         <div className="hero-label">
           <Icon name="mountain" size={30} />
           <span>
-            ENDURO.ZONE<small>СМОЛЕНСК × СОЧИ</small>
+            ENDURO.ZONE<small>ТВОЯ ТЕРРИТОРИЯ</small>
           </span>
         </div>
       </section>
