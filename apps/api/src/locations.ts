@@ -18,8 +18,8 @@ export const locationOutputs: Record<string, [number, unknown]> = {
   "POST /api/moderation/reports/:id/decision": [200, responses.report],
 };
 const iso = (v: Date | string) => new Date(v).toISOString();
-const locationSelect = `SELECT l.*,u.handle,u.display_name,u.level,u.bio,u.city AS author_city FROM locations l JOIN users u ON u.id=l.author_id`;
-const locationOf = (r: Row) => ({
+export const locationSelect = `SELECT l.*,u.handle,u.display_name,u.level,u.bio,u.city AS author_city FROM locations l JOIN users u ON u.id=l.author_id`;
+export const locationOf = (r: Row) => ({
   id: r.id,
   title: r.title,
   description: r.description,

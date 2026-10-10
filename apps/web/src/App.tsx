@@ -25,10 +25,12 @@ import { Riders, RiderProfile } from "./riders.tsx";
 import { Mechanic } from "./mechanic.tsx";
 import { Learning } from "./learning.tsx";
 import { Following, Favorites } from "./follows.tsx";
+import { Nearby } from "./nearby.tsx";
 
 const nav: { path: string; label: string; icon: IconName }[] = [
   { path: "feed", label: "Сообщество", icon: "feed" },
   { path: "riders", label: "Райдеры", icon: "user" },
+  { path: "nearby", label: "Рядом", icon: "mountain" },
   { path: "map", label: "Карта локаций", icon: "route" },
   { path: "tracks", label: "GPX-треки", icon: "mountain" },
   { path: "rides", label: "Покатушки", icon: "route" },
@@ -185,7 +187,7 @@ export default function App() {
           <div className="top-actions">
             <span className="version">
               <span className="tiny-dot" />
-              Разработка · 0.14
+              Разработка · 0.15
             </span>
             {session ? (
               <>
@@ -309,6 +311,8 @@ export default function App() {
               session={session}
               notify={setNotice}
             />
+          ) : route === "nearby" ? (
+            <Nearby key={session?.user.id ?? "guest"} session={session} />
           ) : route === "map" ? (
             <Locations session={session} notify={setNotice} />
           ) : route === "tracks" ? (
@@ -707,7 +711,7 @@ function Roadmap() {
       n: "01",
       title: "Рабочая основа",
       state: "Сейчас",
-      body: "Регистрация и вход, подтверждение email, восстановление доступа, гараж, бортжурнал и публичные страницы райдеров. Фото, подписки на райдеров, лента подписок и личное избранное готовы. Дальше — поиск мест и покатушек рядом.",
+      body: "Регистрация и вход, подтверждение email, восстановление доступа, гараж, бортжурнал и публичные страницы райдеров. Фото, подписки на райдеров, лента подписок и личное избранное готовы.",
       tasks:
         "W01–W04: первая часть готова. Проверка основателями и интервью с райдерами.",
     },
@@ -715,7 +719,7 @@ function Roadmap() {
       n: "02",
       title: "Карта и совместные выезды",
       state: "В работе",
-      body: "Локации, очищенные GPX-треки и модерация, выезды с заявками, лимитом участников и личными уведомлениями. Модерация событий готова; общий стенд отложен.",
+      body: "Локации, очищенные GPX-треки и модерация, выезды с заявками, лимитом участников и личными уведомлениями. Модерация событий и поиск мест, треков и покатушек рядом готовы; общий стенд отложен.",
       tasks: "W05–W09. Реальные разрешённые маршруты для Смоленска и Сочи.",
     },
     {

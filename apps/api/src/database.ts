@@ -82,6 +82,7 @@ export async function openDatabase(
         "008-mechanic.sql",
         "009-photos.sql",
         "010-follows-favorites.sql",
+        "011-nearby.sql",
       ].entries()) {
         const version = index + 1;
         const applied = await tx.query(

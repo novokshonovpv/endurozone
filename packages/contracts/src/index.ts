@@ -355,3 +355,4 @@ export const reportReasons = {
 };
 
 export * from "./adventure.ts";
+export * from "./nearby.ts";

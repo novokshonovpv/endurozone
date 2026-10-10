@@ -2951,3 +2951,85 @@ footer > a {
     flex-wrap: wrap;
   }
 }
+.nearby-controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 12px 16px;
+  padding: 18px 20px;
+  margin-bottom: 16px;
+}
+.nearby-controls label {
+  margin: 0;
+  min-width: 150px;
+}
+.nearby-privacy {
+  flex-basis: 100%;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 0;
+  font-size: 11px;
+  color: var(--muted);
+}
+.nearby-results.is-busy {
+  opacity: 0.6;
+}
+.nearby-section {
+  margin: 26px 0;
+}
+.nearby-section h2 .tag {
+  margin-left: 6px;
+  vertical-align: middle;
+}
+.nearby-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(280px, 100%), 1fr));
+  gap: 12px;
+}
+.nearby-item {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 16px 18px;
+  min-width: 0;
+  color: inherit;
+}
+.nearby-item strong,
+.nearby-item p,
+.nearby-item small {
+  overflow-wrap: anywhere;
+}
+.nearby-item small {
+  color: var(--muted);
+}
+.nearby-item p {
+  margin: 0;
+  font-size: 12px;
+  line-height: 1.6;
+}
+a.nearby-item:hover {
+  border-color: #6e8d52;
+}
+.nearby-item.selected {
+  border-color: #6e8d52;
+  box-shadow: 0 0 0 1px #6e8d52;
+}
+.nearby-distance {
+  align-self: flex-start;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--green);
+  background: #edf4e9;
+  border-radius: 6px;
+  padding: 3px 8px;
+}
+.nearby-note {
+  font-size: 11px;
+}
+@media (max-width: 760px) {
+  .nearby-controls > .button,
+  .nearby-controls label {
+    flex: 1 1 100%;
+  }
+}

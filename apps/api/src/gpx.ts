@@ -158,3 +158,13 @@ export function previewGpx(gpx: string, trimM: number): TrackPreview {
 export function publicGpx(geometry: TrackPreview["geometry"]) {
   return `<?xml version="1.0" encoding="UTF-8"?><gpx version="1.1" creator="Enduro.Zone" xmlns="http://www.topografix.com/GPX/1/1"><trk>${geometry.coordinates.map((s) => `<trkseg>${s.map(([lon, lat]) => `<trkpt lat="${lat}" lon="${lon}"/>`).join("")}</trkseg>`).join("")}</trk></gpx>`;
 }
+
+export function bboxOf(geometry: TrackPreview["geometry"]) {
+  const points = geometry.coordinates.flat();
+  return {
+    minLat: Math.min(...points.map((p) => p[1])),
+    maxLat: Math.max(...points.map((p) => p[1])),
+    minLng: Math.min(...points.map((p) => p[0])),
+    maxLng: Math.max(...points.map((p) => p[0])),
+  };
+}

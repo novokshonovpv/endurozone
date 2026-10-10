@@ -36,6 +36,7 @@ import { learningRoutes } from "./learning.ts";
 import { GpxError } from "./gpx.ts";
 import { adventureRoutes, adventureOutputs } from "./adventure.ts";
 import { locationRoutes, locationOutputs } from "./locations.ts";
+import { nearbyRoutes } from "./nearby.ts";
 
 interface AuthContext {
   user: Row;
@@ -124,6 +125,13 @@ const requireWrite = (req: FastifyRequest) => {
     );
   return auth;
 };
+// Search centres are location data: logs keep the path of /api/nearby, never its query.
+export const logRequest = (req: FastifyRequest) => ({
+  method: req.method,
+  url: req.url.startsWith("/api/nearby") ? "/api/nearby" : req.url,
+  host: req.host,
+  remoteAddress: req.ip,
+});
 const clean = (value: string) => value.trim();
 const nonblank = (values: string[]) => {
   if (values.some((v) => !v.trim()))
@@ -165,6 +173,7 @@ export async function buildApp(options: {
             "req.headers.authorization",
             "req.headers.x-csrf-token",
           ],
+          serializers: { req: logRequest },
         }
       : false,
     bodyLimit: 64 * 1024,
@@ -180,7 +189,7 @@ export async function buildApp(options: {
     openapi: {
       info: {
         title: "Enduro.Zone API",
-        version: "0.14.0",
+        version: "0.15.0",
         description:
           "Аккаунт, гараж, бортжурнал, локации и модерация. Для cookie-сессии запросить /api/me и передать csrfToken в X-CSRF-Token при изменении данных. Все изменения требуют X-Enduro-Client: web. Подтверждение email, восстановление доступа и личные уведомления. Проверка email перед публикацией включается REQUIRE_VERIFIED_EMAIL=true.",
       },
@@ -322,7 +331,7 @@ export async function buildApp(options: {
 
   app.get("/api/health", { schema: { tags: ["System"] } }, () => ({
     ok: true,
-    version: "0.14.0",
+    version: "0.15.0",
   }));
   app.get("/api/openapi.json", { schema: { hide: true } }, () => app.swagger());
   app.post<{ Body: RegisterInput }>(
@@ -873,6 +882,7 @@ export async function buildApp(options: {
     HttpError,
     notFound,
   });
+  nearbyRoutes(app, db);
   if (options.webRoot)
     await app.register(staticFiles, { root: options.webRoot });
   app.setNotFoundHandler((req, reply) => {

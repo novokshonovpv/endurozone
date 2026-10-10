@@ -11,7 +11,7 @@ import {
 } from "@enduro/contracts";
 import type { Database, Row } from "./database.ts";
 import { profileOf } from "./auth.ts";
-import { previewGpx, publicGpx } from "./gpx.ts";
+import { previewGpx, publicGpx, bboxOf } from "./gpx.ts";
 export const adventureOutputs: Record<string, [number, unknown]> = {
   "POST /api/tracks/preview": [200, output.preview],
   "POST /api/tracks": [201, output.track],
@@ -52,8 +52,8 @@ const trackOf = (r: Row) => ({
   updatedAt: iso(r.updated_at),
   author: profileOf({ ...r, id: r.author_id, city: r.author_city }),
 });
-const rideSelect = `SELECT r.id,r.organizer_id,r.track_id,r.title,r.description,r.starts_at,r.timezone,r.capacity,r.status,r.hidden,r.created_at,t.city,t.title AS track_title,t.status AS track_status,u.handle,u.display_name,u.level,u.bio,u.city AS organizer_city,1+(SELECT count(*) FROM ride_members m WHERE m.ride_id=r.id AND m.status='accepted') AS accepted_count FROM rides r JOIN tracks t ON t.id=r.track_id JOIN users u ON u.id=r.organizer_id`;
-const rideOf = (r: Row) => ({
+export const rideSelect = `SELECT r.id,r.organizer_id,r.track_id,r.title,r.description,r.starts_at,r.timezone,r.capacity,r.status,r.hidden,r.created_at,t.city,t.title AS track_title,t.status AS track_status,u.handle,u.display_name,u.level,u.bio,u.city AS organizer_city,1+(SELECT count(*) FROM ride_members m WHERE m.ride_id=r.id AND m.status='accepted') AS accepted_count FROM rides r JOIN tracks t ON t.id=r.track_id JOIN users u ON u.id=r.organizer_id`;
+export const rideOf = (r: Row) => ({
   id: r.id,
   trackId: r.track_id,
   title: r.title,
@@ -163,9 +163,10 @@ export function adventureRoutes(
           "Описание и условия доступа — от 10 символов.",
         );
       const preview = previewGpx(b.gpx, b.trimM),
-        id = randomUUID();
+        id = randomUUID(),
+        box = bboxOf(preview.geometry);
       await db.query(
-        "INSERT INTO tracks(id,author_id,title,description,city,access_notes,difficulty,original_gpx,geometry,distance_m,trim_m,point_count) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12)",
+        "INSERT INTO tracks(id,author_id,title,description,city,access_notes,difficulty,original_gpx,geometry,distance_m,trim_m,point_count,min_lat,max_lat,min_lng,max_lng) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16)",
         [
           id,
           a.user.id,
@@ -179,6 +180,10 @@ export function adventureRoutes(
           preview.distanceM,
           preview.trimM,
           preview.pointCount,
+          box.minLat,
+          box.maxLat,
+          box.minLng,
+          box.maxLng,
         ],
       );
       reply.code(201);
