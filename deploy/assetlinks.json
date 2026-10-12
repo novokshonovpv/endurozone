@@ -1,0 +1,12 @@
+[
+  {
+    "relation": ["delegate_permission/common.handle_all_urls"],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "zone.enduro.app",
+      "sha256_cert_fingerprints": [
+        "56:3B:90:AC:70:EF:0D:4D:17:72:56:F6:96:7C:4E:39:B2:AF:1B:B6:11:5F:FE:88:09:E1:3C:EF:24:40:59:DF"
+      ]
+    }
+  }
+]

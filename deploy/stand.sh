@@ -134,6 +134,12 @@ server {
     server_name $STAND_HOST;
     add_header X-Robots-Tag "noindex, nofollow" always;
     client_max_body_size 8m;
+    # The Android app (Trusted Web Activity) proves site ownership through this public file.
+    location = /.well-known/assetlinks.json {
+        auth_basic off;
+        default_type application/json;
+        alias $APP/deploy/assetlinks.json;
+    }
     location / {
         auth_basic "Enduro.Zone";
         auth_basic_user_file /etc/nginx/endurozone.htpasswd;

@@ -1,0 +1,17 @@
+{
+  "name": "Enduro.Zone — твоя территория эндуро",
+  "short_name": "Enduro.Zone",
+  "description": "Гараж, бортжурнал, покатушки и сообщество эндуро.",
+  "lang": "ru",
+  "start_url": "/#feed",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#d8d3ba",
+  "theme_color": "#2b2d1c",
+  "icons": [
+    { "src": "/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}

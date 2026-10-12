@@ -1,0 +1,55 @@
+plugins {
+    id 'com.android.application'
+}
+
+// The site the app opens. Override for another host: gradlew assembleRelease -PtwaHost=example.org
+def twaHost = (project.findProperty('twaHost') ?: 'enduro.200-165-236-78.sslip.io').toString()
+
+// The release key lives outside the repository (see apps/android/README.md).
+def keyProps = new Properties()
+def keyFile = new File(System.getProperty('user.home'), '.enduro-android/keys/keystore.properties')
+if (keyFile.exists()) keyFile.withInputStream { keyProps.load(it) }
+
+android {
+    namespace 'zone.enduro.app'
+    compileSdk 34
+
+    defaultConfig {
+        applicationId 'zone.enduro.app'
+        minSdk 21
+        targetSdk 34
+        versionCode 1
+        versionName '0.20.0'
+        manifestPlaceholders = [hostName: twaHost, launchUrl: "https://${twaHost}/#feed"]
+        // Digital Asset Links: lets Chrome open the site full screen, without the address bar.
+        resValue 'string', 'asset_statements',
+            "[{\\\"relation\\\":[\\\"delegate_permission/common.handle_all_urls\\\"],\\\"target\\\":{\\\"namespace\\\":\\\"web\\\",\\\"site\\\":\\\"https://${twaHost}\\\"}}]"
+    }
+
+    signingConfigs {
+        release {
+            if (keyFile.exists()) {
+                storeFile new File(keyProps['storeFile'])
+                storePassword keyProps['storePassword']
+                keyAlias keyProps['keyAlias']
+                keyPassword keyProps['keyPassword']
+            }
+        }
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            signingConfig keyFile.exists() ? signingConfigs.release : null
+        }
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
+    }
+}
+
+dependencies {
+    implementation 'com.google.androidbrowserhelper:androidbrowserhelper:2.5.0'
+}

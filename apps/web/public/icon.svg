@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <!-- Enduro.Zone mark: olive field, rust cut-corner plate, EZ drawn as shapes (no font needed). Content stays inside the maskable safe zone. -->
+  <rect width="512" height="512" fill="#2b2d1c"/>
+  <polygon points="136,136 340,136 376,172 376,376 136,376" fill="#c2541f"/>
+  <g fill="#f4f1e4">
+    <rect x="170" y="196" width="26" height="120"/>
+    <rect x="170" y="196" width="76" height="22"/>
+    <rect x="170" y="245" width="66" height="22"/>
+    <rect x="170" y="294" width="76" height="22"/>
+    <rect x="262" y="196" width="80" height="22"/>
+    <rect x="262" y="294" width="80" height="22"/>
+    <polygon points="312,218 342,218 292,294 262,294"/>
+  </g>
+</svg>
