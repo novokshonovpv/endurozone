@@ -101,6 +101,42 @@ class BackupTests(unittest.TestCase):
             with self.assertRaisesRegex(ValueError, 'Unsafe'):
                 backup.verify(archive)
 
+    def test_prune_keeps_fourteen_days_and_a_floor_of_recent_sets(self):
+        from datetime import datetime, timedelta, timezone
+        now = datetime(2026, 10, 30, 20, 30, tzinfo=timezone.utc)
+        with tempfile.TemporaryDirectory() as d:
+            root = Path(d)
+            def make(days, complete=True):
+                stamp = (now - timedelta(days=days)).strftime('%Y%m%dT%H%M%S%fZ')
+                suffixes = ['', '.sha256', '.json'] if complete else ['', '.sha256']
+                for suffix in suffixes:
+                    (root / f'{stamp}.tar.gz{suffix}').write_text('x')
+                return stamp
+            fresh = [make(day) for day in range(0, 20)]
+            stale_partial = make(30, complete=False)
+            (root / 'restore-check-old').mkdir()
+            (root / 'notes.txt').write_text('keep')
+            removed = backup.prune(root, now)
+            self.assertEqual(sorted(removed), sorted(fresh[15:] + [stale_partial]))
+            left = {p.name.split('.')[0] for p in root.glob('*.tar.gz')}
+            self.assertEqual(left, set(fresh[:15]))
+            self.assertTrue((root / 'restore-check-old').is_dir())
+            self.assertTrue((root / 'notes.txt').exists())
+
+    def test_prune_never_drops_below_the_floor(self):
+        from datetime import datetime, timedelta, timezone
+        now = datetime(2026, 10, 30, tzinfo=timezone.utc)
+        with tempfile.TemporaryDirectory() as d:
+            root = Path(d)
+            stamps = []
+            for day in (40, 50, 60):
+                stamp = (now - timedelta(days=day)).strftime('%Y%m%dT%H%M%S%fZ')
+                for suffix in ('', '.sha256', '.json'):
+                    (root / f'{stamp}.tar.gz{suffix}').write_text('x')
+                stamps.append(stamp)
+            self.assertEqual(backup.prune(root, now, keep_days=14, keep_min=2), [stamps[2]])
+            self.assertEqual(len(list(root.glob('*.tar.gz'))), 2)
+
 
 if __name__ == '__main__':
     unittest.main()

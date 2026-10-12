@@ -16,7 +16,9 @@
 
 ## Как прогнать
 
-Когда ключ провайдера добавлен на стенд (`docs/runbooks/mechanic-providers.md`), в консоли Timeweb (root):
+**OpenAI — с компьютера разработчика.** Сервер стенда в Москве, а API OpenAI не обслуживает Россию, поэтому проверка OpenAI идёт с компьютера, у которого есть доступ (порядок — в [подключении провайдеров](../runbooks/mechanic-providers.md#openai)). Из корня проекта: `npm run mechanic:eval -- --models` (бесплатно: ключ, регион и список моделей), затем `--limit 1`, затем без аргументов. Отчёт — в `.data/mechanic-eval-<дата>-openai.md`. После трёх ошибок подряд проверка останавливается сама.
+
+**YandexGPT / GigaChat — на стенде.** Когда ключ провайдера добавлен на стенд (`docs/runbooks/mechanic-providers.md`), в консоли Timeweb (root):
 
 ```sh
 sudo -u enduro bash -c 'set -a; . /etc/endurozone.env; set +a; cd /opt/endurozone/app/apps/api; /opt/node-v24/bin/node node_modules/tsx/dist/cli.mjs ../../deploy/mechanic-eval.mts'

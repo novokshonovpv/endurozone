@@ -43,7 +43,8 @@ function openai(key: string, model: string, request: typeof fetch) {
         input: [{ role: "user", content: userContent(question, bike) }],
       }),
     });
-    if (!result.ok) throw new Error("Provider unavailable");
+    if (!result.ok)
+      throw new Error(`Provider unavailable: HTTP ${result.status}`);
     const data = (await result.json()) as {
       status?: string;
       output?: {
@@ -97,7 +98,8 @@ function yandex(
         }),
       },
     );
-    if (!result.ok) throw new Error("Provider unavailable");
+    if (!result.ok)
+      throw new Error(`Provider unavailable: HTTP ${result.status}`);
     const data = (await result.json()) as {
       result?: {
         alternatives?: { status?: string; message?: { text?: string } }[];
@@ -138,7 +140,8 @@ function gigachat(
             body: new URLSearchParams({ scope }).toString(),
           },
         );
-        if (!result.ok) throw new Error("Provider unavailable");
+        if (!result.ok)
+          throw new Error(`Provider unavailable: HTTP ${result.status}`);
         const data = (await result.json()) as {
           access_token?: string;
           expires_at?: number;
@@ -177,7 +180,8 @@ function gigachat(
       },
     );
     if (result.status === 401) token = null;
-    if (!result.ok) throw new Error("Provider unavailable");
+    if (!result.ok)
+      throw new Error(`Provider unavailable: HTTP ${result.status}`);
     const data = (await result.json()) as {
       choices?: { finish_reason?: string; message?: { content?: string } }[];
     };

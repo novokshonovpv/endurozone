@@ -15,7 +15,8 @@
     "build": "pnpm --filter @enduro/web build",
     "start": "pnpm --filter @enduro/api start",
     "api:export": "pnpm --filter @enduro/api export:api",
-    "moderator": "pnpm --filter @enduro/api moderator"
+    "moderator": "pnpm --filter @enduro/api moderator",
+    "mechanic:eval": "node --env-file-if-exists=.env.mechanic apps/api/node_modules/tsx/dist/cli.mjs deploy/mechanic-eval.mts"
   },
   "devDependencies": {
     "@types/node": "^24.0.0",

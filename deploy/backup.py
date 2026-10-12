@@ -11,10 +11,14 @@ import tarfile
 import tempfile
 import signal
 import shutil
-from datetime import datetime, timezone
+import re
+from datetime import datetime, timedelta, timezone
 
 APP = Path('/opt/endurozone/app')
 DEST = Path('/var/backups/endurozone')
+KEEP_DAYS = 14
+KEEP_MIN = 7
+SET_NAME = re.compile(r'^(\d{8}T\d{12}Z)\.tar\.gz(\.sha256|\.json)?$')
 
 
 def digest(path):
@@ -93,6 +97,29 @@ def snapshot(app, destination, service=subprocess.run):
             service(['systemctl', 'start', 'endurozone'], check=True)
 
 
+def prune(destination, now=None, keep_days=KEEP_DAYS, keep_min=KEEP_MIN):
+    """Removes our archive sets older than keep_days; the newest keep_min completed sets always stay.
+    Only files named like our sets are touched; restore checks and anything else are left alone."""
+    now = now or datetime.now(timezone.utc)
+    sets = {}
+    for path in destination.iterdir():
+        match = SET_NAME.match(path.name)
+        if match and path.is_file() and not path.is_symlink():
+            sets.setdefault(match.group(1), []).append(path)
+    complete = sorted((s for s, files in sets.items() if any(p.name.endswith('.json') for p in files)), reverse=True)
+    protected = set(complete[:keep_min])
+    removed = []
+    for stamp, files in sorted(sets.items()):
+        created = datetime.strptime(stamp, '%Y%m%dT%H%M%S%fZ').replace(tzinfo=timezone.utc)
+        if stamp in protected or now - created <= timedelta(days=keep_days):
+            continue
+        # Metadata first: a set without .json is treated as incomplete if removal stops halfway.
+        for path in sorted(files, key=lambda p: not p.name.endswith('.json')):
+            path.unlink()
+        removed.append(stamp)
+    return removed
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('action', choices=['create', 'verify'])
@@ -118,6 +145,9 @@ def main():
     with open('/var/lock/endurozone-backup.lock', 'w') as lock:
         fcntl.flock(lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
         print('Created private backup:', snapshot(APP, DEST))
+        # Only after a new verified set exists; a failed backup never shrinks the history.
+        removed = prune(DEST)
+        print(f'Retention {KEEP_DAYS} days: removed {len(removed)} old set(s)')
 
 
 if __name__ == '__main__':
