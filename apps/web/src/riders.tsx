@@ -255,6 +255,7 @@ export function RiderProfile({
                   handle={profile.handle}
                   profileId={profile.id}
                   session={session}
+                  onBlockChange={() => setRetry((x) => x + 1)}
                 />
               </div>
               {session?.user.id === profile.id && (
@@ -326,7 +327,7 @@ export function RiderProfile({
               )}
             </section>
             <PublicJournal
-              key={`${handle}/${requestedBike}`}
+              key={`${handle}/${requestedBike}/${retry}`}
               handle={handle}
               bikes={bikes}
               requestedBike={requestedBike}

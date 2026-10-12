@@ -11,6 +11,7 @@ import {
 } from "@enduro/contracts";
 import type { Database, Queryable, Row } from "./database.ts";
 import { profileOf } from "./auth.ts";
+import { blockedBetween } from "./blocks.ts";
 // $2 is the reader. Same audience as the meeting point, except that the chat stays readable
 // after the start and after cancellation; a ride hidden by moderation stays with its organizer.
 const accepted =
@@ -88,7 +89,8 @@ export function rideChatRoutes(
       if (!r) throw notFound();
       // Access is rechecked in the same statement that returns messages.
       const rows = await db.query(
-        `${messageSelect} JOIN rides r ON r.id=msg.ride_id JOIN tracks t ON t.id=r.track_id WHERE msg.ride_id=$1 AND ${readable} ORDER BY msg.created_at DESC,msg.id DESC LIMIT $3 OFFSET $4`,
+        // Two riders who blocked each other can still meet in someone else's ride: their messages are hidden from each other.
+        `${messageSelect} JOIN rides r ON r.id=msg.ride_id JOIN tracks t ON t.id=r.track_id WHERE msg.ride_id=$1 AND ${readable} AND NOT ${blockedBetween("$2::uuid", "msg.author_id")} ORDER BY msg.created_at DESC,msg.id DESC LIMIT $3 OFFSET $4`,
         [req.params.id, me, limit + 1, offset],
       );
       return {

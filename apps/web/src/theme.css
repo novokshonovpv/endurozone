@@ -1186,3 +1186,20 @@ footer {
     transition-duration: 0.01ms !important;
   }
 }
+
+/* Blocking: a quiet control under the follow button; the note uses the rust accent. */
+.block-toggle {
+  font-size: 12px;
+  color: var(--muted, #6b6a58);
+}
+.block-toggle:hover {
+  color: var(--rust);
+}
+.block-note {
+  flex-basis: 100%;
+  margin: 0;
+  padding: 10px 12px;
+  border-left: 3px solid var(--rust);
+  background: var(--paper);
+  font-size: 13px;
+}

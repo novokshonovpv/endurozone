@@ -41,6 +41,7 @@ import { rideChatRoutes } from "./ride-chat.ts";
 import { feedbackRoutes } from "./feedback.ts";
 import { onboardingRoutes } from "./onboarding.ts";
 import { roleRoutes } from "./roles.ts";
+import { blockRoutes, blockedBetween } from "./blocks.ts";
 import { appVersion } from "./version.ts";
 
 interface AuthContext {
@@ -503,9 +504,10 @@ export async function buildApp(options: {
     "/api/profiles/:handle",
     { schema: { params: schemas.handle, tags: ["Profile"] } },
     async (req) => {
+      // Someone who blocked the viewer looks absent to them; the blocker still sees the profile to unblock.
       const [r] = await db.query(
-        "SELECT id,handle,display_name,city,level,bio FROM users WHERE handle=$1",
-        [req.params.handle],
+        "SELECT id,handle,display_name,city,level,bio FROM users u WHERE handle=$1 AND NOT EXISTS(SELECT 1 FROM blocks b WHERE b.blocker_id=u.id AND b.blocked_id=$2::uuid)",
+        [req.params.handle, req.authContext?.user.id ?? null],
       );
       if (!r) throw notFound();
       return profileOf(r);
@@ -627,11 +629,17 @@ export async function buildApp(options: {
     params: unknown[],
     limit = 12,
     offset = 0,
-    shape: { join?: string; order?: string } = {},
+    shape: { join?: string; order?: string; viewer?: string | null } = {},
   ): Promise<Page<Post>> {
+    const all = [...params];
+    // A signed-in viewer never gets posts of someone in a block with them.
+    if (shape.viewer) {
+      all.push(shape.viewer);
+      where = `(${where}) AND NOT ${blockedBetween(`$${all.length}::uuid`, "p.author_id")}`;
+    }
     const rows = await db.query(
-      `${postSelect} ${shape.join ?? ""} WHERE ${where} ORDER BY ${shape.order ?? "p.created_at DESC,p.id DESC"} LIMIT $${params.length + 1} OFFSET $${params.length + 2}`,
-      [...params, limit + 1, offset],
+      `${postSelect} ${shape.join ?? ""} WHERE ${where} ORDER BY ${shape.order ?? "p.created_at DESC,p.id DESC"} LIMIT $${all.length + 1} OFFSET $${all.length + 2}`,
+      [...all, limit + 1, offset],
     );
     return {
       items: rows.slice(0, limit).map(postOf),
@@ -643,7 +651,7 @@ export async function buildApp(options: {
     req: FastifyRequest,
   ): Promise<Post> {
     const [r] = await db.query(
-      `${postSelect} WHERE p.id=$1 AND ((p.visibility='public' AND NOT p.hidden) OR p.author_id=$2)`,
+      `${postSelect} WHERE p.id=$1 AND ((p.visibility='public' AND NOT p.hidden) OR p.author_id=$2) AND (p.author_id=$2 OR NOT ${blockedBetween("$2::uuid", "p.author_id")})`,
       [id, req.authContext?.user.id ?? null],
     );
     if (!r) throw notFound();
@@ -671,7 +679,9 @@ export async function buildApp(options: {
         params.push(kind);
         parts.push(`p.kind=$${params.length}`);
       }
-      return listPosts(parts.join(" AND "), params, limit, offset);
+      return listPosts(parts.join(" AND "), params, limit, offset, {
+        viewer: req.authContext?.user.id ?? null,
+      });
     },
   );
   app.get<{ Querystring: PageQuery }>(
@@ -800,7 +810,7 @@ export async function buildApp(options: {
       const limit = req.query.limit ?? 12,
         offset = req.query.offset ?? 0;
       const rows = await db.query(
-        "SELECT c.*,u.handle,u.display_name,u.city,u.level,u.bio FROM comments c JOIN users u ON c.author_id=u.id JOIN posts p ON c.post_id=p.id WHERE c.post_id=$1 AND ((p.visibility='public' AND NOT p.hidden) OR p.author_id=$4) ORDER BY c.created_at,c.id LIMIT $2 OFFSET $3",
+        `SELECT c.*,u.handle,u.display_name,u.city,u.level,u.bio FROM comments c JOIN users u ON c.author_id=u.id JOIN posts p ON c.post_id=p.id WHERE c.post_id=$1 AND ((p.visibility='public' AND NOT p.hidden) OR p.author_id=$4) AND NOT ${blockedBetween("$4::uuid", "c.author_id")} ORDER BY c.created_at,c.id LIMIT $2 OFFSET $3`,
         [req.params.id, limit + 1, offset, req.authContext?.user.id ?? null],
       );
       return {
@@ -829,7 +839,7 @@ export async function buildApp(options: {
       nonblank([req.body.body]);
       // Access and insertion share one SQL statement, including a concurrent privacy change.
       const [r] = await db.query(
-        "INSERT INTO comments(id,post_id,author_id,body) SELECT $1,p.id,$3,$4 FROM posts p WHERE p.id=$2 AND NOT p.hidden AND (p.visibility='public' OR p.author_id=$3) RETURNING *",
+        `INSERT INTO comments(id,post_id,author_id,body) SELECT $1,p.id,$3,$4 FROM posts p WHERE p.id=$2 AND NOT p.hidden AND (p.visibility='public' OR p.author_id=$3) AND NOT ${blockedBetween("$3::uuid", "p.author_id")} RETURNING *`,
         [randomUUID(), req.params.id, auth.user.id, clean(req.body.body)],
       );
       if (!r) throw notFound();
@@ -895,6 +905,12 @@ export async function buildApp(options: {
   onboardingRoutes(app, db, { requireAuth, requireWrite, HttpError });
   roleRoutes(app, db, { requireAuth, requireWrite, notFound, HttpError });
   rideChatRoutes(app, db, {
+    requireAuth,
+    requireWrite: verifiedWrite,
+    notFound,
+    HttpError,
+  });
+  blockRoutes(app, db, {
     requireAuth,
     requireWrite: verifiedWrite,
     notFound,

@@ -13,6 +13,7 @@ import {
 import type { Database, Queryable, Row } from "./database.ts";
 import { profileOf } from "./auth.ts";
 import { notify } from "./pilot.ts";
+import { isBlockedBetween } from "./blocks.ts";
 type Paging = { limit?: number; offset?: number };
 const visible = "p.visibility='public' AND NOT p.hidden";
 // The owner keeps access to own private or hidden posts, as on the post page.
@@ -28,7 +29,7 @@ export function followRoutes(
       params: unknown[],
       limit?: number,
       offset?: number,
-      shape?: { join?: string; order?: string },
+      shape?: { join?: string; order?: string; viewer?: string | null },
     ) => Promise<Page<Post>>;
     notFound: () => Error;
     HttpError: new (status: number, code: string, message: string) => Error;
@@ -111,6 +112,9 @@ export function followRoutes(
             "Нельзя подписаться на собственный профиль.",
           );
         if ((await lockUsers(tx, [me, target])).length < 2) throw notFound();
+        // Checked after the lock: a block committed at the same moment is seen here.
+        if (await isBlockedBetween(tx, me, target))
+          throw new HttpError(403, "BLOCKED", "Подписка недоступна.");
         const [added] = await tx.query(
           "INSERT INTO follows(follower_id,followee_id) VALUES ($1,$2) ON CONFLICT DO NOTHING RETURNING created_at",
           [me, target],
@@ -200,7 +204,8 @@ export function followRoutes(
       },
     },
     async (req) => {
-      const params: unknown[] = [requireAuth(req).user.id];
+      const me = requireAuth(req).user.id as string;
+      const params: unknown[] = [me];
       const parts = [
         visible,
         "p.author_id IN (SELECT followee_id FROM follows WHERE follower_id=$1)",
@@ -218,6 +223,7 @@ export function followRoutes(
         params,
         req.query.limit,
         req.query.offset,
+        { viewer: me },
       );
     },
   );
@@ -231,18 +237,15 @@ export function followRoutes(
         response: { 200: responses.posts, ...errors },
       },
     },
-    async (req) =>
-      // Access is rechecked on every read: a saved post that became private or hidden disappears.
-      listPosts(
-        readable,
-        [requireAuth(req).user.id],
-        req.query.limit,
-        req.query.offset,
-        {
-          join: "JOIN favorites f ON f.post_id=p.id AND f.user_id=$1",
-          order: "f.created_at DESC,p.id DESC",
-        },
-      ),
+    async (req) => {
+      const me = requireAuth(req).user.id as string;
+      // Access is rechecked on every read: a saved post that became private, hidden or blocked disappears.
+      return listPosts(readable, [me], req.query.limit, req.query.offset, {
+        join: "JOIN favorites f ON f.post_id=p.id AND f.user_id=$1",
+        order: "f.created_at DESC,p.id DESC",
+        viewer: me,
+      });
+    },
   );
   app.get<{ Params: { id: string } }>(
     "/api/me/favorites/:id",

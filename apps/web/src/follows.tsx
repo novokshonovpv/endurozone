@@ -1,6 +1,8 @@
 import { useEffect, useState } from "react";
 import {
   levels,
+  type BlockState,
+  type BlockedRider,
   type FavoriteState,
   type FollowedRider,
   type FollowSummary,
@@ -17,14 +19,18 @@ export function FollowPanel({
   handle,
   profileId,
   session,
+  onBlockChange,
 }: {
   handle: string;
   profileId: string;
   session: Session | null;
+  onBlockChange?: () => void;
 }) {
   const [summary, setSummary] = useState<FollowSummary | null>(null),
+    [blocked, setBlocked] = useState<boolean | null>(null),
     [busy, setBusy] = useState(false),
     [error, setError] = useState("");
+  const own = session?.user.id === profileId;
   useEffect(() => {
     let alive = true;
     api<FollowSummary>(`/profiles/${handle}/follow-summary`)
@@ -34,10 +40,43 @@ export function FollowPanel({
       .catch((e) => {
         if (alive) setError(e.message);
       });
+    if (session && !own)
+      api<BlockState>(`/me/blocks/${handle}`)
+        .then((s) => {
+          if (alive) setBlocked(s.blocked);
+        })
+        .catch((e) => {
+          if (alive) setError(e.message);
+        });
     return () => {
       alive = false;
     };
-  }, [handle, session?.user.id]);
+  }, [handle, session?.user.id, own]);
+  async function toggleBlock() {
+    if (
+      !blocked &&
+      !window.confirm(
+        `Заблокировать @${handle}? Вы перестанете видеть записи и комментарии друг друга, подписки между вами удалятся, а из ваших покатушек райдер будет исключён. Он не получит уведомления.`,
+      )
+    )
+      return;
+    setBusy(true);
+    setError("");
+    try {
+      const s = await api<BlockState>(`/me/blocks/${handle}`, {
+        method: blocked ? "DELETE" : "PUT",
+      });
+      setBlocked(s.blocked);
+      setSummary(
+        await api<FollowSummary>(`/profiles/${handle}/follow-summary`),
+      );
+      onBlockChange?.();
+    } catch (e) {
+      setError((e as Error).message);
+    } finally {
+      setBusy(false);
+    }
+  }
   async function toggle() {
     if (!summary) return;
     setBusy(true);
@@ -54,7 +93,6 @@ export function FollowPanel({
       setBusy(false);
     }
   }
-  const own = session?.user.id === profileId;
   return (
     <div className="follow-panel">
       {summary && (
@@ -79,6 +117,11 @@ export function FollowPanel({
         <a className="text-button" href="#following">
           Мои подписки и подписчики →
         </a>
+      ) : session && blocked ? (
+        <p className="block-note">
+          Вы заблокировали этого райдера: вы не видите записи и комментарии друг
+          друга, подписка и покатушки вместе недоступны.
+        </p>
       ) : session ? (
         summary && (
           <button
@@ -104,9 +147,18 @@ export function FollowPanel({
         )
       ) : (
         <p className="muted follow-hint">
-          <a href="#login">Войдите</a>, чтобы подписаться и видеть записи райдера
-          в своей ленте.
+          <a href="#login">Войдите</a>, чтобы подписаться и видеть записи
+          райдера в своей ленте.
         </p>
+      )}
+      {session && !own && blocked !== null && (
+        <button
+          className="text-button block-toggle"
+          disabled={busy}
+          onClick={toggleBlock}
+        >
+          {blocked ? "Разблокировать" : "Заблокировать"}
+        </button>
       )}
       <ErrorBox message={error} />
     </div>
@@ -210,16 +262,29 @@ function usePage<T>(path: string) {
   }
   return { items, setItems, next, busy, error, more };
 }
+type PersonRow = Omit<FollowedRider, "followedAt"> &
+  Partial<Pick<FollowedRider, "followedAt"> & Pick<BlockedRider, "blockedAt">>;
 export function Following({ notify }: { notify: (s: string) => void }) {
-  const [tab, setTab] = useState<"following" | "followers">("following");
-  const page = usePage<FollowedRider>(`/me/${tab}`),
+  const [tab, setTab] = useState<"following" | "followers" | "blocked">(
+    "following",
+  );
+  const page = usePage<PersonRow>(
+      tab === "blocked" ? "/me/blocks" : `/me/${tab}`,
+    ),
     [removing, setRemoving] = useState("");
-  async function unfollow(r: FollowedRider) {
+  async function unfollow(r: PersonRow) {
     setRemoving(r.id);
     try {
-      await api(`/me/following/${r.handle}`, { method: "DELETE" });
+      const unblocking = tab === "blocked";
+      await api(`/me/${unblocking ? "blocks" : "following"}/${r.handle}`, {
+        method: "DELETE",
+      });
       page.setItems((old) => old.filter((x) => x.id !== r.id));
-      notify(`Вы отписались от ${r.displayName}.`);
+      notify(
+        unblocking
+          ? `${r.displayName} разблокирован.`
+          : `Вы отписались от ${r.displayName}.`,
+      );
     } catch (e) {
       notify((e as Error).message);
     } finally {
@@ -247,6 +312,7 @@ export function Following({ notify }: { notify: (s: string) => void }) {
           [
             ["following", "Я подписан"],
             ["followers", "Мои подписчики"],
+            ["blocked", "Заблокированные"],
           ] as const
         ).map(([value, label]) => (
           <button
@@ -269,12 +335,16 @@ export function Following({ notify }: { notify: (s: string) => void }) {
           <h3>
             {tab === "following"
               ? "Вы пока ни на кого не подписаны"
-              : "Подписчиков пока нет"}
+              : tab === "followers"
+                ? "Подписчиков пока нет"
+                : "Вы никого не блокировали"}
           </h3>
           <p>
             {tab === "following"
               ? "Откройте страницу райдера и нажмите «Подписаться» — его открытые записи появятся в ленте подписок."
-              : "Ведите открытый бортжурнал: райдеры смогут подписаться на вас со страницы профиля."}
+              : tab === "followers"
+                ? "Ведите открытый бортжурнал: райдеры смогут подписаться на вас со страницы профиля."
+                : "Заблокировать райдера можно на странице его профиля. Список видите только вы."}
           </p>
           {tab === "following" && (
             <a className="button outline" href="#riders">
@@ -294,15 +364,19 @@ export function Following({ notify }: { notify: (s: string) => void }) {
                 <small>
                   @{r.handle} · {r.city} · {levels[r.level]}
                 </small>
-                <small>Подписка с {formatDate(r.followedAt)}</small>
+                <small>
+                  {r.blockedAt
+                    ? `Заблокирован ${formatDate(r.blockedAt)}`
+                    : `Подписка с ${formatDate(r.followedAt!)}`}
+                </small>
               </div>
-              {tab === "following" && (
+              {tab !== "followers" && (
                 <button
                   className="text-button"
                   disabled={removing === r.id}
                   onClick={() => unfollow(r)}
                 >
-                  Отписаться
+                  {tab === "blocked" ? "Разблокировать" : "Отписаться"}
                 </button>
               )}
             </article>

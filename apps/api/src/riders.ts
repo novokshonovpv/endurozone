@@ -9,6 +9,7 @@ import {
 } from "@enduro/contracts";
 import type { Database } from "./database.ts";
 import { profileOf } from "./auth.ts";
+import { blockedBetween } from "./blocks.ts";
 type Paging = { limit?: number; offset?: number };
 const visible = "p.visibility='public' AND NOT p.hidden";
 const contains = (value: string) =>
@@ -23,9 +24,12 @@ export function riderRoutes(
       params: unknown[],
       limit?: number,
       offset?: number,
+      shape?: { viewer?: string | null },
     ) => Promise<Page<Post>>;
   },
 ) {
+  const block = (viewer: string) =>
+    `NOT ${blockedBetween(`${viewer}::uuid`, "u.id")}`;
   const tags = ["Riders"];
   async function owner(handle: string) {
     const [u] = await db.query("SELECT id FROM users WHERE handle=$1", [
@@ -46,17 +50,21 @@ export function riderRoutes(
     async (req) => {
       const { limit = 12, offset = 0, q = "", city = "" } = req.query;
       const rows = await db.query(
-        `SELECT u.id,u.handle,u.display_name,u.city,u.level,u.bio,count(p.id) AS public_post_count,count(DISTINCT p.bike_id) AS public_bike_count FROM users u JOIN posts p ON p.author_id=u.id WHERE ${visible} AND (u.display_name ILIKE $1 ESCAPE '!' OR u.handle ILIKE $1 ESCAPE '!') AND u.city ILIKE $2 ESCAPE '!' GROUP BY u.id ORDER BY lower(u.display_name),u.id LIMIT $3 OFFSET $4`,
-        [contains(q), contains(city), limit + 1, offset],
+        `SELECT u.id,u.handle,u.display_name,u.city,u.level,u.bio,count(p.id) AS public_post_count,count(DISTINCT p.bike_id) AS public_bike_count FROM users u JOIN posts p ON p.author_id=u.id WHERE ${visible} AND (u.display_name ILIKE $1 ESCAPE '!' OR u.handle ILIKE $1 ESCAPE '!') AND u.city ILIKE $2 ESCAPE '!' AND ${block("$5")} GROUP BY u.id ORDER BY lower(u.display_name),u.id LIMIT $3 OFFSET $4`,
+        [
+          contains(q),
+          contains(city),
+          limit + 1,
+          offset,
+          req.authContext?.user.id ?? null,
+        ],
       );
       return {
-        items: rows
-          .slice(0, limit)
-          .map((r) => ({
-            ...profileOf(r),
-            publicPostCount: Number(r.public_post_count),
-            publicBikeCount: Number(r.public_bike_count),
-          })),
+        items: rows.slice(0, limit).map((r) => ({
+          ...profileOf(r),
+          publicPostCount: Number(r.public_post_count),
+          publicBikeCount: Number(r.public_bike_count),
+        })),
         nextOffset: rows.length > limit ? offset + limit : null,
       };
     },
@@ -79,20 +87,18 @@ export function riderRoutes(
       const u = await owner(req.params.handle),
         { limit = 12, offset = 0 } = req.query;
       const rows = await db.query(
-        `SELECT b.id,b.make,b.model,b.year,b.modification,count(p.id) AS public_post_count FROM bikes b JOIN posts p ON p.bike_id=b.id AND p.author_id=b.owner_id WHERE b.owner_id=$1 AND ${visible} GROUP BY b.id ORDER BY b.created_at,b.id LIMIT $2 OFFSET $3`,
-        [u.id, limit + 1, offset],
+        `SELECT b.id,b.make,b.model,b.year,b.modification,count(p.id) AS public_post_count FROM bikes b JOIN posts p ON p.bike_id=b.id AND p.author_id=b.owner_id JOIN users u ON u.id=b.owner_id WHERE b.owner_id=$1 AND ${visible} AND ${block("$4")} GROUP BY b.id ORDER BY b.created_at,b.id LIMIT $2 OFFSET $3`,
+        [u.id, limit + 1, offset, req.authContext?.user.id ?? null],
       );
       return {
-        items: rows
-          .slice(0, limit)
-          .map((r) => ({
-            id: r.id,
-            make: r.make,
-            model: r.model,
-            year: r.year,
-            modification: r.modification,
-            publicPostCount: Number(r.public_post_count),
-          })),
+        items: rows.slice(0, limit).map((r) => ({
+          id: r.id,
+          make: r.make,
+          model: r.model,
+          year: r.year,
+          modification: r.modification,
+          publicPostCount: Number(r.public_post_count),
+        })),
         nextOffset: rows.length > limit ? offset + limit : null,
       };
     },
@@ -136,6 +142,7 @@ export function riderRoutes(
         params,
         req.query.limit,
         req.query.offset,
+        { viewer: req.authContext?.user.id ?? null },
       );
     },
   );

@@ -12,6 +12,7 @@ import {
 import type { Database, Row } from "./database.ts";
 import { profileOf } from "./auth.ts";
 import { previewGpx, publicGpx, bboxOf } from "./gpx.ts";
+import { blockedBetween, isBlockedBetween } from "./blocks.ts";
 export const adventureOutputs: Record<string, [number, unknown]> = {
   "POST /api/tracks/preview": [200, output.preview],
   "POST /api/tracks": [201, output.track],
@@ -336,7 +337,7 @@ export function adventureRoutes(
   );
   async function ride(id: string, req: FastifyRequest) {
     const [r] = await db.query(
-      `${rideSelect} WHERE r.id=$1 AND ((t.status='published' AND NOT r.hidden) OR r.organizer_id=$2 OR $3)`,
+      `${rideSelect} WHERE r.id=$1 AND ((t.status='published' AND NOT r.hidden) OR r.organizer_id=$2 OR $3) AND (r.organizer_id=$2 OR $3 OR NOT ${blockedBetween("$2::uuid", "r.organizer_id")})`,
       [
         id,
         req.authContext?.user.id ?? null,
@@ -367,8 +368,8 @@ export function adventureRoutes(
     { schema: { querystring: schemas.locationPage, tags: ["Rides"] } },
     (req) =>
       rides(
-        "r.status='open' AND NOT r.hidden AND r.starts_at>now() AND t.status='published'",
-        [],
+        `r.status='open' AND NOT r.hidden AND r.starts_at>now() AND t.status='published' AND NOT ${blockedBetween("$1::uuid", "r.organizer_id")}`,
+        [req.authContext?.user.id ?? null],
         req.query,
       ),
   );
@@ -493,6 +494,12 @@ export function adventureRoutes(
         const r = await lockedRide(tx, req.params.id);
         open(r);
         if (r.organizer_id === a.user.id) return { status: "organizer" };
+        if (await isBlockedBetween(tx, a.user.id, r.organizer_id))
+          throw new HttpError(
+            403,
+            "BLOCKED",
+            "Заявка на эту покатушку недоступна.",
+          );
         const [existing] = await tx.query(
           "SELECT status FROM ride_members WHERE ride_id=$1 AND user_id=$2",
           [r.id, a.user.id],
