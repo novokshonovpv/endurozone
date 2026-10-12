@@ -2,6 +2,7 @@ import { useEffect, useRef, useState, type FormEvent } from "react";
 import { MapCanvas, ReportButton } from "./map.tsx";
 export { ReportButton } from "./map.tsx";
 import { TrackModeration } from "./adventure.tsx";
+import { ModeratorRoles } from "./roles.tsx";
 import {
   difficulties,
   locationStatuses,
@@ -537,6 +538,7 @@ export function Moderation({ session, notify }: Props) {
         </button>
       </div>
       <ErrorBox message={error} />
+      {session && <ModeratorRoles notify={notify} selfId={session.user.id} />}
       {busy && <Loading />}
       <h2>Локации на проверке</h2>
       {!busy && !locations.items.length && (

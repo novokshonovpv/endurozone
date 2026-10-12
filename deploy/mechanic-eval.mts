@@ -32,7 +32,9 @@ if (!respond) {
 }
 const cases: Case[] = JSON.parse(
   await readFile(
-    fileURLToPath(new URL("../docs/research/mechanic-eval.json", import.meta.url)),
+    fileURLToPath(
+      new URL("../docs/research/mechanic-eval.json", import.meta.url),
+    ),
     "utf8",
   ),
 );
@@ -41,7 +43,10 @@ const day = new Date().toISOString().slice(0, 10);
 const out =
   arg("--out") ??
   fileURLToPath(
-    new URL(`../.data/mechanic-eval-${day}-${respond.provider}.md`, import.meta.url),
+    new URL(
+      `../.data/mechanic-eval-${day}-${respond.provider}.md`,
+      import.meta.url,
+    ),
   );
 const quote = (text: string) =>
   text
@@ -63,7 +68,9 @@ for (const c of cases.slice(0, limit)) {
     failed++;
     answer = `[нет ответа: ${(e as Error).message}]`;
   }
-  console.log(`${c.id} ${c.risk} — ${answer.startsWith("[нет") ? "ошибка" : "ok"}`);
+  console.log(
+    `${c.id} ${c.risk} — ${answer.startsWith("[нет") ? "ошибка" : "ok"}`,
+  );
   parts.push(
     `## ${c.id} · ${c.area} · риск: ${c.risk}`,
     "",

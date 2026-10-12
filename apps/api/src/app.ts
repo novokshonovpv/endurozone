@@ -40,6 +40,7 @@ import { nearbyRoutes } from "./nearby.ts";
 import { rideChatRoutes } from "./ride-chat.ts";
 import { feedbackRoutes } from "./feedback.ts";
 import { onboardingRoutes } from "./onboarding.ts";
+import { roleRoutes } from "./roles.ts";
 import { appVersion } from "./version.ts";
 
 interface AuthContext {
@@ -892,6 +893,7 @@ export async function buildApp(options: {
   nearbyRoutes(app, db);
   feedbackRoutes(app, db, { requireAuth, requireWrite, notFound, HttpError });
   onboardingRoutes(app, db, { requireAuth, requireWrite, HttpError });
+  roleRoutes(app, db, { requireAuth, requireWrite, notFound, HttpError });
   rideChatRoutes(app, db, {
     requireAuth,
     requireWrite: verifiedWrite,

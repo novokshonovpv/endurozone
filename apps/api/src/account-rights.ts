@@ -228,6 +228,11 @@ export function accountRightsRoutes(
           "DELETE FROM moderation_actions WHERE target_id IN (SELECT id FROM reports WHERE reporter_id=$1)",
           [u.id],
         );
+        // Role changes about this person keep no reasons after the account is gone.
+        await tx.query(
+          "DELETE FROM moderation_actions WHERE target_type='user' AND target_id=$1",
+          [u.id],
+        );
         await tx.query("DELETE FROM posts WHERE author_id=$1", [u.id]);
         await tx.query("DELETE FROM users WHERE id=$1", [u.id]);
       });

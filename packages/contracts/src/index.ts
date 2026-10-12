@@ -365,3 +365,4 @@ export * from "./nearby.ts";
 export * from "./ride-chat.ts";
 export * from "./feedback.ts";
 export * from "./onboarding.ts";
+export * from "./roles.ts";
