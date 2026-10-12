@@ -3,6 +3,7 @@
 //   npm run mechanic:eval -- --models      free: checks the OpenAI key and region, lists model ids
 //   npm run mechanic:eval -- --limit 1     one paid question first
 //   npm run mechanic:eval                  all 50 questions
+//   npm run mechanic:eval -- --ids Q16,Q22 only these questions (separate report file)
 // Each question is a paid provider request; participant quotas are not touched.
 // Three failures in a row stop the run so a bad key or blocked region does not burn through the set.
 import { readFile, writeFile } from "node:fs/promises";
@@ -68,13 +69,25 @@ const cases: Case[] = JSON.parse(
     "utf8",
   ),
 );
-const limit = Math.min(Number(arg("--limit") ?? cases.length), cases.length);
+// --ids Q16,Q22 re-asks only those questions (e.g. after changing the instructions).
+const ids = arg("--ids")
+  ?.split(",")
+  .map((id) => id.trim().toUpperCase());
+const selected = ids ? cases.filter((c) => ids.includes(c.id)) : cases;
+if (ids && selected.length !== ids.length) {
+  console.error(`Неизвестные вопросы в --ids: ${ids.join(",")}`);
+  process.exit(1);
+}
+const limit = Math.min(
+  Number(arg("--limit") ?? selected.length),
+  selected.length,
+);
 const day = new Date().toISOString().slice(0, 10);
 const out =
   arg("--out") ??
   fileURLToPath(
     new URL(
-      `../.data/mechanic-eval-${day}-${respond.provider}.md`,
+      `../.data/mechanic-eval-${day}-${respond.provider}${ids ? `-${ids.join("-")}` : ""}.md`,
       import.meta.url,
     ),
   );
@@ -92,7 +105,7 @@ const parts = [
 let failed = 0;
 let inRow = 0;
 let asked = 0;
-for (const c of cases.slice(0, limit)) {
+for (const c of selected.slice(0, limit)) {
   let answer: string;
   asked++;
   try {
