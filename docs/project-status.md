@@ -12,7 +12,7 @@
 
 - Репозиторий: https://github.com/novokshonovpv/endurozone
 - SSH: `git@github.com:novokshonovpv/endurozone.git`.
-- Актуальная ветка с полным приложением (12.10.2026): **`feat/mechanic-eval-and-roles`**, версия 0.19.0, 123 теста, проверка типов и сборка успешны локально. Цепочка веток: `community-foundation → follows-favorites → nearby-search → ride-chat → timeweb-stand → pilot-feedback → onboarding → khaki-redesign → mechanic-providers → mechanic-eval-and-roles`, каждая поверх предыдущей. `main` отстаёт (только начальный коммит); слияние — по отдельной команде пользователя.
+- Актуальная ветка с полным приложением (12.10.2026): **`feat/mechanic-eval-and-roles`**, версия 0.19.0, 123 теста, проверка типов и сборка успешны локально. Цепочка веток: `community-foundation → follows-favorites → nearby-search → ride-chat → timeweb-stand → pilot-feedback → onboarding → khaki-redesign → mechanic-providers → mechanic-eval-and-roles`, каждая поверх предыдущей. 12.10.2026 по команде пользователя `main` перемотан на эту ветку (fast-forward, без merge-коммита); новую работу начинать от `main`.
 - Стенд обновлялся до 0.18.0 (подтверждено пользователем). Новые версии появляются на стенде после `stand.sh update <ветка>` в консоли Timeweb ([deploy/README.md](../deploy/README.md)).
 - Ниже в этом разделе — исторические сведения о ветке `feat/timeweb-stand` и версии 0.16.
 - Проверенный коммит приложения: **`7eefd6f52facc230274723055cefe86887e66ad4`**, версия 0.16.0. Новые изменения этого этапа — документация.
