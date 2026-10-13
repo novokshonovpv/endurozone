@@ -18,7 +18,7 @@ android {
         applicationId 'zone.enduro.app'
         minSdk 21
         targetSdk 34
-        versionCode 2
+        versionCode 3
         versionName '0.20.0'
         manifestPlaceholders = [hostName: twaHost, launchUrl: "https://${twaHost}/#feed"]
         // Digital Asset Links: lets Chrome open the site full screen, without the address bar.
