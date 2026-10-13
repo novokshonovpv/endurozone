@@ -21,16 +21,17 @@ const tabs: {
     active: (r) => isExplore(r),
   },
   {
-    path: "mechanic",
-    label: "ИИ-механик",
-    icon: "wrench",
-    active: (r) => r === "mechanic",
+    path: "game",
+    label: "Игра",
+    icon: "game",
+    active: (r) => r === "game",
   },
+  // The AI mechanic lives inside the garage on phones.
   {
     path: "garage",
     label: "Гараж",
     icon: "bike",
-    active: (r) => r === "garage",
+    active: (r) => r === "garage" || r === "mechanic",
   },
 ];
 export function TabBar({ route }: { route: string }) {

@@ -34,6 +34,7 @@ import { Nearby } from "./nearby.tsx";
 import { ExploreTabs, isExplore, exploreLabel } from "./explore.tsx";
 import { FeedbackButton, MyFeedback, PilotFeedback } from "./feedback.tsx";
 import { TabBar } from "./tabbar.tsx";
+import { Game } from "./game.tsx";
 
 const nav: { path: string; label: string; icon: IconName }[] = [
   { path: "feed", label: "Сообщество", icon: "feed" },
@@ -42,6 +43,7 @@ const nav: { path: string; label: string; icon: IconName }[] = [
   { path: "shop", label: "Магазин", icon: "shop" },
   { path: "mechanic", label: "ИИ-механик", icon: "wrench" },
   { path: "learning", label: "Обучение", icon: "book" },
+  { path: "game", label: "Игра", icon: "game" },
   { path: "garage", label: "Мой гараж", icon: "bike" },
   { path: "following", label: "Подписки", icon: "user" },
   { path: "saved", label: "Избранное", icon: "book" },
@@ -113,7 +115,7 @@ export default function App() {
     }
   };
   return (
-    <div className="shell">
+    <div className={`shell ${route === "game" ? "route-game" : ""}`}>
       <aside className={`sidebar ${menuOpen ? "menu-open" : ""}`}>
         <a className="brand" href="#feed" aria-label="Enduro.Zone, сообщество">
           <span className="brand-mark">
@@ -341,6 +343,8 @@ export default function App() {
             ) : (
               <JoinGate />
             )
+          ) : route === "game" ? (
+            <Game />
           ) : route === "garage" ? (
             session ? (
               <Garage

@@ -422,6 +422,16 @@ export function Garage({
           Добавить мотоцикл
         </button>
       </div>
+      <a className="card garage-mechanic" href="#mechanic">
+        <Icon name="wrench" size={26} />
+        <span>
+          <strong>ИИ-механик</strong>
+          <small>
+            Спросите о неисправности, ТО или настройке своего мотоцикла.
+          </small>
+        </span>
+        <Icon name="arrow" />
+      </a>
       {!busy && (
         <FirstSteps key={`${bikes.length}/${revision}`} current="garage" />
       )}

@@ -1324,3 +1324,93 @@ footer {
     bottom: calc(82px + env(safe-area-inset-bottom));
   }
 }
+
+/* Garage: the AI mechanic entry (on phones the mechanic lives here instead of the tab bar) */
+.garage-mechanic {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 14px 18px;
+  margin-bottom: 22px;
+  color: var(--ink);
+  border-left: 4px solid var(--rust);
+  transition: transform 0.15s var(--ease-out);
+}
+.garage-mechanic > svg:first-child {
+  color: var(--rust);
+  flex: none;
+}
+.garage-mechanic span {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex: 1;
+  min-width: 0;
+}
+.garage-mechanic small {
+  color: var(--muted);
+}
+.garage-mechanic:active {
+  transform: scale(0.98);
+}
+
+/* Game: the 67МОТО page in a frame; sideways on a phone it takes the whole screen */
+.game-frame {
+  position: relative;
+  height: max(560px, calc(100dvh - 330px));
+  border-radius: 6px;
+  overflow: hidden;
+  background: #111;
+  border: 1px solid var(--border);
+}
+.game-frame iframe {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  border: 0;
+}
+.game-frame:fullscreen {
+  border-radius: 0;
+  border: 0;
+}
+@media (max-width: 760px) {
+  .game-heading .button {
+    width: 100%;
+    justify-content: center;
+  }
+  .game-frame {
+    height: calc(100dvh - 150px - env(safe-area-inset-bottom));
+    min-height: 480px;
+    margin: 0 -17px;
+    border-radius: 0;
+    border-left: 0;
+    border-right: 0;
+  }
+}
+@media (orientation: landscape) and (max-height: 560px) {
+  .route-game .sidebar,
+  .route-game .topbar,
+  .route-game .tab-bar,
+  .route-game footer,
+  .route-game .feedback-fab,
+  .route-game .game-heading,
+  .route-game main > .form-note,
+  .route-game main > .error-box {
+    display: none !important;
+  }
+  .route-game main {
+    padding: 0 !important;
+  }
+  body:has(.route-game) {
+    padding-bottom: 0;
+  }
+  .route-game .game-frame {
+    height: 100vh;
+    height: 100dvh;
+    min-height: 0;
+    margin: 0;
+    border: 0;
+    border-radius: 0;
+  }
+}
