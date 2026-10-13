@@ -79,9 +79,16 @@ export interface PartEngine {
   /** Other models of the reference with the same engine. */
   models: number;
 }
+/** The brand's own parts scheme for this model (opened on the brand's site, not copied). */
+export interface OfficialScheme {
+  source: string;
+  title: string;
+  url: string;
+}
 export interface PartsOverview {
   model: ModelSummary;
   engine: PartEngine | null;
+  official: OfficialScheme | null;
   moto: PartNodeSummary[];
   engineNodes: PartNodeSummary[];
   viewerOwns: boolean;
@@ -95,6 +102,7 @@ export interface PartNodePage {
   fits: PartFit[];
   viewerOwns: boolean;
   engine: PartEngine | null;
+  official: OfficialScheme | null;
 }
 const obj = (
   properties: Record<string, unknown>,
@@ -111,6 +119,9 @@ const engine = {
     obj({ key: str, label: str, models: { type: "integer" } }),
     { type: "null" },
   ],
+};
+const official = {
+  anyOf: [obj({ source: str, title: str, url: str }), { type: "null" }],
 };
 const nodeSummary = obj({
   id: node,
@@ -155,6 +166,7 @@ export const partResponses = {
   overview: obj({
     model: obj(modelSummaryProperties),
     engine,
+    official,
     moto: { type: "array", items: nodeSummary },
     engineNodes: { type: "array", items: nodeSummary },
     viewerOwns: { type: "boolean" },
@@ -177,6 +189,7 @@ export const partResponses = {
     fits: { type: "array", items: fit },
     viewerOwns: { type: "boolean" },
     engine,
+    official,
   }),
   fit,
 };

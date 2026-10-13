@@ -117,6 +117,13 @@ describe("Parts selection", () => {
       (await request("GET", "/api/parts/no-such-model")).statusCode,
       404,
     );
+    // Brand schemes are links only: KAYO K1 250 MX goes to its kayo.ru page, BSE has none.
+    assert.equal(o.official, null);
+    const kayo = (
+      await request("GET", "/api/parts/mototsikl-kayo-k1-250-mx-2118")
+    ).json<PartsOverview>();
+    assert.equal(kayo.official?.source, "KAYO");
+    assert.equal(kayo.official?.url, "https://kayo.ru/schemes/68936/");
   });
   it("lets only owners of the model add and confirm, without links", async () => {
     const denied = await fit(stranger, "bse-t5/moto/wheel_front", "Шина");

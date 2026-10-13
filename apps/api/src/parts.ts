@@ -9,6 +9,7 @@ import {
   partSchemas,
   responses,
   type ModelDetail,
+  type OfficialScheme,
   type PartEngine,
   type PartFit,
   type PartFitInput,
@@ -180,6 +181,21 @@ if (existsSync(partsFile)) {
 const tableOf = (scope: PartScope, scopeKey: string, node: string) =>
   tables.get(`${scope}|${scopeKey}|${node}`) ?? [];
 
+// Brands' own scheme pages (scripts/import-kayo-schemes.mjs): only a link and a title, never their content.
+const schemesFile = new URL("../data/external-schemes.json", import.meta.url);
+const official = new Map<string, OfficialScheme>(
+  existsSync(schemesFile)
+    ? Object.entries(
+        (
+          JSON.parse(readFileSync(schemesFile, "utf8")) as {
+            links: Record<string, OfficialScheme>;
+          }
+        ).links,
+      )
+    : [],
+);
+const officialOf = (slug: string) => official.get(slug) ?? null;
+
 export function partRoutes(
   app: FastifyInstance,
   db: Database,
@@ -267,6 +283,7 @@ export function partRoutes(
       return {
         model: summaryOf(m),
         engine,
+        official: officialOf(m.slug),
         moto: (Object.keys(motoNodes) as PartNode[]).map((id) =>
           summary("moto", id, moto, m.slug),
         ),
@@ -335,6 +352,7 @@ export function partRoutes(
         fits: await fitsOf(scope, k, node, viewer),
         viewerOwns: await owns(db, viewer, m, scope),
         engine: engineInfo(m),
+        official: officialOf(m.slug),
       };
     },
   );

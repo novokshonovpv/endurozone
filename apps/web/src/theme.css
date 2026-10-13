@@ -1924,3 +1924,36 @@ footer {
   background: var(--olive);
   color: var(--paper);
 }
+
+/* The brand's own parts scheme: a link out, rust accent */
+.official-scheme {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 14px 18px;
+  margin: 0 0 16px;
+  color: var(--ink);
+  border-left: 4px solid var(--rust);
+}
+.official-scheme > svg {
+  color: var(--rust);
+  flex: none;
+}
+.official-scheme > span:nth-child(2) {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex: 1;
+  min-width: 0;
+}
+.official-scheme small {
+  color: var(--muted);
+}
+.official-go {
+  font-weight: 700;
+  color: var(--rust);
+  white-space: nowrap;
+}
+.parts-table .official-scheme {
+  margin: 12px 0 0;
+}

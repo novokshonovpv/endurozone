@@ -3,6 +3,7 @@ import type {
   Bike,
   ModelBrand,
   ModelSummary,
+  OfficialScheme,
   PartFit,
   PartNode,
   PartNodePage,
@@ -186,6 +187,27 @@ function PartsHome({ session }: { session: Session | null }) {
     </>
   );
 }
+/** The brand's own scheme with part numbers, opened on the brand's site. */
+function OfficialLink({ official }: { official: OfficialScheme | null }) {
+  if (!official) return null;
+  return (
+    <a
+      className="card official-scheme"
+      href={official.url}
+      target="_blank"
+      rel="noreferrer"
+    >
+      <Icon name="book" size={24} />
+      <span>
+        <strong>Официальная схема запчастей {official.source}</strong>
+        <small>
+          Схемы узлов и артикулы для «{official.title}» — на сайте производителя
+        </small>
+      </span>
+      <span className="official-go">Открыть ↗</span>
+    </a>
+  );
+}
 function NodeTile({
   slug,
   scope,
@@ -252,6 +274,7 @@ function PartsModel({ slug, tab }: { slug: string; tab: PartScope }) {
           </a>
         </div>
       </section>
+      <OfficialLink official={o.official} />
       <div className="scope-tabs parts-tabs" role="tablist" aria-label="Раздел">
         <a
           role="tab"
@@ -472,10 +495,13 @@ function PartsNode({
             </table>
           </div>
         ) : (
-          <p className="muted">
-            Таблица деталей с артикулами появится, когда подключим каталог
-            поставщика. Пока — размеры выше и опыт владельцев ниже.
-          </p>
+          <>
+            <p className="muted">
+              Таблица деталей с артикулами появится, когда подключим каталог
+              поставщика. Пока — размеры выше и опыт владельцев ниже.
+            </p>
+            <OfficialLink official={page.official} />
+          </>
         )}
       </section>
       <section className="card parts-fits">
