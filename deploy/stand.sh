@@ -2,6 +2,8 @@
 # Тестовый стенд Enduro.Zone на сервере Timeweb (root, по SSH):
 #   STAND_HOST=enduro.200-165-236-78.sslip.io bash stand.sh setup  — первичная настройка (повторный запуск безопасен)
 #   bash stand.sh update [ветка]                                    — выложить свежую версию ветки
+#   bash stand.sh open                                              — снять пароль со стенда (сайт и приложение без входа по паролю)
+# Пароль стенда необязателен: STAND_GENERATE_PASSWORD=1 или STAND_PASSWORD_STDIN=1 при setup.
 # Отдельный пользователь, своя база PGlite в /opt/endurozone/app/.data, Node.js 24 в /opt/node-v24.
 # Другие сайты на сервере (nginx) не затрагиваются: добавляется только свой server-блок.
 set -euo pipefail
@@ -124,7 +126,12 @@ EOF
     printf '%s:%s\n' "$stand_user" "$hash" > /etc/nginx/endurozone.htpasswd
     chmod 640 /etc/nginx/endurozone.htpasswd && chgrp www-data /etc/nginx/endurozone.htpasswd
   fi
-  [ -s /etc/nginx/endurozone.htpasswd ] || { echo "Нет /etc/nginx/endurozone.htpasswd" >&2; exit 1; }
+  # The stand is open by default (decision of 13.10.2026); a password applies only if one was set above.
+  local auth=""
+  if [ -s /etc/nginx/endurozone.htpasswd ]; then
+    auth='        auth_basic "Enduro.Zone";
+        auth_basic_user_file /etc/nginx/endurozone.htpasswd;'
+  fi
 
   if [ ! -e /etc/nginx/sites-available/endurozone.conf ]; then
     cat > /etc/nginx/sites-available/endurozone.conf <<EOF
@@ -136,13 +143,11 @@ server {
     client_max_body_size 8m;
     # The Android app (Trusted Web Activity) proves site ownership through this public file.
     location = /.well-known/assetlinks.json {
-        auth_basic off;
         default_type application/json;
         alias $APP/deploy/assetlinks.json;
     }
     location / {
-        auth_basic "Enduro.Zone";
-        auth_basic_user_file /etc/nginx/endurozone.htpasswd;
+$auth
         proxy_pass http://127.0.0.1:$PORT;
         proxy_set_header Host \$host;
         proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
@@ -173,8 +178,20 @@ update() {
   health
 }
 
+# Removes the stand password: drops auth_basic lines from the stand's nginx site and the password file.
+open_stand() {
+  local conf=/etc/nginx/sites-available/endurozone.conf
+  cp "$conf" "/root/endurozone.conf.bak.$(date +%s)"
+  sed -i '/auth_basic/d' "$conf"
+  nginx -t
+  systemctl reload nginx
+  rm -f /etc/nginx/endurozone.htpasswd
+  echo "Пароль снят: сайт открыт без входа по паролю"
+}
+
 case "${1:-}" in
   setup) setup ;;
   update) update ;;
-  *) echo "Использование: stand.sh setup|update [ветка]" >&2; exit 2 ;;
+  open) open_stand ;;
+  *) echo "Использование: stand.sh setup|update [ветка]|open" >&2; exit 2 ;;
 esac
