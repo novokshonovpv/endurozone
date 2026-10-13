@@ -1203,3 +1203,124 @@ footer {
   background: var(--paper);
   font-size: 13px;
 }
+
+/* Phone navigation: four main sections in a bottom tab bar, the rest behind "Меню". */
+.tab-bar,
+.menu-toggle {
+  display: none;
+}
+@media (max-width: 760px) {
+  .sidebar {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 0 12px;
+    padding: 12px 16px;
+  }
+  .sidebar nav:first-of-type,
+  .sidebar .roadmap-link {
+    display: none;
+  }
+  .menu-toggle {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 9px 12px;
+    border: 1px solid rgba(207, 200, 168, 0.28);
+    border-radius: 3px;
+    background: var(--olive-2);
+    color: var(--paper);
+    font-family: var(--display);
+    font-size: 12px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    cursor: pointer;
+  }
+  .burger {
+    width: 16px;
+    height: 2px;
+    background: currentColor;
+    box-shadow:
+      0 -5px 0 currentColor,
+      0 5px 0 currentColor;
+  }
+  .sidebar.menu-open nav:first-of-type {
+    grid-column: 1 / -1;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    margin-top: 14px;
+    overflow: visible;
+    animation: ez-fade 0.2s ease both;
+  }
+  .sidebar.menu-open .roadmap-link {
+    grid-column: 1 / -1;
+    display: flex;
+  }
+  .sidebar.menu-open .nav-item {
+    font-size: 14px;
+    padding: 12px;
+  }
+  .tab-bar {
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 60;
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    padding: 6px 4px calc(6px + env(safe-area-inset-bottom));
+    background: var(--olive);
+    border-top: 1px solid rgba(207, 200, 168, 0.18);
+    box-shadow: 0 -12px 26px -18px rgba(23, 24, 15, 0.7);
+  }
+  .tab-bar a {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 3px;
+    padding: 6px 2px 4px;
+    color: var(--khaki);
+    font-size: 10.5px;
+    font-weight: 600;
+    line-height: 1.2;
+    text-align: center;
+    -webkit-tap-highlight-color: transparent;
+    transition:
+      color 0.2s ease,
+      transform 0.15s var(--ease-out);
+  }
+  .tab-bar a::before {
+    content: "";
+    position: absolute;
+    top: -6px;
+    left: 30%;
+    right: 30%;
+    height: 3px;
+    background: var(--rust);
+    transform: scaleX(0);
+    transition: transform 0.3s var(--ease-out);
+  }
+  .tab-bar a.active {
+    color: var(--paper);
+  }
+  .tab-bar a.active svg {
+    color: #e98a52;
+  }
+  .tab-bar a.active::before {
+    transform: scaleX(1);
+  }
+  .tab-bar a:active {
+    transform: scale(0.94);
+  }
+  body {
+    padding-bottom: calc(66px + env(safe-area-inset-bottom));
+  }
+  .feedback-fab {
+    bottom: calc(78px + env(safe-area-inset-bottom));
+  }
+  .toast {
+    bottom: calc(82px + env(safe-area-inset-bottom));
+  }
+}

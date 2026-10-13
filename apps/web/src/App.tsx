@@ -33,6 +33,7 @@ import { Following, Favorites } from "./follows.tsx";
 import { Nearby } from "./nearby.tsx";
 import { ExploreTabs, isExplore, exploreLabel } from "./explore.tsx";
 import { FeedbackButton, MyFeedback, PilotFeedback } from "./feedback.tsx";
+import { TabBar } from "./tabbar.tsx";
 
 const nav: { path: string; label: string; icon: IconName }[] = [
   { path: "feed", label: "Сообщество", icon: "feed" },
@@ -67,7 +68,10 @@ export default function App() {
   const [session, setSession] = useState<Session | null>(null),
     [ready, setReady] = useState(false),
     [connectionError, setConnectionError] = useState(""),
-    [notice, setNotice] = useState("");
+    [notice, setNotice] = useState(""),
+    [menuOpen, setMenuOpen] = useState(false);
+  // The phone menu sheet closes on any navigation.
+  useEffect(() => setMenuOpen(false), [route]);
   const updateSession = (next: Session | null) => {
     setSessionToken(next);
     setSession(next);
@@ -110,7 +114,7 @@ export default function App() {
   };
   return (
     <div className="shell">
-      <aside className="sidebar">
+      <aside className={`sidebar ${menuOpen ? "menu-open" : ""}`}>
         <a className="brand" href="#feed" aria-label="Enduro.Zone, сообщество">
           <span className="brand-mark">
             EZ
@@ -121,8 +125,21 @@ export default function App() {
             <small>ТВОЯ ТЕРРИТОРИЯ ЭНДУРО</small>
           </span>
         </a>
+        <button
+          className="menu-toggle"
+          aria-expanded={menuOpen}
+          aria-controls="all-sections"
+          onClick={() => setMenuOpen((x) => !x)}
+        >
+          {menuOpen ? (
+            <Icon name="close" size={18} />
+          ) : (
+            <span className="burger" />
+          )}
+          Меню
+        </button>
         <div className="nav-caption">СООБЩЕСТВО</div>
-        <nav aria-label="Основные разделы">
+        <nav aria-label="Основные разделы" id="all-sections">
           {nav.map((n) => (
             <a
               key={n.path}
@@ -424,6 +441,7 @@ export default function App() {
         </footer>
       </div>
       {session && <FeedbackButton route={route} notify={setNotice} />}
+      <TabBar route={route} />
       {notice && (
         <div className="toast" role="status">
           {notice}

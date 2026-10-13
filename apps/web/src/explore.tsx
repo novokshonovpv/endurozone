@@ -1,3 +1,4 @@
+import { useEffect, useRef } from "react";
 import { Icon, type IconName } from "./ui.tsx";
 // Places, GPX tracks and rides are one rider journey: where to go and with whom.
 // The old addresses (#map, #tracks, #rides, #nearby) stay valid as tabs of this section.
@@ -19,8 +20,16 @@ export const exploreLabel = (route: string) =>
   tabs.find((t) => t.path === parent(route))?.label ?? "";
 export function ExploreTabs({ route }: { route: string }) {
   const current = parent(route);
+  const bar = useRef<HTMLElement>(null);
+  // On a phone the tabs scroll sideways: keep the active one in view.
+  useEffect(() => {
+    const el = bar.current?.querySelector<HTMLElement>("a.active");
+    if (el && bar.current)
+      bar.current.scrollLeft =
+        el.offsetLeft - (bar.current.clientWidth - el.offsetWidth) / 2;
+  }, [current]);
   return (
-    <nav className="explore-tabs" aria-label="Карта и выезды">
+    <nav className="explore-tabs" aria-label="Карта и выезды" ref={bar}>
       {tabs.map((t) => (
         <a
           key={t.path}
