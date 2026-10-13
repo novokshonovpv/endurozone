@@ -10,6 +10,8 @@ export function Game() {
     setHint("");
     try {
       await box.current?.requestFullscreen();
+      // The Android app turns the screen sideways itself.
+      if (navigator.userAgent.includes("EnduroZoneApp")) return;
       // Not every browser allows locking; a rotated phone works as well.
       await (
         screen.orientation as ScreenOrientation & {

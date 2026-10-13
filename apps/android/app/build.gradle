@@ -2,8 +2,8 @@ plugins {
     id 'com.android.application'
 }
 
-// The site the app opens. Override for another host: gradlew assembleRelease -PtwaHost=example.org
-def twaHost = (project.findProperty('twaHost') ?: 'enduro.200-165-236-78.sslip.io').toString()
+// The site the app opens. Override for another host: gradlew assembleRelease -PsiteHost=example.org
+def siteHost = (project.findProperty('siteHost') ?: 'enduro.200-165-236-78.sslip.io').toString()
 
 // The release key lives outside the repository (see apps/android/README.md).
 def keyProps = new Properties()
@@ -16,14 +16,17 @@ android {
 
     defaultConfig {
         applicationId 'zone.enduro.app'
-        minSdk 21
+        // Android 7+: runtime permissions for location, WebView file picking.
+        minSdk 24
         targetSdk 34
-        versionCode 3
+        versionCode 4
         versionName '0.20.0'
-        manifestPlaceholders = [hostName: twaHost, launchUrl: "https://${twaHost}/#feed"]
-        // Digital Asset Links: lets Chrome open the site full screen, without the address bar.
-        resValue 'string', 'asset_statements',
-            "[{\\\"relation\\\":[\\\"delegate_permission/common.handle_all_urls\\\"],\\\"target\\\":{\\\"namespace\\\":\\\"web\\\",\\\"site\\\":\\\"https://${twaHost}\\\"}}]"
+        resValue 'string', 'site_host', siteHost
+        resValue 'string', 'launch_url', "https://${siteHost}/#feed"
+    }
+
+    buildFeatures {
+        buildConfig true
     }
 
     signingConfigs {
@@ -48,8 +51,4 @@ android {
         sourceCompatibility JavaVersion.VERSION_17
         targetCompatibility JavaVersion.VERSION_17
     }
-}
-
-dependencies {
-    implementation 'com.google.androidbrowserhelper:androidbrowserhelper:2.5.0'
 }
