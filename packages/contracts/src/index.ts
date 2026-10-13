@@ -33,10 +33,13 @@ export interface BikeInput {
   engine: string;
   hours: number;
   notes: string;
+  /** Model from the reference (67МОТО catalog); free-text bikes have none. */
+  catalogSlug?: string | null;
 }
 export interface Bike extends BikeInput {
   id: string;
   createdAt: string;
+  catalogSlug: string | null;
   catalogVerified: false;
 }
 export interface PostInput {
@@ -114,15 +117,24 @@ export const schemas = {
     level: { type: "string", enum: Object.keys(levels) },
     bio: text(600),
   }),
-  bike: obj({
-    make: text(60, 1),
-    model: text(80, 1),
-    year: { type: "integer", minimum: 1970, maximum: 2100 },
-    modification: text(120),
-    engine: text(120),
-    hours: { type: "number", minimum: 0, maximum: 100000 },
-    notes: text(2000),
-  }),
+  bike: obj(
+    {
+      make: text(60, 1),
+      model: text(80, 1),
+      year: { type: "integer", minimum: 1970, maximum: 2100 },
+      modification: text(120),
+      engine: text(120),
+      hours: { type: "number", minimum: 0, maximum: 100000 },
+      notes: text(2000),
+      catalogSlug: {
+        anyOf: [
+          { type: "string", pattern: "^[a-z0-9-]{1,120}$" },
+          { type: "null" },
+        ],
+      },
+    },
+    ["make", "model", "year", "modification", "engine", "hours", "notes"],
+  ),
   post: obj({
     bikeId: { type: "string", format: "uuid" },
     title: text(140, 3),
@@ -210,6 +222,7 @@ const bikeSummary = obj({
   year: { type: "integer" },
   modification: text(120),
 });
+// Every response carries catalogSlug (null for free-text bikes).
 const bikeResponse = obj({
   ...schemas.bike.properties,
   id: uuid,
@@ -367,3 +380,4 @@ export * from "./feedback.ts";
 export * from "./onboarding.ts";
 export * from "./roles.ts";
 export * from "./blocks.ts";
+export * from "./models.ts";

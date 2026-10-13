@@ -2,7 +2,7 @@
   "openapi": "3.0.3",
   "info": {
     "title": "Enduro.Zone API",
-    "version": "0.20.0",
+    "version": "0.21.0",
     "description": "Аккаунт, гараж, бортжурнал, локации и модерация. Для cookie-сессии запросить /api/me и передать csrfToken в X-CSRF-Token при изменении данных. Все изменения требуют X-Enduro-Client: web. Подтверждение email, восстановление доступа и личные уведомления. Проверка email перед публикацией включается REQUIRE_VERIFIED_EMAIL=true."
   },
   "components": {
@@ -4071,6 +4071,11 @@
                             "minLength": 0,
                             "maxLength": 2000
                           },
+                          "catalogSlug": {
+                            "type": "string",
+                            "pattern": "^[a-z0-9-]{1,120}$",
+                            "nullable": true
+                          },
                           "id": {
                             "type": "string",
                             "format": "uuid"
@@ -4094,6 +4099,7 @@
                           "engine",
                           "hours",
                           "notes",
+                          "catalogSlug",
                           "id",
                           "createdAt",
                           "catalogVerified"
@@ -4450,6 +4456,11 @@
                     "type": "string",
                     "minLength": 0,
                     "maxLength": 2000
+                  },
+                  "catalogSlug": {
+                    "type": "string",
+                    "pattern": "^[a-z0-9-]{1,120}$",
+                    "nullable": true
                   }
                 },
                 "required": [
@@ -4514,6 +4525,11 @@
                       "minLength": 0,
                       "maxLength": 2000
                     },
+                    "catalogSlug": {
+                      "type": "string",
+                      "pattern": "^[a-z0-9-]{1,120}$",
+                      "nullable": true
+                    },
                     "id": {
                       "type": "string",
                       "format": "uuid"
@@ -4537,6 +4553,7 @@
                     "engine",
                     "hours",
                     "notes",
+                    "catalogSlug",
                     "id",
                     "createdAt",
                     "catalogVerified"
@@ -4889,6 +4906,11 @@
                     "type": "string",
                     "minLength": 0,
                     "maxLength": 2000
+                  },
+                  "catalogSlug": {
+                    "type": "string",
+                    "pattern": "^[a-z0-9-]{1,120}$",
+                    "nullable": true
                   }
                 },
                 "required": [
@@ -4964,6 +4986,11 @@
                       "minLength": 0,
                       "maxLength": 2000
                     },
+                    "catalogSlug": {
+                      "type": "string",
+                      "pattern": "^[a-z0-9-]{1,120}$",
+                      "nullable": true
+                    },
                     "id": {
                       "type": "string",
                       "format": "uuid"
@@ -4987,6 +5014,7 @@
                     "engine",
                     "hours",
                     "notes",
+                    "catalogSlug",
                     "id",
                     "createdAt",
                     "catalogVerified"
@@ -15890,6 +15918,441 @@
                       }
                     }
                   }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/models/brands": {
+      "get": {
+        "tags": [
+          "Models"
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "properties": {
+                    "source": {
+                      "type": "string"
+                    },
+                    "items": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "additionalProperties": false,
+                        "properties": {
+                          "brand": {
+                            "type": "string"
+                          },
+                          "count": {
+                            "type": "integer"
+                          }
+                        },
+                        "required": [
+                          "brand",
+                          "count"
+                        ]
+                      }
+                    }
+                  },
+                  "required": [
+                    "source",
+                    "items"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/models": {
+      "get": {
+        "tags": [
+          "Models"
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "maxLength": 60
+            },
+            "in": "query",
+            "name": "brand",
+            "required": false
+          },
+          {
+            "schema": {
+              "type": "string",
+              "maxLength": 80
+            },
+            "in": "query",
+            "name": "q",
+            "required": false
+          },
+          {
+            "schema": {
+              "type": "string",
+              "enum": [
+                "enduro",
+                "pit",
+                "road",
+                "electro",
+                "mini"
+              ]
+            },
+            "in": "query",
+            "name": "section",
+            "required": false
+          },
+          {
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 200,
+              "default": 24
+            },
+            "in": "query",
+            "name": "limit",
+            "required": false
+          },
+          {
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 5000,
+              "default": 0
+            },
+            "in": "query",
+            "name": "offset",
+            "required": false
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "properties": {
+                    "items": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "additionalProperties": false,
+                        "properties": {
+                          "slug": {
+                            "type": "string"
+                          },
+                          "brand": {
+                            "type": "string"
+                          },
+                          "model": {
+                            "type": "string"
+                          },
+                          "title": {
+                            "type": "string"
+                          },
+                          "section": {
+                            "type": "string",
+                            "enum": [
+                              "enduro",
+                              "pit",
+                              "road",
+                              "electro",
+                              "mini"
+                            ]
+                          },
+                          "sectionLabel": {
+                            "type": "string"
+                          },
+                          "year": {
+                            "type": "integer",
+                            "nullable": true
+                          },
+                          "cc": {
+                            "type": "number",
+                            "nullable": true
+                          },
+                          "hp": {
+                            "type": "number",
+                            "nullable": true
+                          },
+                          "image": {
+                            "type": "string",
+                            "nullable": true
+                          }
+                        },
+                        "required": [
+                          "slug",
+                          "brand",
+                          "model",
+                          "title",
+                          "section",
+                          "sectionLabel",
+                          "year",
+                          "cc",
+                          "hp",
+                          "image"
+                        ]
+                      }
+                    },
+                    "total": {
+                      "type": "integer"
+                    },
+                    "nextOffset": {
+                      "type": "integer",
+                      "nullable": true
+                    }
+                  },
+                  "required": [
+                    "items",
+                    "total",
+                    "nextOffset"
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "additionalProperties": false,
+                      "properties": {
+                        "code": {
+                          "type": "string",
+                          "minLength": 1,
+                          "maxLength": 100
+                        },
+                        "message": {
+                          "type": "string",
+                          "minLength": 1,
+                          "maxLength": 1000
+                        },
+                        "requestId": {
+                          "type": "string",
+                          "minLength": 1,
+                          "maxLength": 100
+                        }
+                      },
+                      "required": [
+                        "code",
+                        "message",
+                        "requestId"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/models/{slug}": {
+      "get": {
+        "tags": [
+          "Models"
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "pattern": "^[a-z0-9-]{1,120}$"
+            },
+            "in": "path",
+            "name": "slug",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "properties": {
+                    "slug": {
+                      "type": "string"
+                    },
+                    "brand": {
+                      "type": "string"
+                    },
+                    "model": {
+                      "type": "string"
+                    },
+                    "title": {
+                      "type": "string"
+                    },
+                    "section": {
+                      "type": "string",
+                      "enum": [
+                        "enduro",
+                        "pit",
+                        "road",
+                        "electro",
+                        "mini"
+                      ]
+                    },
+                    "sectionLabel": {
+                      "type": "string"
+                    },
+                    "year": {
+                      "type": "integer",
+                      "nullable": true
+                    },
+                    "cc": {
+                      "type": "number",
+                      "nullable": true
+                    },
+                    "hp": {
+                      "type": "number",
+                      "nullable": true
+                    },
+                    "images": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      }
+                    },
+                    "description": {
+                      "type": "string"
+                    },
+                    "specs": {
+                      "type": "array",
+                      "items": {
+                        "type": "array",
+                        "items": {
+                          "type": "string"
+                        },
+                        "minItems": 2,
+                        "maxItems": 2
+                      }
+                    },
+                    "url": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "slug",
+                    "brand",
+                    "model",
+                    "title",
+                    "section",
+                    "sectionLabel",
+                    "year",
+                    "cc",
+                    "hp",
+                    "images",
+                    "description",
+                    "specs",
+                    "url"
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "additionalProperties": false,
+                      "properties": {
+                        "code": {
+                          "type": "string",
+                          "minLength": 1,
+                          "maxLength": 100
+                        },
+                        "message": {
+                          "type": "string",
+                          "minLength": 1,
+                          "maxLength": 1000
+                        },
+                        "requestId": {
+                          "type": "string",
+                          "minLength": 1,
+                          "maxLength": 100
+                        }
+                      },
+                      "required": [
+                        "code",
+                        "message",
+                        "requestId"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "additionalProperties": false,
+                      "properties": {
+                        "code": {
+                          "type": "string",
+                          "minLength": 1,
+                          "maxLength": 100
+                        },
+                        "message": {
+                          "type": "string",
+                          "minLength": 1,
+                          "maxLength": 1000
+                        },
+                        "requestId": {
+                          "type": "string",
+                          "minLength": 1,
+                          "maxLength": 100
+                        }
+                      },
+                      "required": [
+                        "code",
+                        "message",
+                        "requestId"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
                 }
               }
             }

@@ -35,12 +35,14 @@ import { ExploreTabs, isExplore, exploreLabel } from "./explore.tsx";
 import { FeedbackButton, MyFeedback, PilotFeedback } from "./feedback.tsx";
 import { TabBar } from "./tabbar.tsx";
 import { Game } from "./game.tsx";
+import { Models, ModelPage } from "./models.tsx";
 
 const nav: { path: string; label: string; icon: IconName }[] = [
   { path: "feed", label: "Сообщество", icon: "feed" },
   { path: "riders", label: "Райдеры", icon: "user" },
   { path: "nearby", label: "Карта и выезды", icon: "route" },
   { path: "shop", label: "Магазин", icon: "shop" },
+  { path: "models", label: "Модели", icon: "bike" },
   { path: "mechanic", label: "ИИ-механик", icon: "wrench" },
   { path: "learning", label: "Обучение", icon: "book" },
   { path: "game", label: "Игра", icon: "game" },
@@ -67,6 +69,8 @@ export default function App() {
   const route = rawRoute.split("?")[0];
   const shopBike =
     new URLSearchParams(rawRoute.split("?")[1] ?? "").get("bike") ?? "";
+  const addModel =
+    new URLSearchParams(rawRoute.split("?")[1] ?? "").get("model") ?? undefined;
   const [session, setSession] = useState<Session | null>(null),
     [ready, setReady] = useState(false),
     [connectionError, setConnectionError] = useState(""),
@@ -212,28 +216,30 @@ export default function App() {
                       ? "GPX-трек"
                       : route.startsWith("ride/")
                         ? "Покатушка"
-                        : (nav.find(
-                            (n) => n.path === route && !isExplore(route),
-                          )?.label ??
-                          (isExplore(route)
-                            ? `Карта и выезды · ${exploreLabel(route)}`
-                            : undefined) ??
-                          (route === "roadmap"
-                            ? "Ход разработки"
-                            : route === "notifications"
-                              ? "Уведомления"
-                              : route === "moderation"
-                                ? "Модерация"
-                                : route === "pilot-feedback"
-                                  ? "Отзывы пилота"
-                                  : route === "feedback"
-                                    ? "Мои отзывы"
-                                    : "Добро пожаловать"))}
+                        : route.startsWith("model/")
+                          ? "Модель"
+                          : (nav.find(
+                              (n) => n.path === route && !isExplore(route),
+                            )?.label ??
+                            (isExplore(route)
+                              ? `Карта и выезды · ${exploreLabel(route)}`
+                              : undefined) ??
+                            (route === "roadmap"
+                              ? "Ход разработки"
+                              : route === "notifications"
+                                ? "Уведомления"
+                                : route === "moderation"
+                                  ? "Модерация"
+                                  : route === "pilot-feedback"
+                                    ? "Отзывы пилота"
+                                    : route === "feedback"
+                                      ? "Мои отзывы"
+                                      : "Добро пожаловать"))}
           </span>
           <div className="top-actions">
             <span className="version">
               <span className="tiny-dot" />
-              Разработка · 0.20
+              Разработка · 0.21
             </span>
             {session ? (
               <>
@@ -351,6 +357,7 @@ export default function App() {
                 key={session.user.id}
                 session={session}
                 notify={setNotice}
+                addModel={addModel}
               />
             ) : (
               <JoinGate />
@@ -426,6 +433,14 @@ export default function App() {
               handle={route.slice(6)}
               session={session}
               requestedBike={shopBike}
+            />
+          ) : route === "models" ? (
+            <Models />
+          ) : route.startsWith("model/") ? (
+            <ModelPage
+              key={route.slice(6)}
+              slug={route.slice(6)}
+              signedIn={Boolean(session)}
             />
           ) : route === "mechanic" ? (
             <Mechanic key={session?.user.id ?? "guest"} session={session} />

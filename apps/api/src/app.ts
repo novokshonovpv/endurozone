@@ -42,6 +42,7 @@ import { feedbackRoutes } from "./feedback.ts";
 import { onboardingRoutes } from "./onboarding.ts";
 import { roleRoutes } from "./roles.ts";
 import { blockRoutes, blockedBetween } from "./blocks.ts";
+import { modelRoutes, catalogModel } from "./models.ts";
 import { appVersion } from "./version.ts";
 
 interface AuthContext {
@@ -66,6 +67,17 @@ class HttpError extends Error {
 const notFound = () =>
   new HttpError(404, "NOT_FOUND", "Объект не найден или недоступен.");
 const date = (value: Date | string) => new Date(value).toISOString();
+// A bike may point at a model of the reference; unknown slugs are rejected.
+const catalogSlug = (slug?: string | null) => {
+  if (slug == null) return null;
+  if (!catalogModel(slug))
+    throw new HttpError(
+      400,
+      "CATALOG_UNKNOWN",
+      "Такой модели нет в справочнике.",
+    );
+  return slug;
+};
 const bikeOf = (r: Row) => ({
   id: r.id,
   make: r.make,
@@ -75,6 +87,7 @@ const bikeOf = (r: Row) => ({
   engine: r.engine,
   hours: Number(r.hours),
   notes: r.notes,
+  catalogSlug: r.catalog_slug ?? null,
   createdAt: date(r.created_at),
   catalogVerified: false as const,
 });
@@ -536,7 +549,7 @@ export async function buildApp(options: {
       const b = req.body;
       nonblank([b.make, b.model]);
       const [r] = await db.query(
-        "INSERT INTO bikes(id,owner_id,make,model,year,modification,engine,hours,notes) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9) RETURNING *",
+        "INSERT INTO bikes(id,owner_id,make,model,year,modification,engine,hours,notes,catalog_slug) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10) RETURNING *",
         [
           randomUUID(),
           auth.user.id,
@@ -547,6 +560,7 @@ export async function buildApp(options: {
           clean(b.engine),
           b.hours,
           clean(b.notes),
+          catalogSlug(b.catalogSlug),
         ],
       );
       reply.code(201);
@@ -568,7 +582,7 @@ export async function buildApp(options: {
         b = req.body;
       nonblank([b.make, b.model]);
       const [r] = await db.query(
-        "UPDATE bikes SET make=$3,model=$4,year=$5,modification=$6,engine=$7,hours=$8,notes=$9 WHERE id=$1 AND owner_id=$2 RETURNING *",
+        "UPDATE bikes SET make=$3,model=$4,year=$5,modification=$6,engine=$7,hours=$8,notes=$9,catalog_slug=CASE WHEN $11 THEN $10 ELSE catalog_slug END WHERE id=$1 AND owner_id=$2 RETURNING *",
         [
           req.params.id,
           auth.user.id,
@@ -579,6 +593,9 @@ export async function buildApp(options: {
           clean(b.engine),
           b.hours,
           clean(b.notes),
+          catalogSlug(b.catalogSlug),
+          // Older clients that do not send the field keep the stored link.
+          b.catalogSlug !== undefined,
         ],
       );
       if (!r) throw notFound();
@@ -881,6 +898,7 @@ export async function buildApp(options: {
   });
   photoRoutes(app, db, { requireWrite: verifiedWrite, notFound, HttpError });
   catalogRoutes(app);
+  modelRoutes(app, { notFound });
   learningRoutes(app, db, { requireAuth, requireWrite, notFound, HttpError });
   garageRoutes(app, db, {
     requireAuth,

@@ -1,7 +1,10 @@
-import { useEffect, useState, type FormEvent } from "react";
+import { useEffect, useRef, useState, type FormEvent } from "react";
 import {
   type Bike,
   type BikeInput,
+  type ModelBrand,
+  type ModelDetail,
+  type ModelSummary,
   type Comment,
   type Page,
   type Post,
@@ -26,6 +29,12 @@ import { GarageJournal, BikeServicePanel } from "./garage.tsx";
 import { Photos } from "./photos.tsx";
 import { FavoriteButton } from "./follows.tsx";
 import { FirstSteps } from "./onboarding.tsx";
+import {
+  CatalogBadge,
+  engineText,
+  loadBrandModels,
+  loadBrands,
+} from "./models.tsx";
 
 const noteError = (e: unknown) => (e as Error).message;
 export function PostCard({ post }: { post: Post }) {
@@ -368,9 +377,12 @@ export function Feed({ session }: { session: Session | null }) {
 export function Garage({
   session,
   notify,
+  addModel,
 }: {
   session: Session;
   notify: (s: string) => void;
+  /** From a model card: «Добавить в мой гараж» opens the form prefilled. */
+  addModel?: string;
 }) {
   const [bikes, setBikes] = useState<Bike[]>([]),
     [active, setActive] = useState(""),
@@ -378,7 +390,24 @@ export function Garage({
     [error, setError] = useState(""),
     [revision, setRevision] = useState(0);
   const [bikeEditor, setBikeEditor] = useState<Bike | "new" | null>(null),
+    [initialModel, setInitialModel] = useState<ModelSummary>(),
     [postEditor, setPostEditor] = useState(false);
+  useEffect(() => {
+    if (!addModel) return;
+    let alive = true;
+    api<ModelDetail>(`/models/${addModel}`)
+      .then(({ images, description: _d, specs: _s, url: _u, ...m }) => {
+        if (!alive) return;
+        setInitialModel({ ...m, image: images[0] ?? null });
+        setBikeEditor("new");
+        // Back to plain #garage: a reload does not reopen the form, a repeat click does.
+        go("garage");
+      })
+      .catch((e) => alive && setError(noteError(e)));
+    return () => {
+      alive = false;
+    };
+  }, [addModel]);
   useEffect(() => {
     let alive = true;
     setBusy(true);
@@ -414,7 +443,8 @@ export function Garage({
           </p>
           <h1>Мой гараж</h1>
           <p className="muted">
-            Мотоциклы, обслуживание и всё, что было между выездами.
+            Мотоциклы, обслуживание и всё, что было между выездами.{" "}
+            <a href="#models">Справочник моделей →</a>
           </p>
         </div>
         <button className="button" onClick={() => setBikeEditor("new")}>
@@ -524,6 +554,12 @@ export function Garage({
                     <Icon name="bike" size={94} />
                   </div>
                 </div>
+                {currentBike.catalogSlug && (
+                  <CatalogBadge
+                    key={currentBike.catalogSlug}
+                    slug={currentBike.catalogSlug}
+                  />
+                )}
                 <Photos
                   key={currentBike.id}
                   kind="bikes"
@@ -593,9 +629,14 @@ export function Garage({
       {bikeEditor && (
         <BikeEditor
           bike={bikeEditor === "new" ? undefined : bikeEditor}
-          close={() => setBikeEditor(null)}
+          initial={bikeEditor === "new" ? initialModel : undefined}
+          close={() => {
+            setBikeEditor(null);
+            setInitialModel(undefined);
+          }}
           done={() => {
             setBikeEditor(null);
+            setInitialModel(undefined);
             setRevision((x) => x + 1);
             notify("Гараж обновлён.");
           }}
@@ -622,16 +663,76 @@ export function Garage({
 }
 function BikeEditor({
   bike,
+  initial,
   close,
   done,
 }: {
   bike?: Bike;
+  initial?: ModelSummary;
   close: () => void;
   done: () => void;
 }) {
   const [busy, setBusy] = useState(false),
     [error, setError] = useState(""),
     [confirmDelete, setConfirmDelete] = useState(false);
+  // Brand and model come from the reference when they match; free text stays allowed.
+  const [make, setMake] = useState(bike?.make ?? initial?.brand ?? ""),
+    [model, setModel] = useState(bike?.model ?? initial?.model ?? ""),
+    [slug, setSlug] = useState<string | null>(
+      bike?.catalogSlug ?? initial?.slug ?? null,
+    ),
+    [brands, setBrands] = useState<ModelBrand[]>([]),
+    [options, setOptions] = useState<ModelSummary[]>(initial ? [initial] : []);
+  const engineRef = useRef<HTMLInputElement>(null),
+    yearRef = useRef<HTMLInputElement>(null);
+  useEffect(() => {
+    loadBrands().then(setBrands, () => {});
+  }, []);
+  useEffect(() => {
+    const b = brands.find(
+      (x) => x.brand.toLowerCase() === make.trim().toLowerCase(),
+    );
+    if (!b) return;
+    let alive = true;
+    loadBrandModels(b.brand).then(
+      (list) => {
+        if (alive) setOptions(list);
+      },
+      () => {},
+    );
+    return () => {
+      alive = false;
+    };
+  }, [make, brands]);
+  // The same model name in several years: the year tells them apart.
+  const names = new Map<string, number>();
+  for (const o of options)
+    names.set(
+      o.model.toLowerCase(),
+      (names.get(o.model.toLowerCase()) ?? 0) + 1,
+    );
+  const label = (o: ModelSummary) =>
+    (names.get(o.model.toLowerCase()) ?? 0) > 1
+      ? `${o.model} (${o.year ?? o.title})`
+      : o.model;
+  const linked = options.find((o) => o.slug === slug) ?? null;
+  function link(o: ModelSummary) {
+    setSlug(o.slug);
+    setMake(o.brand);
+    setModel(label(o));
+    if (engineRef.current && !engineRef.current.value)
+      engineRef.current.value = engineText(o);
+    if (!bike && o.year && yearRef.current)
+      yearRef.current.value = String(o.year);
+  }
+  function typeModel(value: string) {
+    setModel(value);
+    const o = options.find(
+      (x) => label(x).toLowerCase() === value.trim().toLowerCase(),
+    );
+    if (o) link(o);
+    else setSlug(null);
+  }
   const submit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     setBusy(true);
@@ -641,6 +742,7 @@ function BikeEditor({
       ...fields,
       year: Number(fields.year),
       hours: Number(fields.hours),
+      catalogSlug: fields.catalogSlug ? String(fields.catalogSlug) : null,
     } as unknown as BikeInput;
     try {
       await api(`/me/bikes${bike ? `/${bike.id}` : ""}`, {
@@ -680,9 +782,20 @@ function BikeEditor({
               name="make"
               required
               maxLength={60}
-              defaultValue={bike?.make}
-              placeholder="Например, KTM"
+              value={make}
+              onChange={(e) => {
+                setMake(e.target.value);
+                setSlug(null);
+              }}
+              list="bike-brands"
+              autoComplete="off"
+              placeholder="Например, BSE"
             />
+            <datalist id="bike-brands">
+              {brands.map((b) => (
+                <option key={b.brand} value={b.brand} />
+              ))}
+            </datalist>
           </label>
           <label>
             Модель
@@ -690,21 +803,62 @@ function BikeEditor({
               name="model"
               required
               maxLength={80}
-              defaultValue={bike?.model}
-              placeholder="Например, 300 EXC"
+              value={model}
+              onChange={(e) => typeModel(e.target.value)}
+              list="bike-models"
+              autoComplete="off"
+              placeholder="Например, T5"
             />
+            <datalist id="bike-models">
+              {options.map((o) => (
+                <option key={o.slug} value={label(o)}>
+                  {o.title}
+                </option>
+              ))}
+            </datalist>
           </label>
         </div>
+        <input type="hidden" name="catalogSlug" value={slug ?? ""} />
+        {linked ? (
+          <div className="catalog-pick">
+            {linked.image && <img src={linked.image} alt="" />}
+            <span>
+              <small>Модель из справочника 67МОТО</small>
+              <strong>{linked.title}</strong>
+              {engineText(linked) && <small>{engineText(linked)}</small>}
+            </span>
+            <button
+              type="button"
+              className="text-button"
+              onClick={() => setSlug(null)}
+            >
+              Не та модель
+            </button>
+          </div>
+        ) : (
+          options.length > 0 &&
+          brands.some(
+            (b) => b.brand.toLowerCase() === make.trim().toLowerCase(),
+          ) && (
+            <p className="form-note">
+              Выберите модель из подсказок — справочник знает {options.length}{" "}
+              моделей {make.trim()}. Можно ввести и свою.
+            </p>
+          )
+        )}
         <div className="form-grid">
           <label>
             Год выпуска
             <input
+              ref={yearRef}
               name="year"
               type="number"
               min={1970}
               max={2100}
               required
-              defaultValue={bike?.year ?? new Date().getFullYear()}
+              defaultValue={
+                bike?.year ?? initial?.year ?? new Date().getFullYear()
+              }
             />
           </label>
           <label>
@@ -732,9 +886,12 @@ function BikeEditor({
         <label>
           Двигатель
           <input
+            ref={engineRef}
             name="engine"
             maxLength={120}
-            defaultValue={bike?.engine ?? ""}
+            defaultValue={
+              bike?.engine ?? (initial ? engineText(initial) : "")
+            }
             placeholder="Объём, 2Т / 4Т, код двигателя"
           />
         </label>
