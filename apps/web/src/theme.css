@@ -1620,3 +1620,307 @@ footer {
     padding: 18px 16px;
   }
 }
+
+/* Parts selection: nodes drawn as our own schematics */
+.parts-mine {
+  margin-bottom: 18px;
+}
+.parts-mine h2,
+.parts-pick h2,
+.parts-table h2,
+.parts-fits h2 {
+  font-size: 20px;
+  margin: 0 0 12px;
+}
+.parts-mine-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
+  gap: 10px;
+}
+.parts-mine-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 14px;
+  color: var(--ink);
+  border-left: 4px solid var(--rust);
+}
+.parts-mine-item span,
+.parts-model-row span {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-width: 0;
+}
+.parts-mine-item small,
+.parts-model-row small {
+  color: var(--muted);
+  font-size: 12px;
+}
+.parts-pick {
+  padding: 20px 22px;
+}
+.parts-models {
+  display: grid;
+  gap: 6px;
+  margin-top: 6px;
+}
+.parts-model-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 6px 8px;
+  border-radius: 3px;
+  color: var(--ink);
+}
+.parts-model-row:hover {
+  background: var(--paper);
+}
+.parts-model-row img,
+.parts-model-noimg {
+  width: 64px;
+  height: 48px;
+  object-fit: contain;
+  background: #fff;
+  border-radius: 2px;
+  flex: none;
+  display: grid;
+  place-items: center;
+  color: var(--khaki);
+}
+.parts-head {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  padding: 16px 20px;
+  margin-bottom: 16px;
+}
+.parts-head img {
+  width: 160px;
+  height: 120px;
+  object-fit: contain;
+  background: #fff;
+  border-radius: 3px;
+  flex: none;
+}
+.parts-head h1 {
+  margin: 4px 0 6px;
+}
+.parts-tabs {
+  margin-bottom: 16px;
+}
+.node-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
+  gap: 12px;
+}
+.node-tile {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 16px 12px 14px;
+  color: var(--ink);
+  text-align: center;
+  transition:
+    transform 0.18s var(--ease-out),
+    box-shadow 0.18s ease;
+}
+.node-tile:hover {
+  transform: translateY(-3px);
+  box-shadow: var(--shadow);
+}
+.node-tile .node-art,
+.node-head .node-art {
+  color: var(--olive);
+}
+.node-tile:hover .node-art {
+  color: var(--rust);
+}
+.node-tile strong {
+  font-size: 14px;
+  line-height: 1.25;
+}
+.node-badges {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 4px;
+  min-height: 22px;
+}
+.node-badges .tag {
+  font-size: 10px;
+}
+.node-head {
+  display: flex;
+  align-items: flex-start;
+  gap: 24px;
+  padding: 20px 22px;
+  margin-bottom: 16px;
+}
+.node-head > svg {
+  flex: none;
+  background: var(--paper);
+  border-radius: 4px;
+  padding: 8px;
+}
+.node-head > div {
+  flex: 1;
+  min-width: 0;
+}
+.node-head h1 {
+  margin: 4px 0 12px;
+}
+.passport {
+  margin: 0;
+}
+.passport > div {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 8px 0;
+  border-bottom: 1px solid var(--line);
+}
+.passport dt {
+  color: var(--muted);
+}
+.passport dd {
+  margin: 0;
+  text-align: right;
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+.passport dd .text-button {
+  margin-left: 10px;
+  font-size: 12px;
+  font-weight: 500;
+}
+.parts-table,
+.parts-fits {
+  padding: 20px 22px;
+  margin-bottom: 16px;
+}
+.parts-table .table-wrap {
+  overflow-x: auto;
+}
+.parts-table table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+}
+.parts-table th,
+.parts-table td {
+  text-align: left;
+  padding: 8px 10px;
+  border-bottom: 1px solid var(--line);
+  vertical-align: top;
+}
+.parts-table td small {
+  display: block;
+  color: var(--muted);
+}
+.fit-list {
+  list-style: none;
+  margin: 0 0 14px;
+  padding: 0;
+  display: grid;
+  gap: 10px;
+}
+.fit {
+  display: flex;
+  gap: 14px;
+  justify-content: space-between;
+  padding: 12px 14px;
+  background: var(--paper);
+  border-left: 4px solid var(--olive);
+  border-radius: 3px;
+}
+.fit-main {
+  min-width: 0;
+}
+.fit-main p {
+  margin: 6px 0;
+  overflow-wrap: anywhere;
+}
+.fit-number {
+  margin-left: 8px;
+  font-family: "JetBrains Mono", ui-monospace, monospace;
+  font-size: 13px;
+}
+.fit-author {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--muted);
+}
+.fit-author .avatar {
+  width: 22px;
+  height: 22px;
+  font-size: 10px;
+}
+.fit-side {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 6px;
+  flex: none;
+}
+.fit-votes {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-weight: 700;
+  color: var(--olive);
+}
+.fit-form h3 {
+  margin: 4px 0 10px;
+  font-size: 16px;
+}
+@media (max-width: 760px) {
+  .node-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+  }
+  .node-tile .node-art {
+    width: 84px;
+    height: 63px;
+  }
+  .parts-head {
+    padding: 12px;
+    gap: 12px;
+  }
+  .parts-head img {
+    width: 96px;
+    height: 72px;
+  }
+  .node-head {
+    flex-direction: column;
+    align-items: stretch;
+    padding: 16px;
+  }
+  .node-head > svg {
+    align-self: center;
+  }
+  .fit {
+    flex-direction: column;
+  }
+  .fit-side {
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+  }
+}
+
+/* Motorcycle / engine tabs are links (they change the address) */
+.parts-tabs a {
+  border-radius: 2px;
+  padding: 8px 14px;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--muted);
+  white-space: nowrap;
+}
+.parts-tabs a.active {
+  background: var(--olive);
+  color: var(--paper);
+}

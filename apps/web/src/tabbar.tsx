@@ -26,12 +26,16 @@ const tabs: {
     icon: "game",
     active: (r) => r === "game",
   },
-  // The AI mechanic lives inside the garage on phones.
+  // The AI mechanic and parts selection live inside the garage on phones.
   {
     path: "garage",
     label: "Гараж",
     icon: "bike",
-    active: (r) => r === "garage" || r === "mechanic",
+    active: (r) =>
+      r === "garage" ||
+      r === "mechanic" ||
+      r === "parts" ||
+      r.startsWith("parts/"),
   },
 ];
 export function TabBar({ route }: { route: string }) {

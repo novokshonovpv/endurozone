@@ -22,7 +22,8 @@ const brands = [...new Set(models.map((m) => m.brand))]
     count: models.filter((m) => m.brand === brand).length,
   }));
 export const catalogModel = (slug: string) => bySlug.get(slug);
-const summaryOf = ({
+export const allModels = models;
+export const summaryOf = ({
   images,
   description: _d,
   specs: _s,

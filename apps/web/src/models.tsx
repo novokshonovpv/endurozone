@@ -282,6 +282,10 @@ export function ModelPage({
                 Войти и добавить в гараж
               </a>
             )}
+            <a className="button outline" href={`#parts/${m.slug}`}>
+              <Icon name="gear" />
+              Подбор запчастей
+            </a>
             <a
               className="button outline"
               href={m.url}

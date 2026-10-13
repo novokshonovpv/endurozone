@@ -16,8 +16,16 @@ export type IconName =
   | "wrench"
   | "check"
   | "bell"
-  | "game";
+  | "game"
+  | "gear";
 const paths: Record<IconName, ReactNode> = {
+  gear: (
+    <>
+      <circle cx="12" cy="12" r="3.2" />
+      <path d="M12 2.5v3M12 18.5v3M2.5 12h3M18.5 12h3M5.3 5.3l2.1 2.1M16.6 16.6l2.1 2.1M5.3 18.7l2.1-2.1M16.6 7.4l2.1-2.1" />
+      <circle cx="12" cy="12" r="6.5" />
+    </>
+  ),
   game: (
     <>
       <path d="M7 7h10a5 5 0 0 1 5 5v1a4 4 0 0 1-7.2 2.4L13.5 14h-3l-1.3 1.4A4 4 0 0 1 2 13v-1a5 5 0 0 1 5-5z" />

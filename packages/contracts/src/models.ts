@@ -29,7 +29,7 @@ const obj = (
 const str = { type: "string" };
 const nullable = (t: object) => ({ anyOf: [t, { type: "null" }] });
 export const modelSlug = { type: "string", pattern: "^[a-z0-9-]{1,120}$" };
-const summary = {
+export const modelSummaryProperties = {
   slug: str,
   brand: str,
   model: str,
@@ -42,7 +42,9 @@ const summary = {
   year: nullable({ type: "integer" }),
   cc: nullable({ type: "number" }),
   hp: nullable({ type: "number" }),
+  image: nullable(str),
 };
+const { image: _image, ...summary } = modelSummaryProperties;
 export const modelSchemas = {
   search: obj(
     {
@@ -66,10 +68,7 @@ export const modelResponses = {
     },
   }),
   models: obj({
-    items: {
-      type: "array",
-      items: obj({ ...summary, image: nullable(str) }),
-    },
+    items: { type: "array", items: obj(modelSummaryProperties) },
     total: { type: "integer" },
     nextOffset: nullable({ type: "integer" }),
   }),

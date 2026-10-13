@@ -122,6 +122,10 @@ export function accountRightsRoutes(
             "SELECT u.handle,f.created_at FROM follows f JOIN users u ON u.id=f.follower_id WHERE f.followee_id=$1",
           favorites:
             "SELECT post_id,created_at FROM favorites WHERE user_id=$1",
+          partFits:
+            "SELECT scope,scope_key,node,name,part_number,comment,created_at FROM part_fits WHERE author_id=$1",
+          partFitVotes:
+            "SELECT fit_id,created_at FROM part_fit_votes WHERE user_id=$1",
           // Only the people this account blocked; who blocked it is not disclosed.
           blocked:
             "SELECT u.handle,b.created_at FROM blocks b JOIN users u ON u.id=b.blocked_id WHERE b.blocker_id=$1",

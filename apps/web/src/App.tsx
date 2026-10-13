@@ -36,12 +36,14 @@ import { FeedbackButton, MyFeedback, PilotFeedback } from "./feedback.tsx";
 import { TabBar } from "./tabbar.tsx";
 import { Game } from "./game.tsx";
 import { Models, ModelPage } from "./models.tsx";
+import { Parts } from "./parts.tsx";
 
 const nav: { path: string; label: string; icon: IconName }[] = [
   { path: "feed", label: "Сообщество", icon: "feed" },
   { path: "riders", label: "Райдеры", icon: "user" },
   { path: "nearby", label: "Карта и выезды", icon: "route" },
-  { path: "shop", label: "Магазин", icon: "shop" },
+  // The shop is hidden until the community fills up (decision of 13.10.2026); #shop still opens.
+  { path: "parts", label: "Запчасти", icon: "gear" },
   { path: "models", label: "Модели", icon: "bike" },
   { path: "mechanic", label: "ИИ-механик", icon: "wrench" },
   { path: "learning", label: "Обучение", icon: "book" },
@@ -150,7 +152,7 @@ export default function App() {
             <a
               key={n.path}
               href={`#${n.path}`}
-              className={`nav-item ${route === n.path || (n.path === "feed" && route.startsWith("post/")) || (n.path === "nearby" && isExplore(route)) || (n.path === "riders" && route.startsWith("rider/")) || (n.path === "shop" && route.startsWith("shop/")) || (n.path === "learning" && route.startsWith("learning/")) ? "active" : ""}`}
+              className={`nav-item ${route === n.path || (n.path === "feed" && route.startsWith("post/")) || (n.path === "nearby" && isExplore(route)) || (n.path === "riders" && route.startsWith("rider/")) || (n.path === "parts" && route.startsWith("parts/")) || (n.path === "learning" && route.startsWith("learning/")) ? "active" : ""}`}
             >
               <Icon name={n.icon} />
               {n.label}
@@ -218,28 +220,30 @@ export default function App() {
                         ? "Покатушка"
                         : route.startsWith("model/")
                           ? "Модель"
-                          : (nav.find(
-                              (n) => n.path === route && !isExplore(route),
-                            )?.label ??
-                            (isExplore(route)
-                              ? `Карта и выезды · ${exploreLabel(route)}`
-                              : undefined) ??
-                            (route === "roadmap"
-                              ? "Ход разработки"
-                              : route === "notifications"
-                                ? "Уведомления"
-                                : route === "moderation"
-                                  ? "Модерация"
-                                  : route === "pilot-feedback"
-                                    ? "Отзывы пилота"
-                                    : route === "feedback"
-                                      ? "Мои отзывы"
-                                      : "Добро пожаловать"))}
+                          : route.startsWith("parts/")
+                            ? "Подбор запчастей"
+                            : (nav.find(
+                                (n) => n.path === route && !isExplore(route),
+                              )?.label ??
+                              (isExplore(route)
+                                ? `Карта и выезды · ${exploreLabel(route)}`
+                                : undefined) ??
+                              (route === "roadmap"
+                                ? "Ход разработки"
+                                : route === "notifications"
+                                  ? "Уведомления"
+                                  : route === "moderation"
+                                    ? "Модерация"
+                                    : route === "pilot-feedback"
+                                      ? "Отзывы пилота"
+                                      : route === "feedback"
+                                        ? "Мои отзывы"
+                                        : "Добро пожаловать"))}
           </span>
           <div className="top-actions">
             <span className="version">
               <span className="tiny-dot" />
-              Разработка · 0.21
+              Разработка · 0.22
             </span>
             {session ? (
               <>
@@ -434,6 +438,8 @@ export default function App() {
               session={session}
               requestedBike={shopBike}
             />
+          ) : route === "parts" || route.startsWith("parts/") ? (
+            <Parts route={route} session={session} />
           ) : route === "models" ? (
             <Models />
           ) : route.startsWith("model/") ? (

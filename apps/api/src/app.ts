@@ -43,6 +43,7 @@ import { onboardingRoutes } from "./onboarding.ts";
 import { roleRoutes } from "./roles.ts";
 import { blockRoutes, blockedBetween } from "./blocks.ts";
 import { modelRoutes, catalogModel } from "./models.ts";
+import { partRoutes } from "./parts.ts";
 import { appVersion } from "./version.ts";
 
 interface AuthContext {
@@ -899,6 +900,7 @@ export async function buildApp(options: {
   photoRoutes(app, db, { requireWrite: verifiedWrite, notFound, HttpError });
   catalogRoutes(app);
   modelRoutes(app, { notFound });
+  partRoutes(app, db, { requireWrite: verifiedWrite, notFound, HttpError });
   learningRoutes(app, db, { requireAuth, requireWrite, notFound, HttpError });
   garageRoutes(app, db, {
     requireAuth,

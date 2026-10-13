@@ -181,6 +181,10 @@ GET/POST `/api/bikes/:id/photos` и `/api/posts/:id/photos` читают фот�
 
 `GET /api/models/brands`, `GET /api/models?brand=&q=&section=enduro|pit|road|electro|mini&limit=&offset=` (до 200), `GET /api/models/:slug` — без входа. Данные — каталог 67МОТО (`scripts/import-67moto-models.mjs` → `apps/api/data/models.json`), фото по ссылкам на 67moto.ru, цен нет. Мотоцикл: необязательный `catalogSlug` в `POST/PATCH /api/me/bikes`; неизвестный — 400 `CATALOG_UNKNOWN`; отсутствие поля в `PATCH` сохраняет привязку. [Решения](../sprint-18.md).
 
+## Подбор запчастей · 0.22
+
+`GET /api/parts/:slug` — узлы мотоцикла (14) и двигателя (11, если код двигателя известен) с числом размеров, деталей и записей владельцев; `GET /api/parts/:slug/:scope/:node` (`scope` = `moto` | `engine`) — паспорт, детали поставщика (из `apps/api/data/parts.json`), записи владельцев. Владельцы модели (для двигателя — любой модели с тем же кодом): `POST …/fits` `{name, partNumber, comment}`, `PUT/DELETE /api/part-fits/:id/vote`; автор или модератор: `DELETE /api/part-fits/:id`. Ошибки: 403 `OWNER_REQUIRED`, 400 `LINKS_NOT_ALLOWED` / `OWN_FIT`, 409 `FIT_LIMIT`. [Решения](../sprint-19.md).
+
 ## Уведомления: прочитать все
 
 `POST /api/me/notifications/read-all` — 204, отмечает прочитанными все непрочитанные уведомления текущего участника (сессия и CSRF); уже прочитанные сохраняют своё время. Используется всплывающим списком колокольчика в шапке.

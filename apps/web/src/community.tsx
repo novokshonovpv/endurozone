@@ -585,16 +585,23 @@ export function Garage({
                 {currentBike.notes && (
                   <p className="bike-notes">{currentBike.notes}</p>
                 )}
-                <p className="form-note">
-                  Данные владельца. Для реального подбора запчастей понадобится
-                  подтверждённая версия из справочника.
-                </p>
+                {!currentBike.catalogSlug && (
+                  <p className="form-note">
+                    Привяжите мотоцикл к модели справочника (кнопка
+                    «Редактировать»), чтобы подбирать запчасти по узлам и
+                    делиться тем, что подошло.
+                  </p>
+                )}
                 <div className="garage-quick-actions">
                   <a
                     className="button outline"
-                    href={`#shop?bike=${currentBike.id}`}
+                    href={
+                      currentBike.catalogSlug
+                        ? `#parts/${currentBike.catalogSlug}`
+                        : "#parts"
+                    }
                   >
-                    <Icon name="shop" />
+                    <Icon name="gear" />
                     Подобрать запчасти
                   </a>
                   <button
@@ -889,9 +896,7 @@ function BikeEditor({
             ref={engineRef}
             name="engine"
             maxLength={120}
-            defaultValue={
-              bike?.engine ?? (initial ? engineText(initial) : "")
-            }
+            defaultValue={bike?.engine ?? (initial ? engineText(initial) : "")}
             placeholder="Объём, 2Т / 4Т, код двигателя"
           />
         </label>
