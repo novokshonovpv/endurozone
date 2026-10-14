@@ -1,6 +1,14 @@
 export type Level = "beginner" | "amateur" | "pro";
 export type Visibility = "public" | "private";
-export type PostKind = "ride" | "maintenance" | "build";
+export type PostKind = "ride" | "maintenance" | "build" | "news";
+/** What a point on the map is: a riding spot or a service around riding. */
+export type LocationKind = "spot" | "rental" | "guide" | "school";
+export const locationKinds: Record<LocationKind, string> = {
+  spot: "Место для катания",
+  rental: "Прокат",
+  guide: "Гид",
+  school: "Школа",
+};
 export interface Profile {
   id: string;
   handle: string;
@@ -88,6 +96,8 @@ export const postKinds: Record<PostKind, string> = {
   ride: "Покатушка",
   maintenance: "Обслуживание",
   build: "Доработка",
+  // Published by moderators only; shown in Community → News.
+  news: "Новость",
 };
 const text = (maxLength: number, minLength = 0) => ({
   type: "string",
@@ -142,21 +152,45 @@ export const schemas = {
     kind: { type: "string", enum: Object.keys(postKinds) },
     visibility: { type: "string", enum: ["public", "private"] },
   }),
-  location: obj({
-    title: text(140, 3),
-    description: text(3000, 10),
-    city: text(80, 2),
-    latitude: { type: "number", minimum: -90, maximum: 90 },
-    longitude: { type: "number", minimum: -180, maximum: 180 },
-    difficulty: { type: "string", enum: ["easy", "medium", "hard"] },
-    accessNotes: text(1500, 10),
-    publicationConsent: { type: "boolean", const: true },
-  }),
+  location: obj(
+    {
+      kind: { type: "string", enum: Object.keys(locationKinds) },
+      title: text(140, 3),
+      description: text(3000, 10),
+      city: text(80, 2),
+      latitude: { type: "number", minimum: -90, maximum: 90 },
+      longitude: { type: "number", minimum: -180, maximum: 180 },
+      // Spots need a difficulty; rentals, guides and schools do not.
+      difficulty: {
+        anyOf: [
+          { type: "string", enum: ["easy", "medium", "hard"] },
+          { type: "null" },
+        ],
+      },
+      accessNotes: text(1500, 10),
+      contacts: text(300),
+      publicationConsent: { type: "boolean", const: true },
+    },
+    [
+      "title",
+      "description",
+      "city",
+      "latitude",
+      "longitude",
+      "accessNotes",
+      "publicationConsent",
+    ],
+  ),
   locationPage: obj(
     {
       limit: { type: "integer", minimum: 1, maximum: 30, default: 12 },
       offset: { type: "integer", minimum: 0, maximum: 10000, default: 0 },
       city: text(80),
+      // "services" = rentals, guides and schools together (Маршруты · Прокаты и гиды).
+      kind: {
+        type: "string",
+        enum: [...Object.keys(locationKinds), "services"],
+      },
     },
     [],
   ),
@@ -258,8 +292,15 @@ const locationResponse = obj({
   city: text(80),
   latitude: { type: "number" },
   longitude: { type: "number" },
-  difficulty: { type: "string", enum: ["easy", "medium", "hard"] },
+  kind: { type: "string", enum: ["spot", "rental", "guide", "school"] },
+  difficulty: {
+    anyOf: [
+      { type: "string", enum: ["easy", "medium", "hard"] },
+      { type: "null" },
+    ],
+  },
   accessNotes: text(1500),
+  contacts: text(300),
   status: {
     type: "string",
     enum: ["pending", "published", "rejected", "hidden"],
@@ -322,17 +363,27 @@ export const responses = {
 
 export type LocationStatus = "pending" | "published" | "rejected" | "hidden";
 export interface LocationInput {
+  kind?: LocationKind;
   title: string;
   description: string;
   city: string;
   latitude: number;
   longitude: number;
-  difficulty: "easy" | "medium" | "hard";
+  difficulty?: "easy" | "medium" | "hard" | null;
+  /** For spots: access rules; for rentals, guides and schools: terms and prices. */
   accessNotes: string;
+  /** Phone, site or messenger of a rental, guide or school. */
+  contacts?: string;
   publicationConsent: true;
 }
 export interface EnduroLocation
-  extends Omit<LocationInput, "publicationConsent"> {
+  extends Omit<
+    LocationInput,
+    "publicationConsent" | "kind" | "difficulty" | "contacts"
+  > {
+  kind: LocationKind;
+  difficulty: "easy" | "medium" | "hard" | null;
+  contacts: string;
   id: string;
   author: Profile;
   status: LocationStatus;

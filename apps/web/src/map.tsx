@@ -3,8 +3,10 @@ import type { Map as GLMap, Marker as GLMarker } from "maplibre-gl";
 import "maplibre-gl/dist/maplibre-gl.css";
 import workerUrl from "maplibre-gl/dist/maplibre-gl-worker.mjs?worker&url";
 import {
+  locationKinds,
   reportReasons,
   type EnduroLocation,
+  type LocationKind,
   type TrackGeometry,
 } from "@enduro/contracts";
 import { api } from "./api.ts";
@@ -19,6 +21,13 @@ export type MapPin = {
 type Props = { notify: (message: string) => void };
 const errorOf = (e: unknown) => (e as Error).message;
 const noPins: MapPin[] = [];
+// One letter per kind: the marker colour (CSS) and this letter tell them apart.
+const pinText: Record<LocationKind, string> = {
+  spot: "М",
+  rental: "₽",
+  guide: "Г",
+  school: "Ш",
+};
 export function MapCanvas({
   items,
   center,
@@ -145,10 +154,13 @@ export function MapCanvas({
         ...items
           .filter((l) => l.status === "published")
           .map((l) =>
-            marker(l.id, l.title, "EZ", "location-pin", [
-              l.longitude,
-              l.latitude,
-            ]),
+            marker(
+              l.id,
+              `${locationKinds[l.kind ?? "spot"]}: ${l.title}`,
+              pinText[l.kind ?? "spot"],
+              `location-pin ${l.kind ?? "spot"}-pin`,
+              [l.longitude, l.latitude],
+            ),
           ),
         ...pins.map((p) =>
           marker(

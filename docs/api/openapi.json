@@ -2,7 +2,7 @@
   "openapi": "3.0.3",
   "info": {
     "title": "Enduro.Zone API",
-    "version": "0.23.0",
+    "version": "0.24.0",
     "description": "Аккаунт, гараж, бортжурнал, локации и модерация. Для cookie-сессии запросить /api/me и передать csrfToken в X-CSRF-Token при изменении данных. Все изменения требуют X-Enduro-Client: web. Подтверждение email, восстановление доступа и личные уведомления. Проверка email перед публикацией включается REQUIRE_VERIFIED_EMAIL=true."
   },
   "components": {
@@ -5390,7 +5390,8 @@
               "enum": [
                 "ride",
                 "maintenance",
-                "build"
+                "build",
+                "news"
               ]
             },
             "in": "query",
@@ -5435,7 +5436,8 @@
                             "enum": [
                               "ride",
                               "maintenance",
-                              "build"
+                              "build",
+                              "news"
                             ]
                           },
                           "visibility": {
@@ -5913,7 +5915,8 @@
               "enum": [
                 "ride",
                 "maintenance",
-                "build"
+                "build",
+                "news"
               ]
             },
             "in": "query",
@@ -5963,7 +5966,8 @@
                             "enum": [
                               "ride",
                               "maintenance",
-                              "build"
+                              "build",
+                              "news"
                             ]
                           },
                           "visibility": {
@@ -6445,7 +6449,8 @@
                       "enum": [
                         "ride",
                         "maintenance",
-                        "build"
+                        "build",
+                        "news"
                       ]
                     },
                     "visibility": {
@@ -6898,7 +6903,8 @@
                     "enum": [
                       "ride",
                       "maintenance",
-                      "build"
+                      "build",
+                      "news"
                     ]
                   },
                   "visibility": {
@@ -6967,7 +6973,8 @@
                       "enum": [
                         "ride",
                         "maintenance",
-                        "build"
+                        "build",
+                        "news"
                       ]
                     },
                     "visibility": {
@@ -7448,7 +7455,8 @@
                     "enum": [
                       "ride",
                       "maintenance",
-                      "build"
+                      "build",
+                      "news"
                     ]
                   },
                   "visibility": {
@@ -7506,7 +7514,8 @@
                       "enum": [
                         "ride",
                         "maintenance",
-                        "build"
+                        "build",
+                        "news"
                       ]
                     },
                     "visibility": {
@@ -7973,7 +7982,8 @@
               "enum": [
                 "ride",
                 "maintenance",
-                "build"
+                "build",
+                "news"
               ]
             },
             "in": "query",
@@ -10468,7 +10478,8 @@
                             "enum": [
                               "ride",
                               "maintenance",
-                              "build"
+                              "build",
+                              "news"
                             ]
                           },
                           "visibility": {
@@ -12384,7 +12395,8 @@
               "enum": [
                 "ride",
                 "maintenance",
-                "build"
+                "build",
+                "news"
               ]
             },
             "in": "query",
@@ -12434,7 +12446,8 @@
                             "enum": [
                               "ride",
                               "maintenance",
-                              "build"
+                              "build",
+                              "news"
                             ]
                           },
                           "visibility": {
@@ -12898,7 +12911,8 @@
                             "enum": [
                               "ride",
                               "maintenance",
-                              "build"
+                              "build",
+                              "news"
                             ]
                           },
                           "visibility": {
@@ -21927,6 +21941,21 @@
             "in": "query",
             "name": "city",
             "required": false
+          },
+          {
+            "schema": {
+              "type": "string",
+              "enum": [
+                "spot",
+                "rental",
+                "guide",
+                "school",
+                "services"
+              ]
+            },
+            "in": "query",
+            "name": "kind",
+            "required": false
           }
         ],
         "responses": {
@@ -22445,6 +22474,21 @@
             },
             "in": "query",
             "name": "city",
+            "required": false
+          },
+          {
+            "schema": {
+              "type": "string",
+              "enum": [
+                "spot",
+                "rental",
+                "guide",
+                "school",
+                "services"
+              ]
+            },
+            "in": "query",
+            "name": "kind",
             "required": false
           }
         ],
@@ -22969,6 +23013,21 @@
             },
             "in": "query",
             "name": "city",
+            "required": false
+          },
+          {
+            "schema": {
+              "type": "string",
+              "enum": [
+                "spot",
+                "rental",
+                "guide",
+                "school",
+                "services"
+              ]
+            },
+            "in": "query",
+            "name": "kind",
             "required": false
           }
         ],
@@ -25226,6 +25285,21 @@
             "in": "query",
             "name": "city",
             "required": false
+          },
+          {
+            "schema": {
+              "type": "string",
+              "enum": [
+                "spot",
+                "rental",
+                "guide",
+                "school",
+                "services"
+              ]
+            },
+            "in": "query",
+            "name": "kind",
+            "required": false
           }
         ],
         "responses": {
@@ -26215,6 +26289,21 @@
             },
             "in": "query",
             "name": "city",
+            "required": false
+          },
+          {
+            "schema": {
+              "type": "string",
+              "enum": [
+                "spot",
+                "rental",
+                "guide",
+                "school",
+                "services"
+              ]
+            },
+            "in": "query",
+            "name": "kind",
             "required": false
           }
         ],
@@ -29763,6 +29852,21 @@
             "in": "query",
             "name": "city",
             "required": false
+          },
+          {
+            "schema": {
+              "type": "string",
+              "enum": [
+                "spot",
+                "rental",
+                "guide",
+                "school",
+                "services"
+              ]
+            },
+            "in": "query",
+            "name": "kind",
+            "required": false
           }
         ],
         "responses": {
@@ -29851,18 +29955,33 @@
                           "longitude": {
                             "type": "number"
                           },
+                          "kind": {
+                            "type": "string",
+                            "enum": [
+                              "spot",
+                              "rental",
+                              "guide",
+                              "school"
+                            ]
+                          },
                           "difficulty": {
                             "type": "string",
                             "enum": [
                               "easy",
                               "medium",
                               "hard"
-                            ]
+                            ],
+                            "nullable": true
                           },
                           "accessNotes": {
                             "type": "string",
                             "minLength": 0,
                             "maxLength": 1500
+                          },
+                          "contacts": {
+                            "type": "string",
+                            "minLength": 0,
+                            "maxLength": 300
                           },
                           "status": {
                             "type": "string",
@@ -29890,8 +30009,10 @@
                           "city",
                           "latitude",
                           "longitude",
+                          "kind",
                           "difficulty",
                           "accessNotes",
+                          "contacts",
                           "status",
                           "createdAt",
                           "updatedAt"
@@ -30220,6 +30341,15 @@
                 "type": "object",
                 "additionalProperties": false,
                 "properties": {
+                  "kind": {
+                    "type": "string",
+                    "enum": [
+                      "spot",
+                      "rental",
+                      "guide",
+                      "school"
+                    ]
+                  },
                   "title": {
                     "type": "string",
                     "minLength": 3,
@@ -30251,12 +30381,18 @@
                       "easy",
                       "medium",
                       "hard"
-                    ]
+                    ],
+                    "nullable": true
                   },
                   "accessNotes": {
                     "type": "string",
                     "minLength": 10,
                     "maxLength": 1500
+                  },
+                  "contacts": {
+                    "type": "string",
+                    "minLength": 0,
+                    "maxLength": 300
                   },
                   "publicationConsent": {
                     "type": "boolean",
@@ -30271,7 +30407,6 @@
                   "city",
                   "latitude",
                   "longitude",
-                  "difficulty",
                   "accessNotes",
                   "publicationConsent"
                 ]
@@ -30364,18 +30499,33 @@
                     "longitude": {
                       "type": "number"
                     },
+                    "kind": {
+                      "type": "string",
+                      "enum": [
+                        "spot",
+                        "rental",
+                        "guide",
+                        "school"
+                      ]
+                    },
                     "difficulty": {
                       "type": "string",
                       "enum": [
                         "easy",
                         "medium",
                         "hard"
-                      ]
+                      ],
+                      "nullable": true
                     },
                     "accessNotes": {
                       "type": "string",
                       "minLength": 0,
                       "maxLength": 1500
+                    },
+                    "contacts": {
+                      "type": "string",
+                      "minLength": 0,
+                      "maxLength": 300
                     },
                     "status": {
                       "type": "string",
@@ -30403,8 +30553,10 @@
                     "city",
                     "latitude",
                     "longitude",
+                    "kind",
                     "difficulty",
                     "accessNotes",
+                    "contacts",
                     "status",
                     "createdAt",
                     "updatedAt"
@@ -30747,6 +30899,21 @@
             "in": "query",
             "name": "city",
             "required": false
+          },
+          {
+            "schema": {
+              "type": "string",
+              "enum": [
+                "spot",
+                "rental",
+                "guide",
+                "school",
+                "services"
+              ]
+            },
+            "in": "query",
+            "name": "kind",
+            "required": false
           }
         ],
         "security": [
@@ -30840,18 +31007,33 @@
                           "longitude": {
                             "type": "number"
                           },
+                          "kind": {
+                            "type": "string",
+                            "enum": [
+                              "spot",
+                              "rental",
+                              "guide",
+                              "school"
+                            ]
+                          },
                           "difficulty": {
                             "type": "string",
                             "enum": [
                               "easy",
                               "medium",
                               "hard"
-                            ]
+                            ],
+                            "nullable": true
                           },
                           "accessNotes": {
                             "type": "string",
                             "minLength": 0,
                             "maxLength": 1500
+                          },
+                          "contacts": {
+                            "type": "string",
+                            "minLength": 0,
+                            "maxLength": 300
                           },
                           "status": {
                             "type": "string",
@@ -30879,8 +31061,10 @@
                           "city",
                           "latitude",
                           "longitude",
+                          "kind",
                           "difficulty",
                           "accessNotes",
+                          "contacts",
                           "status",
                           "createdAt",
                           "updatedAt"
@@ -31235,6 +31419,21 @@
             "in": "query",
             "name": "city",
             "required": false
+          },
+          {
+            "schema": {
+              "type": "string",
+              "enum": [
+                "spot",
+                "rental",
+                "guide",
+                "school",
+                "services"
+              ]
+            },
+            "in": "query",
+            "name": "kind",
+            "required": false
           }
         ],
         "security": [
@@ -31328,18 +31527,33 @@
                           "longitude": {
                             "type": "number"
                           },
+                          "kind": {
+                            "type": "string",
+                            "enum": [
+                              "spot",
+                              "rental",
+                              "guide",
+                              "school"
+                            ]
+                          },
                           "difficulty": {
                             "type": "string",
                             "enum": [
                               "easy",
                               "medium",
                               "hard"
-                            ]
+                            ],
+                            "nullable": true
                           },
                           "accessNotes": {
                             "type": "string",
                             "minLength": 0,
                             "maxLength": 1500
+                          },
+                          "contacts": {
+                            "type": "string",
+                            "minLength": 0,
+                            "maxLength": 300
                           },
                           "status": {
                             "type": "string",
@@ -31367,8 +31581,10 @@
                           "city",
                           "latitude",
                           "longitude",
+                          "kind",
                           "difficulty",
                           "accessNotes",
+                          "contacts",
                           "status",
                           "createdAt",
                           "updatedAt"
@@ -31782,18 +31998,33 @@
                     "longitude": {
                       "type": "number"
                     },
+                    "kind": {
+                      "type": "string",
+                      "enum": [
+                        "spot",
+                        "rental",
+                        "guide",
+                        "school"
+                      ]
+                    },
                     "difficulty": {
                       "type": "string",
                       "enum": [
                         "easy",
                         "medium",
                         "hard"
-                      ]
+                      ],
+                      "nullable": true
                     },
                     "accessNotes": {
                       "type": "string",
                       "minLength": 0,
                       "maxLength": 1500
+                    },
+                    "contacts": {
+                      "type": "string",
+                      "minLength": 0,
+                      "maxLength": 300
                     },
                     "status": {
                       "type": "string",
@@ -31821,8 +32052,10 @@
                     "city",
                     "latitude",
                     "longitude",
+                    "kind",
                     "difficulty",
                     "accessNotes",
+                    "contacts",
                     "status",
                     "createdAt",
                     "updatedAt"
@@ -32635,18 +32868,33 @@
                     "longitude": {
                       "type": "number"
                     },
+                    "kind": {
+                      "type": "string",
+                      "enum": [
+                        "spot",
+                        "rental",
+                        "guide",
+                        "school"
+                      ]
+                    },
                     "difficulty": {
                       "type": "string",
                       "enum": [
                         "easy",
                         "medium",
                         "hard"
-                      ]
+                      ],
+                      "nullable": true
                     },
                     "accessNotes": {
                       "type": "string",
                       "minLength": 0,
                       "maxLength": 1500
+                    },
+                    "contacts": {
+                      "type": "string",
+                      "minLength": 0,
+                      "maxLength": 300
                     },
                     "status": {
                       "type": "string",
@@ -32674,8 +32922,10 @@
                     "city",
                     "latitude",
                     "longitude",
+                    "kind",
                     "difficulty",
                     "accessNotes",
+                    "contacts",
                     "status",
                     "createdAt",
                     "updatedAt"
@@ -33435,6 +33685,21 @@
             },
             "in": "query",
             "name": "city",
+            "required": false
+          },
+          {
+            "schema": {
+              "type": "string",
+              "enum": [
+                "spot",
+                "rental",
+                "guide",
+                "school",
+                "services"
+              ]
+            },
+            "in": "query",
+            "name": "kind",
             "required": false
           }
         ],

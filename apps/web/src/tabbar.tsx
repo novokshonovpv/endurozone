@@ -1,60 +1,10 @@
-import { Icon, type IconName } from "./ui.tsx";
-import { isExplore } from "./explore.tsx";
-// Phone navigation, like social apps: four main sections at the thumb.
-// Everything else stays in the top "Меню" sheet. Hidden above 760px (CSS).
-const tabs: {
-  path: string;
-  label: string;
-  icon: IconName;
-  active: (route: string) => boolean;
-}[] = [
-  {
-    path: "feed",
-    label: "Главная",
-    icon: "feed",
-    active: (r) => r === "feed" || r.startsWith("post/"),
-  },
-  {
-    path: "rides",
-    label: "Покатушки",
-    icon: "route",
-    active: (r) => isExplore(r),
-  },
-  {
-    path: "game",
-    label: "Игра",
-    icon: "game",
-    active: (r) => r === "game",
-  },
-  // The AI mechanic and parts selection live inside the garage on phones.
-  {
-    path: "garage",
-    label: "Гараж",
-    icon: "bike",
-    active: (r) =>
-      r === "garage" ||
-      r === "mechanic" ||
-      r === "parts" ||
-      r.startsWith("parts/"),
-  },
-];
+import { SectionLinks } from "./sections.tsx";
+// Phone navigation: the four blocks at the thumb, the same as the sidebar on the web.
+// Account pages (profile, subscriptions, saved) stay in the top «Меню». Hidden above 760px (CSS).
 export function TabBar({ route }: { route: string }) {
   return (
     <nav className="tab-bar" aria-label="Главное меню">
-      {tabs.map((t) => {
-        const on = t.active(route);
-        return (
-          <a
-            key={t.path}
-            href={`#${t.path}`}
-            className={on ? "active" : ""}
-            aria-current={on ? "page" : undefined}
-          >
-            <Icon name={t.icon} size={22} />
-            <span>{t.label}</span>
-          </a>
-        );
-      })}
+      <SectionLinks route={route} className="tab-link" />
     </nav>
   );
 }

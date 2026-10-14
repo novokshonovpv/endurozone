@@ -1,5 +1,5 @@
 /* Khaki expedition, sport edition. Loaded after styles.css: tokens, type, surfaces and motion. */
-@import url("https://fonts.googleapis.com/css2?family=Russo+One&family=Onest:wght@400;500;600;700;800&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Onest:wght@400;500;600;700;800&display=swap");
 
 :root {
   --page: #d8d3ba;
@@ -863,91 +863,6 @@ footer {
 .report-button {
   margin-right: 16px;
 }
-/* Map and rides: one section, four tabs */
-.explore-tabs {
-  display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 2px;
-  margin-bottom: 26px;
-  background: var(--olive);
-  padding: 4px;
-  border-radius: 4px;
-  clip-path: polygon(
-    0 0,
-    calc(100% - 14px) 0,
-    100% 14px,
-    100% 100%,
-    14px 100%,
-    0 calc(100% - 14px)
-  );
-}
-.explore-tabs a {
-  position: relative;
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 12px 14px;
-  color: var(--sand);
-  border-radius: 2px;
-  transition:
-    background 0.2s ease,
-    color 0.2s ease;
-}
-.explore-tabs a span {
-  display: flex;
-  flex-direction: column;
-  font-family: var(--display);
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
-  font-size: 13px;
-  line-height: 1.2;
-}
-.explore-tabs small {
-  font-family: Onest, sans-serif;
-  text-transform: none;
-  letter-spacing: 0;
-  font-size: 11px;
-  color: var(--khaki);
-}
-.explore-tabs a:hover {
-  background: rgba(244, 241, 228, 0.07);
-  color: var(--paper);
-}
-.explore-tabs a.active {
-  background: rgba(194, 84, 31, 0.22);
-  color: var(--paper);
-}
-.explore-tabs a::after {
-  content: "";
-  position: absolute;
-  left: 10px;
-  right: 10px;
-  bottom: 0;
-  height: 3px;
-  background: var(--rust);
-  transform: scaleX(0);
-  transform-origin: left;
-  transition: transform 0.35s var(--ease-out);
-}
-.explore-tabs a.active::after {
-  transform: scaleX(1);
-}
-.explore-tabs a.active svg {
-  color: #e98a52;
-}
-@media (max-width: 760px) {
-  .explore-tabs {
-    display: flex;
-    overflow-x: auto;
-    scrollbar-width: none;
-  }
-  .explore-tabs a {
-    flex: none;
-  }
-  .explore-tabs small {
-    display: none;
-  }
-}
 /* Header bell with an unread badge */
 .bell-button {
   position: relative;
@@ -1217,7 +1132,8 @@ footer {
     gap: 0 12px;
     padding: 12px 16px;
   }
-  .sidebar nav:first-of-type,
+  .sidebar .block-nav,
+  .sidebar #all-sections,
   .sidebar .roadmap-link {
     display: none;
   }
@@ -1244,7 +1160,7 @@ footer {
       0 -5px 0 currentColor,
       0 5px 0 currentColor;
   }
-  .sidebar.menu-open nav:first-of-type {
+  .sidebar.menu-open #all-sections {
     grid-column: 1 / -1;
     display: flex;
     flex-direction: column;

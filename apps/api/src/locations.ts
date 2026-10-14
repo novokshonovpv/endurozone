@@ -26,8 +26,10 @@ export const locationOf = (r: Row) => ({
   city: r.city,
   latitude: r.latitude,
   longitude: r.longitude,
-  difficulty: r.difficulty,
+  kind: r.kind ?? "spot",
+  difficulty: r.difficulty ?? null,
   accessNotes: r.access_notes,
+  contacts: r.contacts ?? "",
   status: r.status,
   createdAt: iso(r.created_at),
   updatedAt: iso(r.updated_at),
@@ -42,7 +44,12 @@ const reportOf = (r: Row) => ({
   status: r.status,
   createdAt: iso(r.created_at),
 });
-type PageQuery = { limit?: number; offset?: number; city?: string };
+type PageQuery = {
+  limit?: number;
+  offset?: number;
+  city?: string;
+  kind?: string;
+};
 
 export function locationRoutes(
   app: FastifyInstance,
@@ -78,6 +85,11 @@ export function locationRoutes(
     if (q.city) {
       params.push(q.city);
       where += ` AND l.city=$${params.length}`;
+    }
+    if (q.kind === "services") where += " AND l.kind<>'spot'";
+    else if (q.kind) {
+      params.push(q.kind);
+      where += ` AND l.kind=$${params.length}`;
     }
     const rows = await db.query(
       `${locationSelect} WHERE ${where} ORDER BY l.created_at DESC,l.id DESC LIMIT $${params.length + 1} OFFSET $${params.length + 2}`,
@@ -141,6 +153,14 @@ export function locationRoutes(
     async (req, reply) => {
       const auth = requireWrite(req),
         b = req.body;
+      const kind = b.kind ?? "spot";
+      // A riding spot needs a difficulty; rentals, guides and schools do not have one.
+      if (kind === "spot" && !b.difficulty)
+        throw new HttpError(
+          400,
+          "VALIDATION_ERROR",
+          "Укажите сложность места.",
+        );
       if (
         b.title.trim().length < 3 ||
         b.description.trim().length < 10 ||
@@ -154,7 +174,7 @@ export function locationRoutes(
         );
       const id = randomUUID();
       await db.query(
-        "INSERT INTO locations(id,author_id,title,description,city,latitude,longitude,difficulty,access_notes) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9)",
+        "INSERT INTO locations(id,author_id,title,description,city,latitude,longitude,difficulty,access_notes,kind,contacts) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11)",
         [
           id,
           auth.user.id,
@@ -163,8 +183,10 @@ export function locationRoutes(
           b.city.trim(),
           b.latitude,
           b.longitude,
-          b.difficulty,
+          kind === "spot" ? b.difficulty : null,
           b.accessNotes.trim(),
+          kind,
+          (b.contacts ?? "").trim(),
         ],
       );
       reply.code(201);

@@ -13,6 +13,7 @@ import { api } from "./api.ts";
 import { Icon, ErrorBox, Loading } from "./ui.tsx";
 import { MapCanvas, type MapPin } from "./map.tsx";
 import { rideDate } from "./adventure.tsx";
+import { locationTag } from "./locations.tsx";
 // The browser never keeps or sends a centre more precise than about 1 km.
 const coarse = (p: GeoPoint): GeoPoint => ({
   latitude: Math.round(p.latitude * 100) / 100,
@@ -21,6 +22,15 @@ const coarse = (p: GeoPoint): GeoPoint => ({
 const km = (n: number) =>
   `≈ ${n.toLocaleString("ru-RU", { maximumFractionDigits: 1 })} км`;
 type Center = GeoPoint & { label: string };
+// Map layers (filter chips). Everything is on by default; turning the last one off shows all again.
+type Layer = "rides" | "tracks" | "spots" | "services";
+const allLayers: Layer[] = ["rides", "tracks", "spots", "services"];
+const layerLabels: Record<Layer, string> = {
+  rides: "Покатушки",
+  tracks: "Треки",
+  spots: "Места",
+  services: "Прокаты и гиды",
+};
 export function Nearby({ session }: { session: Session | null }) {
   const home =
     session && cityCenters[session.user.city] ? session.user.city : "Смоленск";
@@ -36,24 +46,42 @@ export function Nearby({ session }: { session: Session | null }) {
     [error, setError] = useState(""),
     [notice, setNotice] = useState(""),
     [selected, setSelected] = useState(""),
-    [retry, setRetry] = useState(0);
+    [retry, setRetry] = useState(0),
+    [layers, setLayers] = useState<Set<Layer>>(() => new Set(allLayers));
   const cards = useRef<Record<string, HTMLElement | null>>({});
+  const on = (l: Layer) => layers.has(l);
+  const toggle = (l: Layer) =>
+    setLayers((old) => {
+      const next = new Set(old);
+      if (next.has(l)) next.delete(l);
+      else next.add(l);
+      return next.size ? next : new Set(allLayers);
+    });
+  const spots = (result?.locations ?? []).filter((l) => l.kind === "spot");
+  const services = (result?.locations ?? []).filter((l) => l.kind !== "spot");
+  const shownLocations = useMemo(
+    () =>
+      (result?.locations ?? []).filter((l) =>
+        on(l.kind === "spot" ? "spots" : "services"),
+      ),
+    [result, layers],
+  );
   const pins = useMemo<MapPin[]>(
     () => [
-      ...(result?.tracks ?? []).map((t) => ({
+      ...(on("tracks") ? (result?.tracks ?? []) : []).map((t) => ({
         id: t.id,
         kind: "track" as const,
         title: t.title,
         coordinate: t.anchor,
       })),
-      ...(result?.rides ?? []).map((r) => ({
+      ...(on("rides") ? (result?.rides ?? []) : []).map((r) => ({
         id: r.id,
         kind: "ride" as const,
         title: r.title,
         coordinate: r.anchor,
       })),
     ],
-    [result],
+    [result, layers],
   );
   useEffect(() => {
     let alive = true;
@@ -118,12 +146,25 @@ export function Nearby({ session }: { session: Session | null }) {
       <div className="page-heading">
         <div>
           <p className="eyebrow">КУДА ПОЕХАТЬ</p>
-          <h1>Рядом</h1>
+          <h1>Карта</h1>
           <p className="muted">
-            Проверенные места, опубликованные треки и ближайшие покатушки в
-            выбранном радиусе.
+            Места, треки, покатушки, прокаты и гиды в выбранном радиусе — на
+            одной карте.
           </p>
         </div>
+      </div>
+      <div className="chip-row" role="group" aria-label="Что показать на карте">
+        {allLayers.map((l) => (
+          <button
+            key={l}
+            className={`chip layer-${l} ${on(l) ? "active" : ""}`}
+            aria-pressed={on(l)}
+            onClick={() => toggle(l)}
+          >
+            <span className="chip-dot" />
+            {layerLabels[l]}
+          </button>
+        ))}
       </div>
       <section
         className="card nearby-controls"
@@ -184,7 +225,7 @@ export function Nearby({ session }: { session: Session | null }) {
       {notice && <p className="card form-note">{notice}</p>}
       <div className="card map-card">
         <MapCanvas
-          items={result?.locations ?? []}
+          items={shownLocations}
           pins={pins}
           center={center}
           choosing={choosing}
@@ -202,8 +243,9 @@ export function Nearby({ session }: { session: Session | null }) {
           }}
         />
         <p className="map-caption">
-          Центр: {center.label} · {radius} км. «EZ» — места, «Т» — треки, «П» —
-          покатушки (по ближайшей точке публичной линии трека).
+          Центр: {center.label} · {radius} км. «М» — места, «Т» — треки, «П» —
+          покатушки (по ближайшей точке публичной линии трека), «₽» — прокаты,
+          «Г» — гиды, «Ш» — школы.
         </p>
       </div>
       <ErrorBox message={error} />
@@ -232,87 +274,118 @@ export function Nearby({ session }: { session: Session | null }) {
               </div>
             ) : (
               <>
-                <NearbySection
-                  title="Покатушки"
-                  count={result.rides.length}
-                  truncated={result.truncated.rides}
-                  empty="Ближайших открытых покатушек в этом радиусе нет."
-                >
-                  {result.rides.map((r) => (
-                    <a
-                      className={`card nearby-item ${selected === r.id ? "selected" : ""}`}
-                      href={`#ride/${r.id}`}
-                      key={r.id}
-                      ref={(el) => {
-                        cards.current[r.id] = el;
-                      }}
-                    >
-                      <span className="nearby-distance">
-                        {km(r.distanceKm)}
-                      </span>
-                      <strong>{r.title}</strong>
-                      <small>
-                        {rideDate(r)} · {r.trackTitle} · мест: {r.acceptedCount}
-                        /{r.capacity}
-                      </small>
-                    </a>
-                  ))}
-                </NearbySection>
-                <NearbySection
-                  title="Места"
-                  count={result.locations.length}
-                  truncated={result.truncated.locations}
-                  empty="Проверенных мест в этом радиусе пока нет."
-                >
-                  {result.locations.map((l) => (
-                    <article
-                      className={`card nearby-item ${selected === l.id ? "selected" : ""}`}
-                      key={l.id}
-                      ref={(el) => {
-                        cards.current[l.id] = el;
-                      }}
-                    >
-                      <span className="nearby-distance">
-                        {km(l.distanceKm)}
-                      </span>
-                      <strong>{l.title}</strong>
-                      <small>
-                        {l.city} · {difficulties[l.difficulty]}
-                      </small>
-                      <p>{l.description}</p>
-                      <p className="muted">Доступ: {l.accessNotes}</p>
-                    </article>
-                  ))}
-                </NearbySection>
-                <NearbySection
-                  title="GPX-треки"
-                  count={result.tracks.length}
-                  truncated={result.truncated.tracks}
-                  empty="Опубликованных треков в этом радиусе пока нет."
-                >
-                  {result.tracks.map((t) => (
-                    <a
-                      className={`card nearby-item ${selected === t.id ? "selected" : ""}`}
-                      href={`#track/${t.id}`}
-                      key={t.id}
-                      ref={(el) => {
-                        cards.current[t.id] = el;
-                      }}
-                    >
-                      <span className="nearby-distance">
-                        {km(t.distanceKm)}
-                      </span>
-                      <strong>{t.title}</strong>
-                      <small>
-                        {t.city} · {difficulties[t.difficulty]} · длина{" "}
-                        {(t.distanceM / 1000).toLocaleString("ru-RU", {
-                          maximumFractionDigits: 1,
-                        })}{" "}
-                        км
-                      </small>
-                    </a>
-                  ))}
-                </NearbySection>
+                {on("rides") && (
+                  <NearbySection
+                    title="Покатушки"
+                    count={result.rides.length}
+                    truncated={result.truncated.rides}
+                    empty="Ближайших открытых покатушек в этом радиусе нет."
+                  >
+                    {result.rides.map((r) => (
+                      <a
+                        className={`card nearby-item ${selected === r.id ? "selected" : ""}`}
+                        href={`#ride/${r.id}`}
+                        key={r.id}
+                        ref={(el) => {
+                          cards.current[r.id] = el;
+                        }}
+                      >
+                        <span className="nearby-distance">
+                          {km(r.distanceKm)}
+                        </span>
+                        <strong>{r.title}</strong>
+                        <small>
+                          {rideDate(r)} · {r.trackTitle} · мест:{" "}
+                          {r.acceptedCount}/{r.capacity}
+                        </small>
+                      </a>
+                    ))}
+                  </NearbySection>
+                )}
+                {(
+                  [
+                    [
+                      "spots",
+                      "Места",
+                      spots,
+                      "Проверенных мест в этом радиусе пока нет.",
+                    ],
+                    [
+                      "services",
+                      "Прокаты, гиды и школы",
+                      services,
+                      "Прокатов и гидов в этом радиусе пока нет.",
+                    ],
+                  ] as const
+                ).map(
+                  ([layer, title, list, empty]) =>
+                    on(layer) && (
+                      <NearbySection
+                        key={layer}
+                        title={title}
+                        count={list.length}
+                        truncated={result.truncated.locations}
+                        empty={empty}
+                      >
+                        {list.map((l) => (
+                          <article
+                            className={`card nearby-item ${selected === l.id ? "selected" : ""}`}
+                            key={l.id}
+                            ref={(el) => {
+                              cards.current[l.id] = el;
+                            }}
+                          >
+                            <span className="nearby-distance">
+                              {km(l.distanceKm)}
+                            </span>
+                            <strong>{l.title}</strong>
+                            <small>
+                              {l.city} · {locationTag(l)}
+                            </small>
+                            <p>{l.description}</p>
+                            <p className="muted">
+                              {l.kind === "spot" ? "Доступ" : "Условия"}:{" "}
+                              {l.accessNotes}
+                            </p>
+                            {l.contacts && (
+                              <p className="muted">Контакты: {l.contacts}</p>
+                            )}
+                          </article>
+                        ))}
+                      </NearbySection>
+                    ),
+                )}
+                {on("tracks") && (
+                  <NearbySection
+                    title="GPX-треки"
+                    count={result.tracks.length}
+                    truncated={result.truncated.tracks}
+                    empty="Опубликованных треков в этом радиусе пока нет."
+                  >
+                    {result.tracks.map((t) => (
+                      <a
+                        className={`card nearby-item ${selected === t.id ? "selected" : ""}`}
+                        href={`#track/${t.id}`}
+                        key={t.id}
+                        ref={(el) => {
+                          cards.current[t.id] = el;
+                        }}
+                      >
+                        <span className="nearby-distance">
+                          {km(t.distanceKm)}
+                        </span>
+                        <strong>{t.title}</strong>
+                        <small>
+                          {t.city} · {difficulties[t.difficulty]} · длина{" "}
+                          {(t.distanceM / 1000).toLocaleString("ru-RU", {
+                            maximumFractionDigits: 1,
+                          })}{" "}
+                          км
+                        </small>
+                      </a>
+                    ))}
+                  </NearbySection>
+                )}
                 <p className="muted nearby-note">
                   Расстояние по прямой. Для треков и покатушек — до ближайшей
                   точки публичной части трека; точка сбора в поиске не

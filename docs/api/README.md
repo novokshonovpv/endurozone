@@ -57,18 +57,20 @@ Auth: 10 запросов / минуту / IP; общий лимит: 200. Эт�
 
 ## Локации и модерация
 
-| Метод и путь                                 | Результат                                                                 |
-| -------------------------------------------- | ------------------------------------------------------------------------- |
-| GET /api/locations                           | Только опубликованные места; city / limit / offset                        |
-| POST /api/locations                          | Авторизованное предложение; publicationConsent=true; статус pending       |
-| GET /api/me/locations                        | Собственные предложения всех статусов                                     |
-| GET /api/locations/{id}                      | Опубликованное место либо собственное / доступное модератору              |
-| GET /api/locations/{id}/decisions            | Причины решений только автору / модератору, последние 50                  |
-| GET /api/moderation/locations                | Очередь pending, только модератор                                         |
+| Метод и путь          | Результат                                                           |
+| --------------------- | ------------------------------------------------------------------- |
+| GET /api/locations    | Только опубликованные; city / kind / limit / offset                 |
+| POST /api/locations   | Авторизованное предложение; publicationConsent=true; статус pending |
+| GET /api/me/locations | Собственные предложения всех статусов; kind                         |
+
+Виды точек (`kind`, с 0.24): `spot` — место для катания (сложность обязательна), `rental` — прокат, `guide` — гид, `school` — школа (без сложности, с `contacts`). Фильтр `kind=services` — всё, кроме мест. Без `kind` предложение создаётся как место. Тип записи `news` в `/api/posts` публикуют только модераторы (403 `MODERATOR_REQUIRED`).
+| GET /api/locations/{id} | Опубликованное место либо собственное / доступное модератору |
+| GET /api/locations/{id}/decisions | Причины решений только автору / модератору, последние 50 |
+| GET /api/moderation/locations | Очередь pending, только модератор |
 | POST /api/moderation/locations/{id}/decision | publish / reject из pending; hide из published; expectedStatus обязателен |
-| POST /api/reports                            | Жалоба на публичный доступный post / location                             |
-| GET /api/moderation/reports                  | Открытые жалобы, только модератор                                         |
-| POST /api/moderation/reports/{id}/decision   | dismiss / hide, обязательная причина                                      |
+| POST /api/reports | Жалоба на публичный доступный post / location |
+| GET /api/moderation/reports | Открытые жалобы, только модератор |
+| POST /api/moderation/reports/{id}/decision | dismiss / hide, обязательная причина |
 
 Поле role в собственной сессии не редактируется через API; публичный профиль его не возвращает. Решение и аудит записываются в одной транзакции. Повторное решение после изменения статуса — 409. Открытая жалоба одного автора на один объект не дублируется. Жалоба на закрытую / скрытую запись или неопубликованную точку — 404 без раскрытия данных.
 

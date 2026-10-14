@@ -31,29 +31,49 @@ import { Mechanic } from "./mechanic.tsx";
 import { Learning } from "./learning.tsx";
 import { Following, Favorites } from "./follows.tsx";
 import { Nearby } from "./nearby.tsx";
-import { ExploreTabs, isExplore, exploreLabel } from "./explore.tsx";
+import { SectionLinks, SectionTabs, tabOf } from "./sections.tsx";
+import { Events } from "./events.tsx";
 import { FeedbackButton, MyFeedback, PilotFeedback } from "./feedback.tsx";
 import { TabBar } from "./tabbar.tsx";
 import { Game } from "./game.tsx";
 import { Models, ModelPage } from "./models.tsx";
 import { Parts } from "./parts.tsx";
 
-const nav: { path: string; label: string; icon: IconName }[] = [
-  { path: "feed", label: "Сообщество", icon: "feed" },
-  { path: "riders", label: "Райдеры", icon: "user" },
-  { path: "nearby", label: "Карта и выезды", icon: "route" },
-  // The shop is hidden until the community fills up (decision of 13.10.2026); #shop still opens.
-  { path: "parts", label: "Запчасти", icon: "gear" },
-  { path: "models", label: "Модели", icon: "bike" },
-  { path: "mechanic", label: "ИИ-механик", icon: "wrench" },
-  { path: "learning", label: "Обучение", icon: "book" },
-  { path: "game", label: "Игра", icon: "game" },
-  { path: "garage", label: "Мой гараж", icon: "bike" },
+// Personal pages: in the sidebar under «Моё» and in the phone «Меню» sheet.
+const personal: { path: string; label: string; icon: IconName }[] = [
   { path: "following", label: "Подписки", icon: "user" },
   { path: "saved", label: "Избранное", icon: "book" },
   { path: "profile", label: "Мой профиль", icon: "user" },
-  { path: "account", label: "Доступ к аккаунту", icon: "user" },
+  { path: "account", label: "Доступ к аккаунту", icon: "lock" },
 ];
+const details: [string, string][] = [
+  ["rider/", "Страница райдера"],
+  ["learning/", "Урок"],
+  ["shop/", "Карточка товара"],
+  ["post/", "Бортжурнал"],
+  ["track/", "GPX-трек"],
+  ["ride/", "Покатушка"],
+  ["model/", "Модель"],
+  ["parts/", "Подбор запчастей"],
+];
+const pages: Record<string, string> = {
+  game: "Игра",
+  roadmap: "Ход разработки",
+  notifications: "Уведомления",
+  moderation: "Модерация",
+  "pilot-feedback": "Отзывы пилота",
+  feedback: "Мои отзывы",
+};
+function crumb(route: string) {
+  const found = tabOf(route);
+  const detail = details.find(([p]) => route.startsWith(p))?.[1];
+  if (found) return `${found.section.label} · ${detail ?? found.tab.label}`;
+  return (
+    pages[route] ??
+    personal.find((n) => n.path === route)?.label ??
+    "Добро пожаловать"
+  );
+}
 function useRoute() {
   const [route, set] = useState(window.location.hash.slice(1) || "feed");
   useEffect(() => {
@@ -146,20 +166,21 @@ export default function App() {
           )}
           Меню
         </button>
-        <div className="nav-caption">СООБЩЕСТВО</div>
-        <nav aria-label="Основные разделы" id="all-sections">
-          {nav.map((n) => (
+        <nav aria-label="Основные разделы" className="block-nav">
+          <SectionLinks route={route} className="nav-item" iconSize={20} />
+        </nav>
+        <div className="nav-caption">МОЁ</div>
+        <nav aria-label="Личные разделы" id="all-sections">
+          {personal.map((n) => (
             <a
               key={n.path}
               href={`#${n.path}`}
-              className={`nav-item ${route === n.path || (n.path === "feed" && route.startsWith("post/")) || (n.path === "nearby" && isExplore(route)) || (n.path === "riders" && route.startsWith("rider/")) || (n.path === "parts" && route.startsWith("parts/")) || (n.path === "learning" && route.startsWith("learning/")) ? "active" : ""}`}
+              className={`nav-item ${route === n.path ? "active" : ""}`}
             >
               <Icon name={n.icon} />
               {n.label}
-              {n.path === "feed" && <span className="nav-dot" />}
             </a>
           ))}
-          {/* Inside the nav so the mobile horizontal menu keeps them in one row. */}
           {session?.user.role === "moderator" && (
             <>
               <a
@@ -205,45 +226,11 @@ export default function App() {
       </aside>
       <div className="workspace">
         <header className="topbar">
-          <span className="breadcrumb">
-            {route.startsWith("rider/")
-              ? "Страница райдера"
-              : route.startsWith("learning/")
-                ? "Урок"
-                : route.startsWith("shop/")
-                  ? "Карточка товара"
-                  : route.startsWith("post/")
-                    ? "Бортжурнал"
-                    : route.startsWith("track/")
-                      ? "GPX-трек"
-                      : route.startsWith("ride/")
-                        ? "Покатушка"
-                        : route.startsWith("model/")
-                          ? "Модель"
-                          : route.startsWith("parts/")
-                            ? "Подбор запчастей"
-                            : (nav.find(
-                                (n) => n.path === route && !isExplore(route),
-                              )?.label ??
-                              (isExplore(route)
-                                ? `Карта и выезды · ${exploreLabel(route)}`
-                                : undefined) ??
-                              (route === "roadmap"
-                                ? "Ход разработки"
-                                : route === "notifications"
-                                  ? "Уведомления"
-                                  : route === "moderation"
-                                    ? "Модерация"
-                                    : route === "pilot-feedback"
-                                      ? "Отзывы пилота"
-                                      : route === "feedback"
-                                        ? "Мои отзывы"
-                                        : "Добро пожаловать"))}
-          </span>
+          <span className="breadcrumb">{crumb(route)}</span>
           <div className="top-actions">
             <span className="version">
               <span className="tiny-dot" />
-              Разработка · 0.23
+              Разработка · 0.24
             </span>
             {session ? (
               <>
@@ -279,7 +266,7 @@ export default function App() {
                 <a href="#account">Доступ к аккаунту</a>
               </p>
             )}
-          {ready && isExplore(route) && <ExploreTabs route={route} />}
+          {ready && <SectionTabs route={route} />}
           {!ready ? (
             <Loading />
           ) : route === "login" || route === "register" ? (
@@ -386,8 +373,21 @@ export default function App() {
             />
           ) : route === "nearby" ? (
             <Nearby key={session?.user.id ?? "guest"} session={session} />
-          ) : route === "map" ? (
-            <Locations session={session} notify={setNotice} />
+          ) : route === "map" || route === "services" ? (
+            <Locations
+              key={route}
+              view={route === "map" ? "spots" : "services"}
+              session={session}
+              notify={setNotice}
+            />
+          ) : route === "news" || route === "service" ? (
+            <Feed
+              key={route}
+              session={session}
+              mode={route === "news" ? "news" : "service"}
+            />
+          ) : route === "events" ? (
+            <Events session={session} />
           ) : route === "tracks" ? (
             <Tracks
               key={session?.user.id}

@@ -9,6 +9,7 @@ import {
   type Page,
   type Post,
   type PostInput,
+  type PostKind,
   type Session,
   postKinds,
   levels,
@@ -91,13 +92,42 @@ export function PostCard({ post }: { post: Post }) {
     </article>
   );
 }
-export function Feed({ session }: { session: Session | null }) {
+// One feed, three views: the community stream, project news (Сообщество) and the
+// maintenance and build blogs of the Garage block.
+const feedModes = {
+  all: {
+    eyebrow: "ОПЫТ СООБЩЕСТВА",
+    title: "Бортжурналы райдеров",
+    kinds: Object.keys(postKinds) as PostKind[],
+    start: "",
+  },
+  news: {
+    eyebrow: "ЧТО НОВОГО",
+    title: "Новости",
+    kinds: ["news"] as PostKind[],
+    start: "news",
+  },
+  service: {
+    eyebrow: "БЛОГИ ОБ ОБСЛУЖИВАНИИ",
+    title: "Обслуживание и доработки",
+    kinds: ["maintenance", "build"] as PostKind[],
+    start: "maintenance",
+  },
+};
+export function Feed({
+  session,
+  mode = "all",
+}: {
+  session: Session | null;
+  mode?: keyof typeof feedModes;
+}) {
+  const view = feedModes[mode];
   const [posts, setPosts] = useState<Post[]>([]),
     [next, setNext] = useState<number | null>(null),
     [busy, setBusy] = useState(true),
     [error, setError] = useState(""),
     [city, setCity] = useState(""),
-    [kind, setKind] = useState(""),
+    [kind, setKind] = useState(view.start),
     [scope, setScope] = useState<"all" | "following">("all");
   const [retry, setRetry] = useState(0);
   const following = Boolean(session) && scope === "following";
@@ -147,56 +177,66 @@ export function Feed({ session }: { session: Session | null }) {
   const cities = [
     ...new Set(["Смоленск", "Сочи", ...(session ? [session.user.city] : [])]),
   ];
+  const canWrite = mode !== "news" || session?.user.role === "moderator";
   return (
     <>
-      <section className="hero">
-        <TrailScene />
-        <div className="hero-content">
-          <p className="eyebrow light">
-            <span className="hero-dash" />
-            ДЛЯ ТЕХ, КТО ВЫБИРАЕТ СВОЙ ПУТЬ
-          </p>
-          <h1>
-            Твой мотоцикл.
-            <br />
-            Твои люди.
-            <br />
-            <span>Твоя территория.</span>
-          </h1>
-          <p>
-            Опыт из гаража и с трассы — в одном месте.
-            <br />
-            Рассказывай, чему научился. Находи тех, кто понимает.
-          </p>
-          <a className="button accent" href={session ? "#garage" : "#register"}>
-            {session ? "Открыть мой гараж" : "Начать свою историю"}
-            <Icon name="arrow" />
-          </a>
-        </div>
-        <div className="hero-label">
-          <Icon name="mountain" size={30} />
-          <span>
-            ENDURO.ZONE<small>ТВОЯ ТЕРРИТОРИЯ</small>
-          </span>
-        </div>
-      </section>
-      <div className="feed-layout">
-        <section className="feed-main">
-          {session && <FirstSteps key={session.user.id} current="feed" />}
-          <div className="section-heading">
-            <div>
-              <p className="eyebrow">ОПЫТ СООБЩЕСТВА</p>
-              <h2>Бортжурналы райдеров</h2>
-            </div>
+      {mode === "all" && (
+        <section className="hero">
+          <TrailScene />
+          <div className="hero-content">
+            <p className="eyebrow light">
+              <span className="hero-dash" />
+              ДЛЯ ТЕХ, КТО ВЫБИРАЕТ СВОЙ ПУТЬ
+            </p>
+            <h1>
+              Твой мотоцикл.
+              <br />
+              Твои люди.
+              <br />
+              <span>Твоя территория.</span>
+            </h1>
+            <p>
+              Опыт из гаража и с трассы — в одном месте.
+              <br />
+              Рассказывай, чему научился. Находи тех, кто понимает.
+            </p>
             <a
-              className="button outline small"
+              className="button accent"
               href={session ? "#garage" : "#register"}
             >
-              <Icon name="plus" size={17} />
-              Написать запись
+              {session ? "Открыть мой гараж" : "Начать свою историю"}
+              <Icon name="arrow" />
             </a>
           </div>
-          {session && (
+          <div className="hero-label">
+            <Icon name="mountain" size={30} />
+            <span>
+              ENDURO.ZONE<small>ТВОЯ ТЕРРИТОРИЯ</small>
+            </span>
+          </div>
+        </section>
+      )}
+      <div className="feed-layout">
+        <section className="feed-main">
+          {session && mode === "all" && (
+            <FirstSteps key={session.user.id} current="feed" />
+          )}
+          <div className="section-heading">
+            <div>
+              <p className="eyebrow">{view.eyebrow}</p>
+              <h2>{view.title}</h2>
+            </div>
+            {canWrite && (
+              <a
+                className="button outline small"
+                href={session ? "#garage" : "#register"}
+              >
+                <Icon name="plus" size={17} />
+                {mode === "news" ? "Опубликовать новость" : "Написать запись"}
+              </a>
+            )}
+          </div>
+          {session && mode !== "news" && (
             <div className="scope-tabs" role="tablist" aria-label="Лента">
               {(
                 [
@@ -226,17 +266,19 @@ export function Feed({ session }: { session: Session | null }) {
                 ))}
               </select>
             </label>
-            <label>
-              <span className="sr-only">Тип записи</span>
-              <select value={kind} onChange={(e) => setKind(e.target.value)}>
-                <option value="">Все записи</option>
-                {Object.entries(postKinds).map(([v, l]) => (
-                  <option key={v} value={v}>
-                    {l}
-                  </option>
-                ))}
-              </select>
-            </label>
+            {view.kinds.length > 1 && (
+              <label>
+                <span className="sr-only">Тип записи</span>
+                <select value={kind} onChange={(e) => setKind(e.target.value)}>
+                  {mode === "all" && <option value="">Все записи</option>}
+                  {view.kinds.map((v) => (
+                    <option key={v} value={v}>
+                      {postKinds[v]}
+                    </option>
+                  ))}
+                </select>
+              </label>
+            )}
             <span className="filter-note">
               {following ? "Открытые записи подписок" : "Публичные записи"}
             </span>
@@ -278,22 +320,30 @@ export function Feed({ session }: { session: Session | null }) {
                 <Icon name="book" size={30} />
               </span>
               <h3>
-                {city || kind
-                  ? "Здесь пока нет записей"
-                  : "Сообщество начинается с вас"}
+                {mode === "news"
+                  ? "Новостей пока нет"
+                  : city || kind !== view.start
+                    ? "Здесь пока нет записей"
+                    : "Сообщество начинается с вас"}
               </h3>
               <p>
-                {city || kind
-                  ? "Попробуйте другой город или тип записи."
-                  : "Опубликуйте первую покатушку, обслуживание или доработку. Здесь появятся истории участников."}
+                {mode === "news"
+                  ? "Здесь команда проекта и модераторы рассказывают о новых разделах, событиях и партнёрах."
+                  : city || kind !== view.start
+                    ? "Попробуйте другой город или тип записи."
+                    : mode === "service"
+                      ? "Расскажите, как меняли масло, обслуживали вилку или дорабатывали мотоцикл, — опыт пригодится другим."
+                      : "Опубликуйте первую покатушку, обслуживание или доработку. Здесь появятся истории участников."}
               </p>
-              <a
-                href={session ? "#garage" : "#register"}
-                className="button outline"
-              >
-                {session ? "Написать в гараже" : "Создать аккаунт"}
-                <Icon name="arrow" size={17} />
-              </a>
+              {canWrite && (
+                <a
+                  href={session ? "#garage" : "#register"}
+                  className="button outline"
+                >
+                  {session ? "Написать в гараже" : "Создать аккаунт"}
+                  <Icon name="arrow" size={17} />
+                </a>
+              )}
             </div>
           ) : (
             <div className="post-list">
@@ -653,6 +703,7 @@ export function Garage({
         <PostEditor
           bikes={bikes}
           active={active}
+          moderator={session.user.role === "moderator"}
           close={() => setPostEditor(false)}
           done={(p) => {
             setPostEditor(false);
@@ -970,12 +1021,15 @@ function PostEditor({
   post,
   close,
   done,
+  moderator,
 }: {
   bikes: Bike[];
   active?: string;
   post?: Post;
   close: () => void;
   done: (p: Post) => void;
+  /** News are published by moderators only (the API checks it too). */
+  moderator: boolean;
 }) {
   const [busy, setBusy] = useState(false),
     [error, setError] = useState("");
@@ -1024,11 +1078,13 @@ function PostEditor({
           <label>
             Тип записи
             <select name="kind" defaultValue={post?.kind ?? "ride"}>
-              {Object.entries(postKinds).map(([v, l]) => (
-                <option key={v} value={v}>
-                  {l}
-                </option>
-              ))}
+              {Object.entries(postKinds)
+                .filter(([v]) => v !== "news" || moderator || post?.kind === v)
+                .map(([v, l]) => (
+                  <option key={v} value={v}>
+                    {l}
+                  </option>
+                ))}
             </select>
           </label>
           <label>
@@ -1378,6 +1434,7 @@ export function PostDetail({
         <PostEditor
           bikes={bikes}
           post={post}
+          moderator={session?.user.role === "moderator"}
           close={() => setBikes(null)}
           done={() => {
             setBikes(null);

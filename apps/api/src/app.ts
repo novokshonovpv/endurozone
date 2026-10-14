@@ -742,6 +742,13 @@ export async function buildApp(options: {
       const auth = verifiedWrite(req),
         b = req.body;
       nonblank([b.title, b.body]);
+      // News in Community are published by moderators only.
+      if (b.kind === "news" && auth.user.role !== "moderator")
+        throw new HttpError(
+          403,
+          "MODERATOR_REQUIRED",
+          "Новости публикуют модераторы.",
+        );
       if (clean(b.title).length < 3 || clean(b.body).length < 10)
         throw new HttpError(
           400,
@@ -780,6 +787,13 @@ export async function buildApp(options: {
       const auth = verifiedWrite(req),
         b = req.body;
       nonblank([b.title, b.body]);
+      // News in Community are published by moderators only.
+      if (b.kind === "news" && auth.user.role !== "moderator")
+        throw new HttpError(
+          403,
+          "MODERATOR_REQUIRED",
+          "Новости публикуют модераторы.",
+        );
       if (clean(b.title).length < 3 || clean(b.body).length < 10)
         throw new HttpError(
           400,

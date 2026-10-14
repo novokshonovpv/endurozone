@@ -5,7 +5,9 @@ import { TrackModeration } from "./adventure.tsx";
 import { ModeratorRoles } from "./roles.tsx";
 import {
   difficulties,
+  locationKinds,
   locationStatuses,
+  type LocationKind,
   reportReasons,
   type EnduroLocation,
   type LocationInput,
@@ -26,10 +28,31 @@ const cities = {
 type Props = { session: Session | null; notify: (message: string) => void };
 const errorOf = (e: unknown) => (e as Error).message;
 
-export function Locations({ session, notify }: Props) {
+// The tag of a list row: difficulty for a riding spot, the kind for a service.
+export const locationTag = (l: EnduroLocation) =>
+  l.kind === "spot" && l.difficulty
+    ? difficulties[l.difficulty]
+    : locationKinds[l.kind];
+const serviceKinds = ["rental", "guide", "school"] as const;
+const kindPlural: Record<(typeof serviceKinds)[number], string> = {
+  rental: "Прокаты",
+  guide: "Гиды",
+  school: "Школы",
+};
+/** Маршруты · Места (riding spots) and Маршруты · Прокаты и гиды (rentals, guides, schools). */
+export function Locations({
+  session,
+  notify,
+  view = "spots",
+}: Props & { view?: "spots" | "services" }) {
+  const services = view === "services";
   const [items, setItems] = useState<EnduroLocation[]>([]),
     [next, setNext] = useState<number | null>(null),
     [city, setCity] = useState(""),
+    [kind, setKind] = useState<string>(services ? "services" : "spot"),
+    [formKind, setFormKind] = useState<LocationKind>(
+      services ? "rental" : "spot",
+    ),
     [mine, setMine] = useState(false),
     [busy, setBusy] = useState(true),
     [error, setError] = useState(""),
@@ -48,7 +71,7 @@ export function Locations({ session, notify }: Props) {
     setError("");
     try {
       const p = await api<Page<EnduroLocation>>(
-        `${mine ? "/me/locations" : "/locations"}?limit=30&offset=${offset}${city ? `&city=${encodeURIComponent(city)}` : ""}`,
+        `${mine ? "/me/locations" : "/locations"}?limit=30&offset=${offset}&kind=${kind}${city ? `&city=${encodeURIComponent(city)}` : ""}`,
       );
       setItems((prev) => (offset ? [...prev, ...p.items] : p.items));
       setNext(p.nextOffset);
@@ -64,7 +87,7 @@ export function Locations({ session, notify }: Props) {
     setError("");
     setSelected(null);
     api<Page<EnduroLocation>>(
-      `${mine ? "/me/locations" : "/locations"}?limit=30${city ? `&city=${encodeURIComponent(city)}` : ""}`,
+      `${mine ? "/me/locations" : "/locations"}?limit=30&kind=${kind}${city ? `&city=${encodeURIComponent(city)}` : ""}`,
     )
       .then((p) => {
         if (alive) {
@@ -84,7 +107,7 @@ export function Locations({ session, notify }: Props) {
     return () => {
       alive = false;
     };
-  }, [mine, city, session?.user.id]);
+  }, [mine, city, kind, session?.user.id]);
   useEffect(() => {
     let alive = true;
     setDecisions([]);
@@ -113,13 +136,18 @@ export function Locations({ session, notify }: Props) {
     e.preventDefault();
     const f = new FormData(e.currentTarget);
     const b: LocationInput = {
+      kind: formKind,
       title: String(f.get("title")),
       description: String(f.get("description")),
       city: String(f.get("city")),
       latitude: Number(f.get("latitude")),
       longitude: Number(f.get("longitude")),
-      difficulty: f.get("difficulty") as LocationInput["difficulty"],
+      difficulty:
+        formKind === "spot"
+          ? (f.get("difficulty") as LocationInput["difficulty"])
+          : null,
       accessNotes: String(f.get("accessNotes")),
+      contacts: String(f.get("contacts") ?? ""),
       publicationConsent: true,
     };
     setSaving(true);
@@ -132,7 +160,7 @@ export function Locations({ session, notify }: Props) {
       setCity("");
       if (mine && !city) await load();
       notify(
-        "Локация отправлена на проверку. До одобрения она видна только вам и модератору.",
+        `${services ? "Карточка" : "Локация"} отправлена на проверку. До одобрения она видна только вам и модератору.`,
       );
     } catch (e) {
       setError(errorOf(e));
@@ -163,10 +191,14 @@ export function Locations({ session, notify }: Props) {
     <>
       <div className="page-heading">
         <div>
-          <p className="eyebrow">ТВОЯ ТЕРРИТОРИЯ</p>
-          <h1>Где кататься?</h1>
+          <p className="eyebrow">
+            {services ? "С КЕМ И НА ЧЁМ" : "ТВОЯ ТЕРРИТОРИЯ"}
+          </p>
+          <h1>{services ? "Прокаты и гиды" : "Где кататься?"}</h1>
           <p className="muted">
-            Локации сообщества, условия доступа и уровень сложности.
+            {services
+              ? "Прокаты мотоциклов, гиды и школы эндуро: условия, цены и контакты."
+              : "Локации сообщества, условия доступа и уровень сложности."}
           </p>
         </div>
         {session ? (
@@ -179,14 +211,31 @@ export function Locations({ session, notify }: Props) {
             }}
           >
             <Icon name="plus" />
-            Предложить локацию
+            {services ? "Добавить прокат или гида" : "Предложить локацию"}
           </button>
         ) : (
           <a className="button" href="#login">
-            Войти и добавить место
+            {services ? "Войти и добавить" : "Войти и добавить место"}
           </a>
         )}
       </div>
+      {services && (
+        <div className="chip-row" role="group" aria-label="Что показать">
+          {[
+            ["services", "Все"],
+            ...serviceKinds.map((k) => [k, kindPlural[k]]),
+          ].map(([value, label]) => (
+            <button
+              key={value}
+              className={`chip ${kind === value ? "active" : ""}`}
+              aria-pressed={kind === value}
+              onClick={() => setKind(value)}
+            >
+              {label}
+            </button>
+          ))}
+        </div>
+      )}
       <div className="map-toolbar">
         <label>
           Город
@@ -234,12 +283,30 @@ export function Locations({ session, notify }: Props) {
       </div>
       {editor && session && (
         <section className="card location-editor">
-          <h2>Предложить место</h2>
+          <h2>
+            {services ? "Добавить прокат, гида или школу" : "Предложить место"}
+          </h2>
           <p className="muted">
-            Опишите условия въезда и источник разрешения. Не публикуйте частный
-            адрес или место хранения мотоцикла.
+            {services
+              ? "Укажите точку встречи или базу, условия и контакты. Добавлять стоит с согласия владельца карточки."
+              : "Опишите условия въезда и источник разрешения. Не публикуйте частный адрес или место хранения мотоцикла."}
           </p>
           <form className="location-form" onSubmit={submit}>
+            {services && (
+              <label>
+                Что добавляем
+                <select
+                  value={formKind}
+                  onChange={(e) => setFormKind(e.target.value as LocationKind)}
+                >
+                  {serviceKinds.map((k) => (
+                    <option value={k} key={k}>
+                      {locationKinds[k]}
+                    </option>
+                  ))}
+                </select>
+              </label>
+            )}
             <label>
               Название
               <input name="title" required minLength={3} maxLength={140} />
@@ -255,16 +322,29 @@ export function Locations({ session, notify }: Props) {
                   maxLength={80}
                 />
               </label>
-              <label>
-                Сложность
-                <select name="difficulty">
-                  {Object.entries(difficulties).map(([v, t]) => (
-                    <option value={v} key={v}>
-                      {t}
-                    </option>
-                  ))}
-                </select>
-              </label>
+              {formKind === "spot" ? (
+                <label>
+                  Сложность
+                  <select name="difficulty">
+                    {Object.entries(difficulties).map(([v, t]) => (
+                      <option value={v} key={v}>
+                        {t}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+              ) : (
+                <label>
+                  Контакты
+                  <input
+                    name="contacts"
+                    required
+                    minLength={5}
+                    maxLength={300}
+                    placeholder="Телефон, сайт или мессенджер"
+                  />
+                </label>
+              )}
             </div>
             <div
               className="location-fields"
@@ -296,24 +376,33 @@ export function Locations({ session, notify }: Props) {
               </label>
             </div>
             <label>
-              Описание места
+              {services ? "Описание" : "Описание места"}
               <textarea
                 name="description"
                 rows={3}
                 required
                 minLength={10}
                 maxLength={3000}
+                placeholder={
+                  services
+                    ? "Какие мотоциклы, маршруты или программы, для какого уровня"
+                    : undefined
+                }
               />
             </label>
             <label>
-              Условия доступа и разрешения
+              {services ? "Условия и цены" : "Условия доступа и разрешения"}
               <textarea
                 name="accessNotes"
                 rows={3}
                 required
                 minLength={10}
                 maxLength={1500}
-                placeholder="Кто разрешает въезд, когда можно кататься, какие ограничения действуют"
+                placeholder={
+                  services
+                    ? "Цены, что входит, требования к опыту и экипировке"
+                    : "Кто разрешает въезд, когда можно кататься, какие ограничения действуют"
+                }
               />
             </label>
             <label className="consent">
@@ -338,7 +427,11 @@ export function Locations({ session, notify }: Props) {
       <div className="location-layout">
         <section>
           <h2>
-            {mine ? "Мои предложения" : "Локации сообщества"}{" "}
+            {mine
+              ? "Мои предложения"
+              : services
+                ? "Прокаты, гиды и школы"
+                : "Локации сообщества"}{" "}
             <span className="muted">{items.length}</span>
           </h2>
           {busy && !items.length ? (
@@ -349,11 +442,14 @@ export function Locations({ session, notify }: Props) {
               <h3>
                 {mine
                   ? "Здесь появятся ваши предложения"
-                  : "Первые места ещё впереди"}
+                  : services
+                    ? "Первые прокаты и гиды ещё впереди"
+                    : "Первые места ещё впереди"}
               </h3>
               <p>
-                Добавьте место с понятными условиями доступа. После проверки оно
-                появится на карте.
+                {services
+                  ? "Знаете хороший прокат или гида? Добавьте карточку с условиями и контактами — после проверки она появится на карте."
+                  : "Добавьте место с понятными условиями доступа. После проверки оно появится на карте."}
               </p>
             </div>
           ) : (
@@ -363,7 +459,7 @@ export function Locations({ session, notify }: Props) {
                 className={`card location-row ${selected === l.id ? "selected" : ""}`}
                 onClick={() => select(l.id)}
               >
-                <span className="tag">{difficulties[l.difficulty]}</span>
+                <span className={`tag kind-${l.kind}`}>{locationTag(l)}</span>
                 <h3>{l.title}</h3>
                 <p>{l.city}</p>
                 <small>{locationStatuses[l.status]}</small>
@@ -388,11 +484,19 @@ export function Locations({ session, notify }: Props) {
               </span>
               <h2>{detail.title}</h2>
               <p className="muted">
-                {detail.city} · {difficulties[detail.difficulty]}
+                {detail.city} · {locationTag(detail)}
               </p>
               <p className="plain-text">{detail.description}</p>
-              <h3>Условия доступа</h3>
+              <h3>
+                {detail.kind === "spot" ? "Условия доступа" : "Условия и цены"}
+              </h3>
               <p className="plain-text">{detail.accessNotes}</p>
+              {detail.contacts && (
+                <>
+                  <h3>Контакты</h3>
+                  <p className="plain-text">{detail.contacts}</p>
+                </>
+              )}
               <p className="muted">
                 {detail.latitude.toFixed(6)}, {detail.longitude.toFixed(6)} ·
                 Автор: {detail.author.displayName}
@@ -547,12 +651,15 @@ export function Moderation({ session, notify }: Props) {
       {locations.items.map((l) => (
         <article className="card moderation-card" key={l.id}>
           <span className="tag">
-            {l.city} · {difficulties[l.difficulty]}
+            {l.city} · {locationTag(l)}
           </span>
           <h3>{l.title}</h3>
           <p className="plain-text">{l.description}</p>
-          <strong>Условия доступа</strong>
+          <strong>
+            {l.kind === "spot" ? "Условия доступа" : "Условия и цены"}
+          </strong>
           <p className="plain-text">{l.accessNotes}</p>
+          {l.contacts && <p className="plain-text">Контакты: {l.contacts}</p>}
           <p className="muted">
             {l.latitude}, {l.longitude} · {l.author.displayName}
           </p>
