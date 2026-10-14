@@ -1,0 +1,196 @@
+[
+  {
+    "key": "raceenduro-2884",
+    "title": "До отстрела",
+    "startsOn": "2026-10-17",
+    "region": "Смоленская область",
+    "place": "д. Лягушкино",
+    "discipline": "Эндуро",
+    "classes": "Золото, Серебро, Бронза, Мастер",
+    "sourceUrl": "https://t.me/raceenduro/2884"
+  },
+  {
+    "key": "raceenduro-2902",
+    "title": "Череповецкий междусобойчик",
+    "startsOn": "2026-10-17",
+    "region": "Вологодская область",
+    "place": "п. Шексна",
+    "discipline": "Эндуро",
+    "classes": "Золото, Серебро, Бронза, Леди, Дети",
+    "sourceUrl": "https://t.me/raceenduro/2902"
+  },
+  {
+    "key": "raceenduro-2910",
+    "title": "Путь лешего: 2-й этап",
+    "startsOn": "2026-10-17",
+    "region": "Тюменская область",
+    "place": "д. Тюнево",
+    "discipline": "Эндуро",
+    "classes": "Золото, Серебро, Бронза; детская гонка",
+    "sourceUrl": "https://t.me/raceenduro/2910"
+  },
+  {
+    "key": "raceenduro-2911",
+    "title": "HYPERCUT",
+    "startsOn": "2026-10-17",
+    "region": "Омская область",
+    "place": "Омск",
+    "discipline": "Эндуро",
+    "classes": "Один общий класс, 18+",
+    "sourceUrl": "https://t.me/raceenduro/2911"
+  },
+  {
+    "key": "raceenduro-2920",
+    "title": "Кантри-кросс и эндуро",
+    "startsOn": "2026-10-17",
+    "region": "Новгородская область",
+    "place": "Окуловка (Кулотино)",
+    "discipline": "Кантри-кросс, эндуро",
+    "sourceUrl": "https://t.me/raceenduro/2920"
+  },
+  {
+    "key": "raceenduro-2883",
+    "title": "Супер-эндуро",
+    "startsOn": "2026-10-17",
+    "region": "Краснодарский край",
+    "place": "Абинск",
+    "discipline": "Супер-эндуро (заезды на выбывание в парах)",
+    "classes": "Золото, Серебро, Бронза",
+    "sourceUrl": "https://t.me/raceenduro/2883"
+  },
+  {
+    "key": "raceenduro-2842",
+    "title": "Хард-эндуро «Орлёнок»",
+    "startsOn": "2026-10-17",
+    "endsOn": "2026-10-18",
+    "region": "Краснодарский край",
+    "place": "пгт Новомихайловский",
+    "discipline": "Хард-эндуро",
+    "sourceUrl": "https://t.me/raceenduro/2842"
+  },
+  {
+    "key": "raceenduro-2913",
+    "title": "Чемпионат и первенство Республики Адыгея по суперкроссу и кантри-кроссу",
+    "startsOn": "2026-10-17",
+    "endsOn": "2026-10-18",
+    "region": "Республика Адыгея",
+    "place": "п. Тульский",
+    "discipline": "Суперкросс, кантри-кросс",
+    "sourceUrl": "https://t.me/raceenduro/2913"
+  },
+  {
+    "key": "raceenduro-2867",
+    "title": "Чандарский хребет",
+    "startsOn": "2026-10-17",
+    "region": "Республика Башкортостан",
+    "place": "Нуримановский район",
+    "discipline": "Хард-эндуро",
+    "classes": "Золото, Серебро, Бронза",
+    "sourceUrl": "https://t.me/raceenduro/2922",
+    "status": "cancelled",
+    "note": "Организаторы объявили об отмене."
+  },
+  {
+    "key": "raceenduro-2923",
+    "title": "Enduro4seasons",
+    "startsOn": "2026-10-23",
+    "endsOn": "2026-10-25",
+    "region": "Беларусь",
+    "place": "урочище Сивошино",
+    "discipline": "Эндуро",
+    "classes": "Open, Base, Profi, Electro, Lady, Master, Junior",
+    "sourceUrl": "https://t.me/raceenduro/2923"
+  },
+  {
+    "key": "raceenduro-2904",
+    "title": "Башаринский замес: взятие",
+    "startsOn": "2026-10-24",
+    "region": "Свердловская область",
+    "place": "Богданович",
+    "discipline": "Эндуро",
+    "classes": "Золото, Серебро, Бронза, Мастер, Леди",
+    "sourceUrl": "https://t.me/raceenduro/2904"
+  },
+  {
+    "key": "raceenduro-2914",
+    "title": "Осенний рубеж",
+    "startsOn": "2026-10-24",
+    "region": "Ленинградская область",
+    "place": "с. Путилово",
+    "discipline": "Экстрим-эндуро",
+    "sourceUrl": "https://t.me/raceenduro/2914"
+  },
+  {
+    "key": "raceenduro-2916",
+    "title": "Мотокросс и кантри-кросс",
+    "startsOn": "2026-10-24",
+    "region": "Московская область",
+    "place": "Серпухов, о. Русский",
+    "discipline": "Мотокросс, кантри-кросс",
+    "sourceUrl": "https://t.me/raceenduro/2916"
+  },
+  {
+    "key": "raceenduro-2921",
+    "title": "BEACH RACE",
+    "startsOn": "2026-10-24",
+    "region": "Республика Крым",
+    "place": "Судак",
+    "discipline": "Пляжная гонка",
+    "classes": "Серебро",
+    "sourceUrl": "https://t.me/raceenduro/2921"
+  },
+  {
+    "key": "raceenduro-2871",
+    "title": "За гранью",
+    "startsOn": "2026-10-24",
+    "region": "Краснодарский край",
+    "place": "Новороссийск",
+    "discipline": "Эндуро",
+    "classes": "Золото (65 км), Серебро (50 км), Бронза (35 км)",
+    "sourceUrl": "https://t.me/raceenduro/2871"
+  },
+  {
+    "key": "raceenduro-2878",
+    "title": "Эндуро Нация",
+    "startsOn": "2026-10-31",
+    "endsOn": "2026-11-01",
+    "region": "Краснодарский край",
+    "place": "Новороссийск, ст. Натухаевская",
+    "discipline": "Эндуро",
+    "classes": "Новичок, Хобби, Спорт",
+    "sourceUrl": "https://t.me/raceenduro/2909",
+    "status": "postponed",
+    "note": "Перенесена с 24 октября."
+  },
+  {
+    "key": "raceenduro-2907",
+    "title": "Тропа горцев",
+    "startsOn": "2026-10-31",
+    "endsOn": "2026-11-01",
+    "region": "Кабардино-Балкарская Республика",
+    "place": "с. Кёнделен",
+    "discipline": "Многодневная гонка",
+    "classes": "Золото, Серебро, Бронза, Железо",
+    "sourceUrl": "https://t.me/raceenduro/2907"
+  },
+  {
+    "key": "raceenduro-2908",
+    "title": "Детская квадро-эндуро гонка",
+    "startsOn": "2026-11-01",
+    "region": "Краснодарский край",
+    "place": "Геленджик",
+    "discipline": "Квадро-эндуро и эндуро для детей и юниоров",
+    "sourceUrl": "https://t.me/raceenduro/2908"
+  },
+  {
+    "key": "raceenduro-2887",
+    "title": "BEZOOMKA: Новый уровень",
+    "startsOn": "2026-11-07",
+    "endsOn": "2026-11-08",
+    "region": "Краснодарский край",
+    "place": "с. Кабардинка",
+    "discipline": "Эндуро: лесной пролог со стадионом 7 ноября, гонка 8 ноября",
+    "classes": "Золото, Серебро, Бронза, Железо, Леди, Дети 14+, Серебро Электро, Бронза Электро",
+    "sourceUrl": "https://t.me/raceenduro/2887"
+  }
+]

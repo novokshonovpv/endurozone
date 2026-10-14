@@ -13,6 +13,7 @@ import {
   type Session,
   postKinds,
   levels,
+  cityCenters,
 } from "@enduro/contracts";
 import { api } from "./api.ts";
 import {
@@ -175,7 +176,10 @@ export function Feed({
     }
   };
   const cities = [
-    ...new Set(["Смоленск", "Сочи", ...(session ? [session.user.city] : [])]),
+    ...new Set([
+      ...Object.keys(cityCenters),
+      ...(session ? [session.user.city] : []),
+    ]),
   ];
   const canWrite = mode !== "news" || session?.user.role === "moderator";
   return (

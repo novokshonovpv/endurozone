@@ -37,6 +37,7 @@ import { GpxError } from "./gpx.ts";
 import { adventureRoutes, adventureOutputs } from "./adventure.ts";
 import { locationRoutes, locationOutputs } from "./locations.ts";
 import { nearbyRoutes } from "./nearby.ts";
+import { announcementRoutes } from "./announcements.ts";
 import { rideChatRoutes } from "./ride-chat.ts";
 import { feedbackRoutes } from "./feedback.ts";
 import { onboardingRoutes } from "./onboarding.ts";
@@ -946,6 +947,11 @@ export async function buildApp(options: {
   });
   blockRoutes(app, db, {
     requireAuth,
+    requireWrite: verifiedWrite,
+    notFound,
+    HttpError,
+  });
+  announcementRoutes(app, db, {
     requireWrite: verifiedWrite,
     notFound,
     HttpError,

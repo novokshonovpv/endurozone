@@ -20,6 +20,8 @@ export const cityCenters: Record<string, GeoPoint> = {
   Воронеж: { latitude: 51.661, longitude: 39.2 },
   Краснодар: { latitude: 45.035, longitude: 38.975 },
   Туапсе: { latitude: 44.098, longitude: 39.074 },
+  Новороссийск: { latitude: 44.723, longitude: 37.769 },
+  Майкоп: { latitude: 44.609, longitude: 40.106 },
   "Ростов-на-Дону": { latitude: 47.222, longitude: 39.72 },
   "Нижний Новгород": { latitude: 56.327, longitude: 44.006 },
   Казань: { latitude: 55.796, longitude: 49.106 },
@@ -27,6 +29,15 @@ export const cityCenters: Record<string, GeoPoint> = {
   Пермь: { latitude: 58.01, longitude: 56.229 },
   Екатеринбург: { latitude: 56.838, longitude: 60.597 },
   Новосибирск: { latitude: 55.03, longitude: 82.92 },
+  // Belarus: the map and routes cover it on a par with Russia.
+  Минск: { latitude: 53.902, longitude: 27.562 },
+  Витебск: { latitude: 55.184, longitude: 30.202 },
+  Орша: { latitude: 54.509, longitude: 30.426 },
+  Могилёв: { latitude: 53.894, longitude: 30.331 },
+  Гомель: { latitude: 52.424, longitude: 31.014 },
+  Мозырь: { latitude: 52.049, longitude: 29.245 },
+  Гродно: { latitude: 53.669, longitude: 23.813 },
+  Брест: { latitude: 52.098, longitude: 23.734 },
 };
 export interface NearbyLocation extends EnduroLocation {
   distanceKm: number;

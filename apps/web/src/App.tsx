@@ -230,7 +230,7 @@ export default function App() {
           <div className="top-actions">
             <span className="version">
               <span className="tiny-dot" />
-              Разработка · 0.25
+              Разработка · 0.26
             </span>
             {session ? (
               <>
@@ -387,7 +387,7 @@ export default function App() {
               mode={route === "news" ? "news" : "service"}
             />
           ) : route === "events" ? (
-            <Events session={session} />
+            <Events session={session} notify={setNotice} />
           ) : route === "tracks" ? (
             <Tracks
               key={session?.user.id}

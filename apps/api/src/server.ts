@@ -4,6 +4,7 @@ import { openDatabase } from "./database.ts";
 import { fileURLToPath } from "node:url";
 import { existsSync, mkdirSync } from "node:fs";
 import { createMailSender, deliverMail } from "./mail.ts";
+import { seedContent } from "./seed.ts";
 
 const envPath = fileURLToPath(new URL("../../../.env", import.meta.url));
 if (existsSync(envPath)) process.loadEnvFile(envPath);
@@ -28,6 +29,9 @@ const dataDir = fileURLToPath(
 );
 if (!process.env.DATABASE_URL) mkdirSync(dataDir, { recursive: true });
 const db = await openDatabase({ url: process.env.DATABASE_URL, dataDir });
+// Starter places and race announcements: each is added once; SEED_CONTENT=false skips it.
+const seeded =
+  process.env.SEED_CONTENT === "false" ? null : await seedContent(db);
 const webRoot = fileURLToPath(new URL("../../web/dist", import.meta.url));
 const app = await buildApp({
   db,
@@ -39,6 +43,7 @@ const app = await buildApp({
   trustProxy: process.env.TRUST_PROXY === "true",
   webRoot: existsSync(webRoot) ? webRoot : undefined,
 });
+if (seeded) app.log.info(seeded, "Starter content checked");
 let closing = false;
 let inFlight: Promise<unknown> | undefined;
 const poll = () => {

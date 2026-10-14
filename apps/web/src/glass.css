@@ -662,6 +662,47 @@ select:focus {
   font-size: 14px;
 }
 
+/* Race announcements in the events calendar */
+.event-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 6px;
+}
+.event-body small {
+  display: block;
+}
+.event-note {
+  margin-top: 4px;
+  color: var(--ochre-ink);
+}
+.event-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 16px;
+  margin-top: 8px;
+  font-size: 14px;
+  font-weight: 600;
+}
+.event-actions a {
+  color: var(--ochre-ink);
+}
+.event-until {
+  font-size: 15px;
+}
+.race-card.is-cancelled h3 {
+  text-decoration: line-through;
+  color: var(--muted);
+}
+.event-source {
+  margin-top: 26px;
+  font-size: 13px;
+}
+.event-source a {
+  color: var(--ochre-ink);
+  font-weight: 600;
+}
 /* Phone: frosted top and bottom bars, the four blocks at the thumb */
 @media (max-width: 760px) {
   .sidebar {

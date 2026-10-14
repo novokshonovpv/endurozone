@@ -195,3 +195,12 @@ GET/POST `/api/bikes/:id/photos` и `/api/posts/:id/photos` читают фот�
 ## Первые шаги и активация · 0.18
 
 `GET /api/me/onboarding` → `{steps:[{id:"bike"|"post"|"follow"|"social", done}], complete, dismissed}` — по сохранённым данным; действия со своим контентом не считаются социальным шагом. `PUT /api/me/onboarding` `{dismissed: boolean}` (сессия и CSRF, без проверки email). Модератор: `GET /api/moderation/activation` — только агрегаты `participants, bike, post, follow, social, activated, eligibleForReturn, returned, excludedModerators, excludedSynthetic`; участники — не модераторы и не `@example.test`; возврат — полезное действие через 7+ дней после регистрации. [Решения и приёмка](../sprint-16.md).
+
+## Анонсы гонок (0.26)
+
+| Метод и путь                   | Результат                                                     |
+| ------------------------------ | ------------------------------------------------------------- |
+| GET /api/announcements         | Ближайшие и идущие сейчас анонсы по дате; limit / offset      |
+| POST /api/announcements        | Новый анонс; только модератор; ссылка на источник обязательна |
+| PATCH /api/announcements/{id}  | Правка, статус «перенесено/отменено»; только модератор        |
+| DELETE /api/announcements/{id} | Скрытие (не удаление); только модератор                       |

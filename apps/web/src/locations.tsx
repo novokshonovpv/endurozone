@@ -4,6 +4,7 @@ export { ReportButton } from "./map.tsx";
 import { TrackModeration } from "./adventure.tsx";
 import { ModeratorRoles } from "./roles.tsx";
 import {
+  cityCenters,
   difficulties,
   locationKinds,
   locationStatuses,
@@ -21,10 +22,8 @@ import { api } from "./api.ts";
 import { ErrorBox, Loading, Modal, Icon } from "./ui.tsx";
 
 type Point = { latitude: number; longitude: number };
-const cities = {
-  Смоленск: { latitude: 54.782, longitude: 32.045 },
-  Сочи: { latitude: 43.585, longitude: 39.724 },
-};
+// The same city list as the nearby search: every city is a peer of Smolensk and Sochi.
+const cities = cityCenters;
 type Props = { session: Session | null; notify: (message: string) => void };
 const errorOf = (e: unknown) => (e as Error).message;
 
@@ -261,13 +260,13 @@ export function Locations({
             value={city}
             onChange={(e) => {
               setCity(e.target.value);
-              if (e.target.value)
-                setCenter(cities[e.target.value as keyof typeof cities]);
+              if (e.target.value) setCenter(cities[e.target.value]);
             }}
           >
             <option value="">Все города</option>
-            <option>Смоленск</option>
-            <option>Сочи</option>
+            {Object.keys(cities).map((c) => (
+              <option key={c}>{c}</option>
+            ))}
           </select>
         </label>
         <button className="button outline small" onClick={locate}>
