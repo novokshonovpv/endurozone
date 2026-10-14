@@ -156,6 +156,11 @@ function engineOf(m: ModelDetail): { key: string; label: string } | null {
   }
   return null;
 }
+/** Engine code of a model of the reference (for imports); null when the specs have none. */
+export const engineKeyOf = (slug: string) => {
+  const m = catalogModel(slug);
+  return m ? (engineOf(m)?.key ?? null) : null;
+};
 const engines = new Map<string, string[]>();
 for (const m of allModels) {
   const e = engineOf(m);
@@ -175,7 +180,9 @@ if (existsSync(partsFile)) {
   };
   for (const { scope, key: k, node, ...item } of data.items) {
     const id = `${scope}|${k}|${node}`;
-    tables.set(id, [...(tables.get(id) ?? []), item]);
+    const list = tables.get(id) ?? [];
+    list.push({ ...item, source: item.source || "csv" });
+    tables.set(id, list);
   }
 }
 const tableOf = (scope: PartScope, scopeKey: string, node: string) =>

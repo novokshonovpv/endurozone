@@ -51,6 +51,8 @@ export interface PartItem {
   article: string;
   qty: number | null;
   note: string;
+  /** Where the line comes from: "KAYO", "csv"… */
+  source: string;
 }
 export interface PartFitInput {
   name: string;
@@ -184,6 +186,7 @@ export const partResponses = {
         article: str,
         qty: { anyOf: [{ type: "number" }, { type: "null" }] },
         note: str,
+        source: str,
       }),
     },
     fits: { type: "array", items: fit },

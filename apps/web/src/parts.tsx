@@ -417,6 +417,8 @@ function PartsNode({
       <Loading />
     );
   const moderator = session?.user.role === "moderator";
+  const hasArticles = page.items.some((i) => i.article);
+  const sources = [...new Set(page.items.map((i) => i.source))];
   return (
     <>
       <a href={back} className="back-link">
@@ -460,40 +462,59 @@ function PartsNode({
       <section className="card parts-table">
         <h2>Детали узла</h2>
         {page.items.length ? (
-          <div className="table-wrap">
-            <table>
-              <thead>
-                <tr>
-                  <th>№</th>
-                  <th>Название</th>
-                  <th>Артикул</th>
-                  <th>Кол-во</th>
-                </tr>
-              </thead>
-              <tbody>
-                {page.items.map((i, n) => (
-                  <tr key={n}>
-                    <td>{i.position}</td>
-                    <td>
-                      {i.name}
-                      {i.note && <small>{i.note}</small>}
-                    </td>
-                    <td>
-                      {i.article && (
-                        <button
-                          className="text-button"
-                          onClick={() => copy(i.article)}
-                        >
-                          {copied === i.article ? "Скопировано" : i.article}
-                        </button>
-                      )}
-                    </td>
-                    <td>{i.qty ?? ""}</td>
+          <>
+            <div className="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>№</th>
+                    <th>Название</th>
+                    {hasArticles && <th>Артикул</th>}
+                    <th>Кол-во</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+                </thead>
+                <tbody>
+                  {page.items.map((i, n) => (
+                    <tr key={n}>
+                      <td>{i.position}</td>
+                      <td>
+                        {i.name}
+                        {i.note && <small>{i.note}</small>}
+                      </td>
+                      {hasArticles && (
+                        <td>
+                          {i.article && (
+                            <button
+                              className="text-button"
+                              onClick={() => copy(i.article)}
+                            >
+                              {copied === i.article ? "Скопировано" : i.article}
+                            </button>
+                          )}
+                        </td>
+                      )}
+                      <td>{i.qty ?? ""}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+            <p className="form-note parts-source">
+              Состав узла: {sources.join(", ")}. Номера — позиции на схеме
+              производителя
+              {page.official ? (
+                <>
+                  {" "}
+                  (
+                  <a href={page.official.url} target="_blank" rel="noreferrer">
+                    открыть схему ↗
+                  </a>
+                  )
+                </>
+              ) : null}
+              . Перед заказом сверяйте деталь со старой и с VIN.
+            </p>
+          </>
         ) : (
           <>
             <p className="muted">

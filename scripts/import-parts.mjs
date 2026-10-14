@@ -8,7 +8,7 @@
 //                  wheel_front wheel_rear electrics tank_seat
 //            engine: head cylinder crank clutch gearbox ignition starter intake lube cooling covers
 //   position, name, article, qty, note
-import { readFileSync, readdirSync, writeFileSync } from "node:fs";
+import { existsSync, readFileSync, readdirSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 
 const nodes = {
@@ -97,6 +97,7 @@ for (const file of readdirSync(dir).filter((f) =>
       article: get("article"),
       qty: Number.isFinite(qty) && get("qty") ? qty : null,
       note: get("note"),
+      source: "csv",
     });
   });
 }
@@ -104,8 +105,17 @@ for (const p of problems) console.warn(p);
 // Optional second argument: where to write (default apps/api/data/parts.json).
 const out =
   process.argv[3] ?? join(process.cwd(), "apps", "api", "data", "parts.json");
+// Lines from other sources (e.g. KAYO) stay; earlier CSV lines are replaced.
+const kept = existsSync(out)
+  ? JSON.parse(readFileSync(out, "utf8")).items.filter(
+      (i) => i.source !== "csv",
+    )
+  : [];
 writeFileSync(
   out,
-  JSON.stringify({ importedAt: new Date().toISOString(), items }) + "\n",
+  JSON.stringify({
+    importedAt: new Date().toISOString(),
+    items: [...kept, ...items],
+  }) + "\n",
 );
 console.log(`parts: ${items.length}, problems: ${problems.length} → ${out}`);

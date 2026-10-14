@@ -124,6 +124,18 @@ describe("Parts selection", () => {
     ).json<PartsOverview>();
     assert.equal(kayo.official?.source, "KAYO");
     assert.equal(kayo.official?.url, "https://kayo.ru/schemes/68936/");
+    // KAYO node lists: names and quantities from the brand's scheme, without articles or prices.
+    assert.ok(kayo.moto.find((n) => n.id === "wheel_front")!.items > 0);
+    const wheelKayo = (
+      await request(
+        "GET",
+        "/api/parts/mototsikl-kayo-k1-250-mx-2118/moto/wheel_front",
+      )
+    ).json<PartNodePage>();
+    assert.ok(wheelKayo.items.length > 0);
+    assert.ok(
+      wheelKayo.items.every((i) => i.source === "KAYO" && i.article === ""),
+    );
   });
   it("lets only owners of the model add and confirm, without links", async () => {
     const denied = await fit(stranger, "bse-t5/moto/wheel_front", "Шина");
