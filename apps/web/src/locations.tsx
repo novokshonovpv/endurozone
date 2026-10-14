@@ -58,6 +58,8 @@ export function Locations({
     [error, setError] = useState(""),
     [selected, setSelected] = useState<string | null>(null),
     [editor, setEditor] = useState(false),
+    // The author's own proposal being fixed and resubmitted; null for a new one.
+    [editing, setEditing] = useState<EnduroLocation | null>(null),
     [saving, setSaving] = useState(false);
   const [center, setCenter] = useState<Point>(cities["Смоленск"]),
     [point, setPoint] = useState<Point | null>(null),
@@ -153,6 +155,20 @@ export function Locations({
     setSaving(true);
     setError("");
     try {
+      if (editing) {
+        const saved = await api<EnduroLocation>(`/locations/${editing.id}`, {
+          method: "PATCH",
+          body: b,
+        });
+        setItems((old) => old.map((l) => (l.id === saved.id ? saved : l)));
+        setEditor(false);
+        setEditing(null);
+        setPoint(null);
+        notify(
+          "Изменения отправлены на проверку. До одобрения карточка видна только вам и модератору.",
+        );
+        return;
+      }
       await api("/locations", { method: "POST", body: b });
       setEditor(false);
       setPoint(null);
@@ -205,7 +221,9 @@ export function Locations({
           <button
             className="button"
             onClick={() => {
-              setEditor(!editor);
+              setEditor(!editor || Boolean(editing));
+              setEditing(null);
+              setFormKind(services ? "rental" : "spot");
               setError("");
               setPoint(null);
             }}
@@ -284,14 +302,28 @@ export function Locations({
       {editor && session && (
         <section className="card location-editor">
           <h2>
-            {services ? "Добавить прокат, гида или школу" : "Предложить место"}
+            {editing
+              ? `Изменить «${editing.title}»`
+              : services
+                ? "Добавить прокат, гида или школу"
+                : "Предложить место"}
           </h2>
           <p className="muted">
             {services
               ? "Укажите точку встречи или базу, условия и контакты. Добавлять стоит с согласия владельца карточки."
               : "Опишите условия въезда и источник разрешения. Не публикуйте частный адрес или место хранения мотоцикла."}
           </p>
-          <form className="location-form" onSubmit={submit}>
+          {editing?.status === "published" && (
+            <p className="form-note">
+              После изменения карточка снова уйдёт на проверку и вернётся на
+              карту, когда модератор её одобрит.
+            </p>
+          )}
+          <form
+            className="location-form"
+            onSubmit={submit}
+            key={editing?.id ?? "new"}
+          >
             {services && (
               <label>
                 Что добавляем
@@ -309,14 +341,20 @@ export function Locations({
             )}
             <label>
               Название
-              <input name="title" required minLength={3} maxLength={140} />
+              <input
+                name="title"
+                required
+                minLength={3}
+                maxLength={140}
+                defaultValue={editing?.title}
+              />
             </label>
             <div className="location-fields">
               <label>
                 Город / ближайший населённый пункт
                 <input
                   name="city"
-                  defaultValue={city || session.user.city}
+                  defaultValue={editing?.city ?? (city || session.user.city)}
                   required
                   minLength={2}
                   maxLength={80}
@@ -325,7 +363,10 @@ export function Locations({
               {formKind === "spot" ? (
                 <label>
                   Сложность
-                  <select name="difficulty">
+                  <select
+                    name="difficulty"
+                    defaultValue={editing?.difficulty ?? "medium"}
+                  >
                     {Object.entries(difficulties).map(([v, t]) => (
                       <option value={v} key={v}>
                         {t}
@@ -342,6 +383,7 @@ export function Locations({
                     minLength={5}
                     maxLength={300}
                     placeholder="Телефон, сайт или мессенджер"
+                    defaultValue={editing?.contacts}
                   />
                 </label>
               )}
@@ -359,7 +401,7 @@ export function Locations({
                   min={-90}
                   max={90}
                   required
-                  defaultValue={point?.latitude}
+                  defaultValue={point?.latitude ?? editing?.latitude}
                 />
               </label>
               <label>
@@ -371,7 +413,7 @@ export function Locations({
                   min={-180}
                   max={180}
                   required
-                  defaultValue={point?.longitude}
+                  defaultValue={point?.longitude ?? editing?.longitude}
                 />
               </label>
             </div>
@@ -383,6 +425,7 @@ export function Locations({
                 required
                 minLength={10}
                 maxLength={3000}
+                defaultValue={editing?.description}
                 placeholder={
                   services
                     ? "Какие мотоциклы, маршруты или программы, для какого уровня"
@@ -398,6 +441,7 @@ export function Locations({
                 required
                 minLength={10}
                 maxLength={1500}
+                defaultValue={editing?.accessNotes}
                 placeholder={
                   services
                     ? "Цены, что входит, требования к опыту и экипировке"
@@ -411,12 +455,19 @@ export function Locations({
             </label>
             <div className="location-actions">
               <button className="button" disabled={saving}>
-                {saving ? "Отправляем…" : "Отправить на проверку"}
+                {saving
+                  ? "Отправляем…"
+                  : editing
+                    ? "Отправить на проверку снова"
+                    : "Отправить на проверку"}
               </button>
               <button
                 className="text-button"
                 type="button"
-                onClick={() => setEditor(false)}
+                onClick={() => {
+                  setEditor(false);
+                  setEditing(null);
+                }}
               >
                 Отмена
               </button>
@@ -501,13 +552,33 @@ export function Locations({
                 {detail.latitude.toFixed(6)}, {detail.longitude.toFixed(6)} ·
                 Автор: {detail.author.displayName}
               </p>
-              {detail.status === "published" && session && (
-                <ReportButton
-                  targetType="location"
-                  targetId={detail.id}
-                  notify={notify}
-                />
-              )}
+              {session?.user.id === detail.author.id &&
+                detail.status !== "hidden" && (
+                  <button
+                    className="button outline small"
+                    onClick={() => {
+                      setEditing(detail);
+                      setFormKind(detail.kind);
+                      setPoint(null);
+                      setError("");
+                      setEditor(true);
+                      window.scrollTo({ top: 0, behavior: "smooth" });
+                    }}
+                  >
+                    {detail.status === "rejected"
+                      ? "Исправить и отправить снова"
+                      : "Изменить"}
+                  </button>
+                )}
+              {detail.status === "published" &&
+                session &&
+                session.user.id !== detail.author.id && (
+                  <ReportButton
+                    targetType="location"
+                    targetId={detail.id}
+                    notify={notify}
+                  />
+                )}
               <a
                 className="text-button"
                 href={`https://www.openstreetmap.org/?mlat=${detail.latitude}&mlon=${detail.longitude}#map=14/${detail.latitude}/${detail.longitude}`}

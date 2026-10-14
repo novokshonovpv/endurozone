@@ -15,6 +15,7 @@ import { profileOf } from "./auth.ts";
 import { distance } from "./gpx.ts";
 import { locationSelect, locationOf } from "./locations.ts";
 import { rideSelect, rideOf } from "./adventure.ts";
+import { blockedBetween } from "./blocks.ts";
 // About 1 km: the search centre is never more precise than this, in memory or in responses.
 export const coarse = (n: number) => Math.round(n * 100) / 100;
 const km = (m: number) => Math.round(m / 100) / 10;
@@ -58,7 +59,9 @@ export function nearbyRoutes(app: FastifyInstance, db: Database) {
       const latitude = coarse(req.query.latitude),
         longitude = coarse(req.query.longitude),
         radiusKm = req.query.radiusKm ?? defaultNearbyRadius,
-        from: Coordinate = [longitude, latitude];
+        from: Coordinate = [longitude, latitude],
+        // Places, tracks and rides of riders in a block with the viewer are left out.
+        viewer = req.authContext?.user.id ?? null;
       const dLat = radiusKm / 111.2,
         dLng = Math.min(
           180,
@@ -73,12 +76,12 @@ export function nearbyRoutes(app: FastifyInstance, db: Database) {
       ];
       // Exact great-circle distance in SQL; the bounding box only narrows the scan.
       const located = await db.query(
-        `SELECT * FROM (SELECT x.*, 2*6371.0088*asin(least(1,sqrt(power(sin(radians(x.latitude-$5)/2),2)+cos(radians($5))*cos(radians(x.latitude))*power(sin(radians(x.longitude-$6)/2),2)))) AS distance_km FROM (${locationSelect} WHERE l.status='published' AND l.latitude BETWEEN $1 AND $2 AND l.longitude BETWEEN $3 AND $4) x) d WHERE d.distance_km<=$7 ORDER BY d.distance_km,d.id LIMIT $8`,
-        [...box, latitude, longitude, radiusKm, nearbyLimit + 1],
+        `SELECT * FROM (SELECT x.*, 2*6371.0088*asin(least(1,sqrt(power(sin(radians(x.latitude-$5)/2),2)+cos(radians($5))*cos(radians(x.latitude))*power(sin(radians(x.longitude-$6)/2),2)))) AS distance_km FROM (${locationSelect} WHERE l.status='published' AND l.latitude BETWEEN $1 AND $2 AND l.longitude BETWEEN $3 AND $4 AND NOT ${blockedBetween("$9::uuid", "l.author_id")}) x) d WHERE d.distance_km<=$7 ORDER BY d.distance_km,d.id LIMIT $8`,
+        [...box, latitude, longitude, radiusKm, nearbyLimit + 1, viewer],
       );
       const trackRows = await db.query(
-        "SELECT t.id,t.title,t.city,t.difficulty,t.distance_m,t.geometry,t.author_id,u.handle,u.display_name,u.level,u.bio,u.city AS author_city FROM tracks t JOIN users u ON u.id=t.author_id WHERE t.status='published' AND t.max_lat>=$1 AND t.min_lat<=$2 AND t.max_lng>=$3 AND t.min_lng<=$4 ORDER BY t.created_at DESC,t.id LIMIT $5",
-        [...box, candidates],
+        `SELECT t.id,t.title,t.city,t.difficulty,t.distance_m,t.geometry,t.author_id,u.handle,u.display_name,u.level,u.bio,u.city AS author_city FROM tracks t JOIN users u ON u.id=t.author_id WHERE t.status='published' AND t.max_lat>=$1 AND t.min_lat<=$2 AND t.max_lng>=$3 AND t.min_lng<=$4 AND NOT ${blockedBetween("$6::uuid", "t.author_id")} ORDER BY t.created_at DESC,t.id LIMIT $5`,
+        [...box, candidates, viewer],
       );
       const near = new Map<string, { km: number; anchor: Coordinate }>();
       for (const t of trackRows) {
@@ -104,8 +107,8 @@ export function nearbyRoutes(app: FastifyInstance, db: Database) {
       // Rides are placed by their published track only; the private meeting point is never read.
       const rideRows = near.size
         ? await db.query(
-            `${rideSelect} WHERE r.status='open' AND NOT r.hidden AND r.starts_at>now() AND t.status='published' AND r.track_id=ANY($1::uuid[]) ORDER BY r.starts_at,r.id LIMIT $2`,
-            [[...near.keys()], candidates],
+            `${rideSelect} WHERE r.status='open' AND NOT r.hidden AND r.starts_at>now() AND t.status='published' AND r.track_id=ANY($1::uuid[]) AND NOT ${blockedBetween("$3::uuid", "r.organizer_id")} ORDER BY r.starts_at,r.id LIMIT $2`,
+            [[...near.keys()], candidates, viewer],
           )
         : [];
       const rides = rideRows

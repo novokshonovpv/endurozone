@@ -106,7 +106,7 @@ export function adventureRoutes(
   };
   async function track(id: string, req: FastifyRequest) {
     const [r] = await db.query(
-      `${trackSelect} WHERE t.id=$1 AND (t.status='published' OR t.author_id=$2 OR $3)`,
+      `${trackSelect} WHERE t.id=$1 AND (t.status='published' OR t.author_id=$2 OR $3) AND (t.author_id=$2 OR $3 OR NOT ${blockedBetween("$2::uuid", "t.author_id")})`,
       [
         id,
         req.authContext?.user.id ?? null,
@@ -194,7 +194,12 @@ export function adventureRoutes(
   app.get<{ Querystring: Query }>(
     "/api/tracks",
     { schema: { querystring: schemas.locationPage, tags: ["Tracks"] } },
-    (req) => tracks("t.status='published'", [], req.query),
+    (req) =>
+      tracks(
+        `t.status='published' AND NOT ${blockedBetween("$1::uuid", "t.author_id")}`,
+        [req.authContext?.user.id ?? null],
+        req.query,
+      ),
   );
   app.get<{ Querystring: Query }>(
     "/api/me/tracks",

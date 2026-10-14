@@ -4,12 +4,14 @@ import { randomUUID } from "node:crypto";
 import { schemas, responses, type LocationInput } from "@enduro/contracts";
 import type { Database, Row } from "./database.ts";
 import { profileOf } from "./auth.ts";
+import { blockedBetween } from "./blocks.ts";
 
 export const locationOutputs: Record<string, [number, unknown]> = {
   "GET /api/locations": [200, responses.locations],
   "GET /api/me/locations": [200, responses.locations],
   "GET /api/locations/:id": [200, responses.location],
   "POST /api/locations": [201, responses.location],
+  "PATCH /api/locations/:id": [200, responses.location],
   "GET /api/locations/:id/decisions": [200, responses.audit],
   "GET /api/moderation/locations": [200, responses.locations],
   "POST /api/moderation/locations/:id/decision": [200, responses.location],
@@ -100,9 +102,38 @@ export function locationRoutes(
       nextOffset: rows.length > limit ? offset + limit : null,
     };
   }
+  // Shared by create and edit: trimmed values in INSERT/UPDATE order after the ids.
+  function fields(b: LocationInput) {
+    const kind = b.kind ?? "spot";
+    // A riding spot needs a difficulty; rentals, guides and schools do not have one.
+    if (kind === "spot" && !b.difficulty)
+      throw new HttpError(400, "VALIDATION_ERROR", "Укажите сложность места.");
+    if (
+      b.title.trim().length < 3 ||
+      b.description.trim().length < 10 ||
+      b.city.trim().length < 2 ||
+      b.accessNotes.trim().length < 10
+    )
+      throw new HttpError(
+        400,
+        "VALIDATION_ERROR",
+        "Заполните название, описание, город и условия доступа.",
+      );
+    return [
+      b.title.trim(),
+      b.description.trim(),
+      b.city.trim(),
+      b.latitude,
+      b.longitude,
+      kind === "spot" ? b.difficulty : null,
+      b.accessNotes.trim(),
+      kind,
+      (b.contacts ?? "").trim(),
+    ];
+  }
   async function get(id: string, req: FastifyRequest) {
     const [r] = await db.query(
-      `${locationSelect} WHERE l.id=$1 AND (l.status='published' OR l.author_id=$2 OR $3)`,
+      `${locationSelect} WHERE l.id=$1 AND (l.status='published' OR l.author_id=$2 OR $3) AND (l.author_id=$2 OR $3 OR NOT ${blockedBetween("$2::uuid", "l.author_id")})`,
       [
         id,
         req.authContext?.user.id ?? null,
@@ -115,7 +146,13 @@ export function locationRoutes(
   app.get<{ Querystring: PageQuery }>(
     "/api/locations",
     { schema: { querystring: schemas.locationPage, tags: ["Locations"] } },
-    (req) => list("l.status='published'", [], req.query),
+    (req) =>
+      // Places of riders in a block with the viewer are hidden, as their posts are.
+      list(
+        `l.status='published' AND NOT ${blockedBetween("$1::uuid", "l.author_id")}`,
+        [req.authContext?.user.id ?? null],
+        req.query,
+      ),
   );
   app.get<{ Querystring: PageQuery }>(
     "/api/me/locations",
@@ -152,45 +189,49 @@ export function locationRoutes(
     { schema: { body: schemas.location, ...member, tags: ["Locations"] } },
     async (req, reply) => {
       const auth = requireWrite(req),
-        b = req.body;
-      const kind = b.kind ?? "spot";
-      // A riding spot needs a difficulty; rentals, guides and schools do not have one.
-      if (kind === "spot" && !b.difficulty)
-        throw new HttpError(
-          400,
-          "VALIDATION_ERROR",
-          "Укажите сложность места.",
-        );
-      if (
-        b.title.trim().length < 3 ||
-        b.description.trim().length < 10 ||
-        b.city.trim().length < 2 ||
-        b.accessNotes.trim().length < 10
-      )
-        throw new HttpError(
-          400,
-          "VALIDATION_ERROR",
-          "Заполните название, описание, город и условия доступа.",
-        );
+        v = fields(req.body);
       const id = randomUUID();
       await db.query(
         "INSERT INTO locations(id,author_id,title,description,city,latitude,longitude,difficulty,access_notes,kind,contacts) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11)",
-        [
-          id,
-          auth.user.id,
-          b.title.trim(),
-          b.description.trim(),
-          b.city.trim(),
-          b.latitude,
-          b.longitude,
-          kind === "spot" ? b.difficulty : null,
-          b.accessNotes.trim(),
-          kind,
-          (b.contacts ?? "").trim(),
-        ],
+        [id, auth.user.id, ...v],
       );
       reply.code(201);
       return get(id, req);
+    },
+  );
+  // The author fixes a proposal and sends it to moderation again: after a rejection, while
+  // pending, or to change a published card (it leaves the map until re-approved).
+  // A place hidden by a moderator cannot be brought back by editing.
+  app.patch<{ Params: { id: string }; Body: LocationInput }>(
+    "/api/locations/:id",
+    {
+      schema: {
+        params: schemas.id,
+        body: schemas.location,
+        ...member,
+        tags: ["Locations"],
+      },
+    },
+    async (req) => {
+      const auth = requireWrite(req),
+        v = fields(req.body);
+      const [r] = await db.query(
+        "SELECT status FROM locations WHERE id=$1 AND author_id=$2",
+        [req.params.id, auth.user.id],
+      );
+      if (!r) throw notFound();
+      if (r.status === "hidden")
+        throw new HttpError(
+          409,
+          "LOCATION_HIDDEN",
+          "Место скрыто модератором и не может быть изменено.",
+        );
+      const [updated] = await db.query(
+        "UPDATE locations SET title=$3,description=$4,city=$5,latitude=$6,longitude=$7,difficulty=$8,access_notes=$9,kind=$10,contacts=$11,status='pending',updated_at=now() WHERE id=$1 AND author_id=$2 AND status<>'hidden' RETURNING id",
+        [req.params.id, auth.user.id, ...v],
+      );
+      if (!updated) throw conflict();
+      return get(req.params.id, req);
     },
   );
   app.get<{ Params: { id: string } }>(
