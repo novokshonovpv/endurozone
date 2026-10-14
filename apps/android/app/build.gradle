@@ -19,8 +19,8 @@ android {
         // Android 7+: runtime permissions for location, WebView file picking.
         minSdk 24
         targetSdk 34
-        versionCode 4
-        versionName '0.20.0'
+        versionCode 5
+        versionName '0.26.0'
         resValue 'string', 'site_host', siteHost
         resValue 'string', 'launch_url', "https://${siteHost}/#feed"
     }
