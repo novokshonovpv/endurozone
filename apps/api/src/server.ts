@@ -5,6 +5,7 @@ import { fileURLToPath } from "node:url";
 import { existsSync, mkdirSync } from "node:fs";
 import { createMailSender, deliverMail } from "./mail.ts";
 import { seedContent } from "./seed.ts";
+import { importAnnouncementDrafts } from "./announcement-import.ts";
 
 const envPath = fileURLToPath(new URL("../../../.env", import.meta.url));
 if (existsSync(envPath)) process.loadEnvFile(envPath);
@@ -33,6 +34,10 @@ const db = await openDatabase({ url: process.env.DATABASE_URL, dataDir });
 const seeded =
   process.env.SEED_CONTENT === "false" ? null : await seedContent(db);
 const webRoot = fileURLToPath(new URL("../../web/dist", import.meta.url));
+const channels = (process.env.ANNOUNCEMENT_CHANNELS ?? "raceenduro")
+  .split(",")
+  .map((c) => c.trim())
+  .filter(Boolean);
 const app = await buildApp({
   db,
   mechanicResponder: createMechanicResponder(process.env),
@@ -42,8 +47,24 @@ const app = await buildApp({
   requireVerifiedEmail: process.env.REQUIRE_VERIFIED_EMAIL === "true",
   trustProxy: process.env.TRUST_PROXY === "true",
   webRoot: existsSync(webRoot) ? webRoot : undefined,
+  announcementChannels: channels,
 });
 if (seeded) app.log.info(seeded, "Starter content checked");
+// Race announcement drafts: read the channels every 6 hours; ANNOUNCEMENT_IMPORT=false stops it.
+const readChannels = () =>
+  importAnnouncementDrafts(db, channels)
+    .then((r) => app.log.info(r, "Announcement drafts checked"))
+    .catch((e) =>
+      app.log.warn({ err: (e as Error).message }, "Announcement drafts failed"),
+    );
+const importTimers =
+  process.env.ANNOUNCEMENT_IMPORT === "false"
+    ? []
+    : [
+        setTimeout(readChannels, 60_000),
+        setInterval(readChannels, 6 * 3600_000),
+      ];
+for (const t of importTimers) t.unref();
 let closing = false;
 let inFlight: Promise<unknown> | undefined;
 const poll = () => {
@@ -60,6 +81,7 @@ poll();
 app.addHook("onClose", async () => {
   closing = true;
   clearInterval(timer);
+  for (const t of importTimers) clearTimeout(t);
   await inFlight;
   await db.close();
 });

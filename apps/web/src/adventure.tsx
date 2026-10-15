@@ -15,7 +15,7 @@ import {
   locationStatuses,
 } from "@enduro/contracts";
 import { api } from "./api.ts";
-import { ErrorBox, Loading, Modal, Icon } from "./ui.tsx";
+import { ErrorBox, Loading, Modal, Icon, ShareButton } from "./ui.tsx";
 import { MapCanvas, ReportButton } from "./map.tsx";
 import { go } from "./routing.ts";
 import { RideChat } from "./ride-chat.tsx";
@@ -452,6 +452,9 @@ export function TrackDetail({ id, session, notify }: Props & { id: string }) {
                 </p>
                 <h1>{track.title}</h1>
                 <span className="tag">{locationStatuses[track.status]}</span>
+                {track.status === "published" && (
+                  <ShareButton path={`track/${track.id}`} title={track.title} />
+                )}
               </div>
               {session && track.status === "published" && (
                 <button
@@ -929,6 +932,9 @@ export function RideDetail({ id, session, notify }: Props & { id: string }) {
                       ? "Отменена"
                       : rideDate(ride)}
                 </span>
+                {!ride.hidden && ride.status === "open" && (
+                  <ShareButton path={`ride/${ride.id}`} title={ride.title} />
+                )}
               </div>
               <span className="tag green">
                 {ride.acceptedCount} / {ride.capacity} участников

@@ -76,3 +76,33 @@ export const announcementResponses = {
     nextOffset: { anyOf: [{ type: "integer", minimum: 0 }, { type: "null" }] },
   }),
 };
+// Drafts read from public channels: the parser's guess, checked by a moderator before publishing.
+export interface AnnouncementDraft {
+  id: string;
+  sourceUrl: string;
+  postText: string;
+  guess: Partial<AnnouncementInput>;
+  createdAt: string;
+}
+const draft = obj({
+  id: { type: "string", format: "uuid" },
+  sourceUrl: { type: "string" },
+  postText: { type: "string" },
+  guess: obj(
+    {
+      ...fields,
+      title: { type: "string" },
+      region: { type: "string" },
+      sourceUrl: { type: "string" },
+    },
+    [],
+  ),
+  createdAt: { type: "string", format: "date-time" },
+});
+export const announcementDraftResponses = {
+  page: obj({ items: { type: "array", items: draft } }),
+  refresh: obj({
+    checked: { type: "integer", minimum: 0 },
+    added: { type: "integer", minimum: 0 },
+  }),
+};

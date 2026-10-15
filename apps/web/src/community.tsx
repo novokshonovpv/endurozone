@@ -24,6 +24,7 @@ import {
   Loading,
   TrailScene,
   formatDate,
+  ShareButton,
 } from "./ui.tsx";
 import { ReportButton } from "./locations.tsx";
 import { go } from "./routing.ts";
@@ -1290,6 +1291,9 @@ export function PostDetail({
                 <span className="tag">{postKinds[post.kind]}</span>
               </div>
               <h1>{post.title}</h1>
+              {post.visibility === "public" && !post.hidden && (
+                <ShareButton path={`post/${post.id}`} title={post.title} />
+              )}
               <div className="article-bike">
                 <Icon name="bike" />
                 <span>

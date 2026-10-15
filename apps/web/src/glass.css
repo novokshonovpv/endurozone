@@ -703,6 +703,93 @@ select:focus {
   color: var(--ochre-ink);
   font-weight: 600;
 }
+/* «Поделиться» */
+.share-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin: 6px 14px 6px 0;
+  white-space: nowrap;
+}
+/* Moderators: race announcement drafts from the channel */
+.draft-queue {
+  padding: 18px 22px;
+  margin-bottom: 22px;
+  border-color: rgba(201, 137, 43, 0.35);
+}
+.draft-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 16px;
+}
+.draft-head h2 {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 19px;
+  margin: 0 0 4px;
+}
+.draft-head p {
+  margin: 0;
+  font-size: 14px;
+}
+.draft-list {
+  list-style: none;
+  margin: 14px 0 0;
+  padding: 0;
+  display: grid;
+  gap: 10px;
+}
+.draft-list li {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 12px 14px;
+  border-radius: var(--radius-sm);
+  background: rgba(255, 255, 255, 0.55);
+}
+.draft-text {
+  min-width: 0;
+}
+.draft-text small {
+  display: block;
+}
+.draft-text summary {
+  margin-top: 6px;
+  color: var(--ochre-ink);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.draft-text details p {
+  font-size: 13px;
+  max-height: 220px;
+  overflow: auto;
+}
+.draft-actions {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 6px;
+  flex: none;
+}
+.draft-actions a {
+  color: var(--ochre-ink);
+  font-weight: 600;
+  font-size: 14px;
+}
+@media (max-width: 760px) {
+  .draft-head,
+  .draft-list li {
+    flex-direction: column;
+  }
+  .draft-actions {
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-items: center;
+  }
+}
 /* Phone: frosted top and bottom bars, the four blocks at the thumb */
 @media (max-width: 760px) {
   .sidebar {

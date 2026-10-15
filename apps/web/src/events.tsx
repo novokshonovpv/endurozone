@@ -2,6 +2,7 @@ import { useEffect, useState, type FormEvent } from "react";
 import {
   announcementStatuses,
   type Announcement,
+  type AnnouncementDraft,
   type AnnouncementInput,
   type AnnouncementStatus,
   type Page,
@@ -9,7 +10,7 @@ import {
   type Session,
 } from "@enduro/contracts";
 import { api } from "./api.ts";
-import { ErrorBox, Icon, Loading, Modal } from "./ui.tsx";
+import { ErrorBox, Icon, Loading, Modal, ShareButton } from "./ui.tsx";
 // Сообщество · Мероприятия: one calendar of race announcements (from organisers' public posts,
 // published by moderators) and upcoming community rides, grouped by month.
 type Item =
@@ -41,7 +42,58 @@ export function Events({
     [busy, setBusy] = useState(true),
     [error, setError] = useState(""),
     [show, setShow] = useState<(typeof filters)[number][0]>("all"),
-    [editor, setEditor] = useState<Announcement | "new" | null>(null);
+    [editor, setEditor] = useState<
+      Announcement | AnnouncementDraft | "new" | null
+    >(null),
+    [drafts, setDrafts] = useState<AnnouncementDraft[]>([]),
+    [checking, setChecking] = useState(false);
+  const loadDrafts = async () => {
+    if (!moderator) return;
+    try {
+      setDrafts(
+        (
+          await api<{ items: AnnouncementDraft[] }>(
+            "/moderation/announcement-drafts",
+          )
+        ).items,
+      );
+    } catch (e) {
+      setError((e as Error).message);
+    }
+  };
+  useEffect(() => {
+    void loadDrafts();
+  }, [moderator]);
+  const checkChannel = async () => {
+    setChecking(true);
+    setError("");
+    try {
+      const r = await api<{ checked: number; added: number }>(
+        "/moderation/announcement-drafts/refresh",
+        { method: "POST" },
+      );
+      notify(
+        r.added
+          ? `Новых черновиков: ${r.added}.`
+          : "Новых анонсов в канале нет.",
+      );
+      await loadDrafts();
+    } catch (e) {
+      setError((e as Error).message);
+    } finally {
+      setChecking(false);
+    }
+  };
+  const dismiss = async (d: AnnouncementDraft) => {
+    try {
+      await api(`/moderation/announcement-drafts/${d.id}/dismiss`, {
+        method: "POST",
+      });
+      setDrafts((old) => old.filter((x) => x.id !== d.id));
+    } catch (e) {
+      setError((e as Error).message);
+    }
+  };
   const loadRides = async (offset = 0) => {
     const p = await api<Page<Ride>>(`/rides?offset=${offset}`);
     setRides((old) => (offset ? [...old, ...p.items] : p.items));
@@ -132,6 +184,15 @@ export function Events({
           </a>
         )}
       </div>
+      {moderator && (
+        <DraftQueue
+          drafts={drafts}
+          checking={checking}
+          check={checkChannel}
+          review={(d) => setEditor(d)}
+          dismiss={dismiss}
+        />
+      )}
       <div className="chip-row" role="group" aria-label="Что показать">
         {filters.map(([value, label]) => (
           <button
@@ -202,9 +263,12 @@ export function Events({
       </p>
       {editor && (
         <AnnouncementEditor
-          race={editor === "new" ? undefined : editor}
+          race={editor === "new" || "postText" in editor ? undefined : editor}
+          draft={editor !== "new" && "postText" in editor ? editor : undefined}
           close={() => setEditor(null)}
           done={(a) => {
+            if (editor !== "new" && "postText" in editor)
+              setDrafts((old) => old.filter((x) => x.id !== editor.id));
             setRaces((old) =>
               [...old.filter((x) => x.id !== a.id), a].sort((x, y) =>
                 x.startsOn.localeCompare(y.startsOn),
@@ -265,6 +329,7 @@ function RaceCard({
           <a href={race.sourceUrl} target="_blank" rel="noreferrer">
             Анонс и регистрация ↗
           </a>
+          <ShareButton path={`race/${race.id}`} title={race.title} />
           {moderator && (
             <>
               <button className="text-button" onClick={edit}>
@@ -308,13 +373,17 @@ function RideCard({ ride, day }: { ride: Ride; day: string }) {
 }
 function AnnouncementEditor({
   race,
+  draft,
   close,
   done,
 }: {
   race?: Announcement;
+  /** A channel draft: its guess fills the form, saving publishes it. */
+  draft?: AnnouncementDraft;
   close: () => void;
   done: (a: Announcement) => void;
 }) {
+  const initial: Partial<AnnouncementInput> | undefined = race ?? draft?.guess;
   const [busy, setBusy] = useState(false),
     [error, setError] = useState("");
   const submit = async (e: FormEvent<HTMLFormElement>) => {
@@ -338,7 +407,11 @@ function AnnouncementEditor({
     try {
       done(
         await api<Announcement>(
-          race ? `/announcements/${race.id}` : "/announcements",
+          race
+            ? `/announcements/${race.id}`
+            : draft
+              ? `/moderation/announcement-drafts/${draft.id}/publish`
+              : "/announcements",
           { method: race ? "PATCH" : "POST", body },
         ),
       );
@@ -349,7 +422,16 @@ function AnnouncementEditor({
     }
   };
   return (
-    <Modal title={race ? "Изменить анонс" : "Новый анонс гонки"} close={close}>
+    <Modal
+      title={
+        race
+          ? "Изменить анонс"
+          : draft
+            ? "Проверить и опубликовать"
+            : "Новый анонс гонки"
+      }
+      close={close}
+    >
       <form onSubmit={submit}>
         <ErrorBox message={error} />
         <label>
@@ -359,7 +441,7 @@ function AnnouncementEditor({
             required
             minLength={3}
             maxLength={140}
-            defaultValue={race?.title}
+            defaultValue={initial?.title}
           />
         </label>
         <div className="form-grid">
@@ -369,7 +451,7 @@ function AnnouncementEditor({
               name="startsOn"
               type="date"
               required
-              defaultValue={race?.startsOn}
+              defaultValue={initial?.startsOn}
             />
           </label>
           <label>
@@ -377,7 +459,7 @@ function AnnouncementEditor({
             <input
               name="endsOn"
               type="date"
-              defaultValue={race?.endsOn ?? ""}
+              defaultValue={initial?.endsOn ?? ""}
             />
           </label>
         </div>
@@ -389,7 +471,7 @@ function AnnouncementEditor({
               required
               minLength={2}
               maxLength={120}
-              defaultValue={race?.region}
+              defaultValue={initial?.region}
               placeholder="Смоленская область"
             />
           </label>
@@ -398,7 +480,7 @@ function AnnouncementEditor({
             <input
               name="place"
               maxLength={160}
-              defaultValue={race?.place}
+              defaultValue={initial?.place}
               placeholder="Населённый пункт или площадка"
             />
           </label>
@@ -409,13 +491,13 @@ function AnnouncementEditor({
             <input
               name="discipline"
               maxLength={80}
-              defaultValue={race?.discipline}
+              defaultValue={initial?.discipline}
               placeholder="Эндуро, хард-эндуро, кантри-кросс"
             />
           </label>
           <label>
             Статус
-            <select name="status" defaultValue={race?.status ?? "scheduled"}>
+            <select name="status" defaultValue={initial?.status ?? "scheduled"}>
               {Object.entries(announcementStatuses).map(([v, l]) => (
                 <option key={v} value={v}>
                   {l}
@@ -429,7 +511,7 @@ function AnnouncementEditor({
           <input
             name="classes"
             maxLength={200}
-            defaultValue={race?.classes}
+            defaultValue={initial?.classes}
             placeholder="Золото, Серебро, Бронза"
           />
         </label>
@@ -441,7 +523,7 @@ function AnnouncementEditor({
             required
             pattern="https://.*"
             maxLength={300}
-            defaultValue={race?.sourceUrl}
+            defaultValue={initial?.sourceUrl}
             placeholder="https://t.me/…"
           />
         </label>
@@ -450,7 +532,7 @@ function AnnouncementEditor({
           <input
             name="note"
             maxLength={300}
-            defaultValue={race?.note}
+            defaultValue={initial?.note}
             placeholder="Например: перенесена с 24 октября"
           />
         </label>
@@ -459,5 +541,78 @@ function AnnouncementEditor({
         </button>
       </form>
     </Modal>
+  );
+}
+
+function DraftQueue({
+  drafts,
+  checking,
+  check,
+  review,
+  dismiss,
+}: {
+  drafts: AnnouncementDraft[];
+  checking: boolean;
+  check: () => void;
+  review: (d: AnnouncementDraft) => void;
+  dismiss: (d: AnnouncementDraft) => void;
+}) {
+  return (
+    <section className="card draft-queue">
+      <div className="draft-head">
+        <div>
+          <h2>
+            Черновики из канала <span className="tag">{drafts.length}</span>
+          </h2>
+          <p className="muted">
+            Новые анонсы гонок — канал читается раз в 6 часов. Проверьте даты и
+            место, затем опубликуйте. Видно только модераторам.
+          </p>
+        </div>
+        <button
+          className="button outline small"
+          disabled={checking}
+          onClick={check}
+        >
+          {checking ? "Проверяем…" : "Проверить канал"}
+        </button>
+      </div>
+      {drafts.length ? (
+        <ul className="draft-list">
+          {drafts.map((d) => (
+            <li key={d.id}>
+              <div className="draft-text">
+                <strong>{d.guess.title || "Без названия"}</strong>
+                <small>
+                  {d.guess.startsOn
+                    ? `${dateOf(d.guess.startsOn).toLocaleDateString("ru-RU", { day: "numeric", month: "long" })}${d.guess.endsOn ? ` — ${dateOf(d.guess.endsOn).toLocaleDateString("ru-RU", { day: "numeric", month: "long" })}` : ""}`
+                    : "дата не распознана"}
+                  {" · "}
+                  {d.guess.region || "регион не распознан"}
+                  {d.guess.status === "cancelled" && " · отмена"}
+                </small>
+                <details>
+                  <summary>Текст поста</summary>
+                  <p className="plain-text">{d.postText}</p>
+                </details>
+              </div>
+              <div className="draft-actions">
+                <a href={d.sourceUrl} target="_blank" rel="noreferrer">
+                  Пост ↗
+                </a>
+                <button className="button small" onClick={() => review(d)}>
+                  Проверить и опубликовать
+                </button>
+                <button className="text-button" onClick={() => dismiss(d)}>
+                  Не нужно
+                </button>
+              </div>
+            </li>
+          ))}
+        </ul>
+      ) : (
+        <p className="muted">Новых черновиков нет.</p>
+      )}
+    </section>
   );
 }

@@ -19,7 +19,7 @@ import {
   type RideMessage,
 } from "@enduro/contracts";
 import { api } from "./api.ts";
-import { ErrorBox, Loading, Modal, Icon } from "./ui.tsx";
+import { ErrorBox, Loading, Modal, Icon, ShareButton } from "./ui.tsx";
 
 type Point = { latitude: number; longitude: number };
 // The same city list as the nearby search: every city is a peer of Smolensk and Sochi.
@@ -586,6 +586,9 @@ export function Locations({
               >
                 Открыть в OpenStreetMap ↗
               </a>
+              {detail.status === "published" && (
+                <ShareButton path={`place/${detail.id}`} title={detail.title} />
+              )}
               {decisions.length > 0 && (
                 <>
                   <h3>Результат проверки</h3>

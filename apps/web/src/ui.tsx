@@ -1,4 +1,4 @@
-import { useEffect, useId, useRef, type ReactNode } from "react";
+import { useEffect, useId, useRef, useState, type ReactNode } from "react";
 export type IconName =
   | "feed"
   | "bike"
@@ -17,8 +17,15 @@ export type IconName =
   | "check"
   | "bell"
   | "game"
-  | "gear";
+  | "gear"
+  | "share";
 const paths: Record<IconName, ReactNode> = {
+  share: (
+    <>
+      <path d="M12 3v12M7.5 7.5 12 3l4.5 4.5" />
+      <path d="M5 12v7.5h14V12" />
+    </>
+  ),
   gear: (
     <>
       <circle cx="12" cy="12" r="3.2" />
@@ -338,5 +345,43 @@ export function TrailScene() {
         )}
       </g>
     </svg>
+  );
+}
+/** «Поделиться»: a /s/… link whose preview in messengers shows this object's title. */
+export function ShareButton({
+  path,
+  title,
+  className = "text-button",
+}: {
+  path: string;
+  title: string;
+  className?: string;
+}) {
+  const [copied, setCopied] = useState(false);
+  const share = async () => {
+    const url = `${window.location.origin}/s/${path}`;
+    try {
+      if (navigator.share) {
+        await navigator.share({ title, url });
+        return;
+      }
+      await navigator.clipboard.writeText(url);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2500);
+    } catch (e) {
+      // Closing the system share sheet is not an error; otherwise let the rider copy by hand.
+      if ((e as Error).name !== "AbortError")
+        window.prompt("Скопируйте ссылку", url);
+    }
+  };
+  return (
+    <button
+      type="button"
+      className={`share-button ${className}`}
+      onClick={share}
+    >
+      <Icon name="share" size={16} />
+      {copied ? "Ссылка скопирована" : "Поделиться"}
+    </button>
   );
 }

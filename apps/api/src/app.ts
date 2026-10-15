@@ -1,4 +1,8 @@
-import Fastify, { type FastifyInstance, type FastifyRequest } from "fastify";
+import Fastify, {
+  type FastifyInstance,
+  type FastifyReply,
+  type FastifyRequest,
+} from "fastify";
 import cookie from "@fastify/cookie";
 import rateLimit from "@fastify/rate-limit";
 import swagger from "@fastify/swagger";
@@ -38,6 +42,13 @@ import { adventureRoutes, adventureOutputs } from "./adventure.ts";
 import { locationRoutes, locationOutputs } from "./locations.ts";
 import { nearbyRoutes } from "./nearby.ts";
 import { announcementRoutes } from "./announcements.ts";
+import { shareRoutes } from "./share.ts";
+import {
+  announcementDraftRoutes,
+  type FetchPage,
+} from "./announcement-import.ts";
+import { readFileSync } from "node:fs";
+import { join } from "node:path";
 import { rideChatRoutes } from "./ride-chat.ts";
 import { feedbackRoutes } from "./feedback.ts";
 import { onboardingRoutes } from "./onboarding.ts";
@@ -170,6 +181,10 @@ export async function buildApp(options: {
   logger?: boolean;
   rateMax?: number;
   webRoot?: string;
+  /** Public Telegram channels read for race announcement drafts. */
+  announcementChannels?: string[];
+  /** Replaces the network fetch of a channel page (tests). */
+  fetchChannelPage?: FetchPage;
   requireVerifiedEmail?: boolean;
   mechanicResponder?: MechanicResponder;
   // Only behind a local reverse proxy: client IPs for rate limits come from X-Forwarded-For.
@@ -956,11 +971,36 @@ export async function buildApp(options: {
     notFound,
     HttpError,
   });
-  if (options.webRoot)
-    await app.register(staticFiles, { root: options.webRoot });
+  announcementDraftRoutes(
+    app,
+    db,
+    options.announcementChannels ?? ["raceenduro"],
+    { requireAuth, requireWrite: verifiedWrite, notFound, HttpError },
+    options.fetchChannelPage,
+  );
+  shareRoutes(app, db, origin);
+  // The page is served with this deployment's address in its preview tags (og:url, og:image).
+  let indexHtml: string | undefined;
+  const sendIndex = (webRoot: string, reply: FastifyReply) => {
+    indexHtml ??= readFileSync(join(webRoot, "index.html"), "utf8").replaceAll(
+      "__SITE_ORIGIN__",
+      origin,
+    );
+    return reply
+      .type("text/html; charset=utf-8")
+      .header("Cache-Control", "no-cache")
+      .send(indexHtml);
+  };
+  if (options.webRoot) {
+    const webRoot = options.webRoot;
+    app.get("/", { schema: { hide: true } }, (_req, reply) =>
+      sendIndex(webRoot, reply),
+    );
+    await app.register(staticFiles, { root: webRoot, index: false });
+  }
   app.setNotFoundHandler((req, reply) => {
     if (options.webRoot && req.method === "GET" && !req.url.startsWith("/api/"))
-      return reply.sendFile("index.html");
+      return sendIndex(options.webRoot, reply);
     return reply.code(404).send({
       error: {
         code: "NOT_FOUND",

@@ -230,7 +230,7 @@ export default function App() {
           <div className="top-actions">
             <span className="version">
               <span className="tiny-dot" />
-              Разработка · 0.26
+              Разработка · 0.27
             </span>
             {session ? (
               <>

@@ -91,6 +91,7 @@ export async function openDatabase(
         "017-part-fits.sql",
         "018-map-kinds-news.sql",
         "019-announcements-seed.sql",
+        "020-announcement-drafts.sql",
       ].entries()) {
         const version = index + 1;
         const applied = await tx.query(

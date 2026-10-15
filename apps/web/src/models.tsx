@@ -6,7 +6,7 @@ import type {
   ModelSummary,
 } from "@enduro/contracts";
 import { api } from "./api.ts";
-import { ErrorBox, Icon, Loading } from "./ui.tsx";
+import { ErrorBox, Icon, Loading, ShareButton } from "./ui.tsx";
 // Motorcycle models from the owner's 67МОТО catalog: a reference for the garage, not a shop.
 type Page = { items: ModelSummary[]; total: number; nextOffset: number | null };
 const sections: [ModelSection | "", string][] = [
@@ -264,6 +264,7 @@ export function ModelPage({
             {m.brand} · {m.sectionLabel}
           </p>
           <h1>{m.model}</h1>
+          <ShareButton path={`model/${m.slug}`} title={m.title} />
           {(engineText(m) || m.year) && (
             <p className="model-chips">
               {m.cc && <span className="tag">{m.cc} см³</span>}

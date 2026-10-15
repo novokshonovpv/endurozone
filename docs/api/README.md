@@ -204,3 +204,14 @@ GET/POST `/api/bikes/:id/photos` и `/api/posts/:id/photos` читают фот�
 | POST /api/announcements        | Новый анонс; только модератор; ссылка на источник обязательна |
 | PATCH /api/announcements/{id}  | Правка, статус «перенесено/отменено»; только модератор        |
 | DELETE /api/announcements/{id} | Скрытие (не удаление); только модератор                       |
+
+## Черновики анонсов и превью ссылок (0.27)
+
+| Метод и путь                                          | Результат                                                               |
+| ----------------------------------------------------- | ----------------------------------------------------------------------- |
+| GET /api/moderation/announcement-drafts               | Ожидающие черновики из каналов; только модератор                        |
+| POST /api/moderation/announcement-drafts/refresh      | Прочитать каналы сейчас; `{ checked, added }`                           |
+| POST /api/moderation/announcement-drafts/{id}/publish | Опубликовать проверенный анонс (тело как у анонса)                      |
+| POST /api/moderation/announcement-drafts/{id}/dismiss | Убрать черновик                                                         |
+| GET /s/{type}/{id}                                    | Страница превью для мессенджеров: place, track, ride, race, post, model |
+| GET /sitemap.xml, GET /robots.txt                     | Для поисковиков                                                         |
