@@ -280,7 +280,18 @@ export async function buildApp(options: {
   app.addHook("onRequest", async (req, reply) => {
     reply
       .header("X-Content-Type-Options", "nosniff")
-      .header("Referrer-Policy", "strict-origin-when-cross-origin");
+      .header("Referrer-Policy", "strict-origin-when-cross-origin")
+      // Other sites must not frame our pages (clickjacking); our own pages and the app may.
+      .header("X-Frame-Options", "SAMEORIGIN")
+      .header("Content-Security-Policy", "frame-ancestors 'self'")
+      // Location only for our own pages; camera and microphone are not used at all.
+      .header(
+        "Permissions-Policy",
+        "geolocation=(self), camera=(), microphone=()",
+      );
+    // Behind HTTPS browsers keep to HTTPS for half a year.
+    if (options.secureCookie)
+      reply.header("Strict-Transport-Security", "max-age=15552000");
     if (req.url.startsWith("/api/")) reply.header("Cache-Control", "no-store");
     if (!["GET", "HEAD", "OPTIONS"].includes(req.method)) {
       if (req.headers.origin && !trustedOrigins.has(req.headers.origin))
