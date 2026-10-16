@@ -93,6 +93,7 @@ export async function openDatabase(
         "019-announcements-seed.sql",
         "020-announcement-drafts.sql",
         "021-location-visits.sql",
+        "022-ride-reminders.sql",
       ].entries()) {
         const version = index + 1;
         const applied = await tx.query(
@@ -104,7 +105,12 @@ export async function openDatabase(
           new URL(`../migrations/${name}`, import.meta.url),
           "utf8",
         );
-        for (const statement of migration.split(";").filter((x) => x.trim()))
+        // Whole-line comments go first: a «;» inside a comment must not split a statement.
+        const sql = migration
+          .split("\n")
+          .filter((line) => !line.trimStart().startsWith("--"))
+          .join("\n");
+        for (const statement of sql.split(";").filter((x) => x.trim()))
           await tx.query(statement);
         await tx.query("INSERT INTO schema_migrations(version) VALUES ($1)", [
           version,

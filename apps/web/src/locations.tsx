@@ -21,6 +21,7 @@ import {
 } from "@enduro/contracts";
 import { api } from "./api.ts";
 import { VisitPanel } from "./visits.tsx";
+import { Weather } from "./weather.tsx";
 import { PlaceImport } from "./place-import.tsx";
 import { ErrorBox, Loading, Modal, Icon, ShareButton } from "./ui.tsx";
 
@@ -625,6 +626,12 @@ export function Locations({
               >
                 Открыть в OpenStreetMap ↗
               </a>
+              {detail.status === "published" && (
+                <Weather
+                  latitude={detail.latitude}
+                  longitude={detail.longitude}
+                />
+              )}
               {detail.status === "published" && (
                 <VisitPanel
                   place={detail}

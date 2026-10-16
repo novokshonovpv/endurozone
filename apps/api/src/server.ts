@@ -6,6 +6,7 @@ import { existsSync, mkdirSync } from "node:fs";
 import { createMailSender, deliverMail } from "./mail.ts";
 import { seedContent } from "./seed.ts";
 import { importAnnouncementDrafts } from "./announcement-import.ts";
+import { sendRideReminders } from "./reminders.ts";
 
 const envPath = fileURLToPath(new URL("../../../.env", import.meta.url));
 if (existsSync(envPath)) process.loadEnvFile(envPath);
@@ -65,6 +66,20 @@ const importTimers =
         setInterval(readChannels, 6 * 3600_000),
       ];
 for (const t of importTimers) t.unref();
+// Ride reminders: checked every 30 minutes.
+const remind = () =>
+  sendRideReminders(db)
+    .then((r) => {
+      if (r.rides) app.log.info(r, "Ride reminders sent");
+    })
+    .catch((e) =>
+      app.log.warn({ err: (e as Error).message }, "Ride reminders failed"),
+    );
+const reminderTimers = [
+  setTimeout(remind, 90_000),
+  setInterval(remind, 30 * 60_000),
+];
+for (const t of reminderTimers) t.unref();
 let closing = false;
 let inFlight: Promise<unknown> | undefined;
 const poll = () => {
@@ -81,7 +96,7 @@ poll();
 app.addHook("onClose", async () => {
   closing = true;
   clearInterval(timer);
-  for (const t of importTimers) clearTimeout(t);
+  for (const t of [...importTimers, ...reminderTimers]) clearTimeout(t);
   await inFlight;
   await db.close();
 });

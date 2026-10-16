@@ -43,6 +43,7 @@ import { locationRoutes, locationOutputs } from "./locations.ts";
 import { nearbyRoutes } from "./nearby.ts";
 import { announcementRoutes } from "./announcements.ts";
 import { shareRoutes } from "./share.ts";
+import { statsRoutes } from "./stats.ts";
 import {
   announcementDraftRoutes,
   type FetchPage,
@@ -989,6 +990,7 @@ export async function buildApp(options: {
     { requireAuth, requireWrite: verifiedWrite, notFound, HttpError },
     options.fetchChannelPage,
   );
+  statsRoutes(app, db, { requireAuth, notFound });
   shareRoutes(app, db, origin);
   // The page is served with this deployment's address in its preview tags (og:url, og:image).
   let indexHtml: string | undefined;

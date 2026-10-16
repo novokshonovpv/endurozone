@@ -448,3 +448,4 @@ export * from "./parts.ts";
 export * from "./announcements.ts";
 export * from "./visits.ts";
 export * from "./place-import.ts";
+export * from "./stats.ts";

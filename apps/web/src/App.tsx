@@ -27,6 +27,7 @@ import { SectionLinks, SectionTabs, tabOf } from "./sections.tsx";
 import { Events } from "./events.tsx";
 import { FeedbackButton, MyFeedback, PilotFeedback } from "./feedback.tsx";
 import { TabBar } from "./tabbar.tsx";
+import { MyStatsPanel } from "./stats.tsx";
 import { Models, ModelPage } from "./models.tsx";
 
 // Sections other than the home feed load on first visit: the first screen stays light,
@@ -274,7 +275,7 @@ export default function App() {
           <div className="top-actions">
             <span className="version">
               <span className="tiny-dot" />
-              Разработка · 0.30
+              Разработка · 0.31
             </span>
             {session ? (
               <>
@@ -843,6 +844,7 @@ function ProfileForm({
           <p className="muted">{session.user.email}</p>
         </aside>
       </div>
+      <MyStatsPanel />
     </>
   );
 }

@@ -18,6 +18,7 @@ import { api } from "./api.ts";
 import { ErrorBox, Loading, Modal, Icon, ShareButton } from "./ui.tsx";
 import { MapCanvas } from "./map.tsx";
 import { ReportButton } from "./report.tsx";
+import { Weather } from "./weather.tsx";
 import { go } from "./routing.ts";
 import { RideChat } from "./ride-chat.tsx";
 type Props = { session: Session | null; notify: (text: string) => void };
@@ -961,6 +962,7 @@ export function RideDetail({ id, session, notify }: Props & { id: string }) {
                 />
               )}
               <a href={`#track/${ride.trackId}`}>Маршрут: {ride.trackTitle}</a>
+              {upcoming && <RideWeather ride={ride} />}
               <p className="muted">{stateNames[status]}</p>
               {meeting ? (
                 <>
@@ -1077,4 +1079,27 @@ export function RideDetail({ id, session, notify }: Props & { id: string }) {
       )}
     </>
   );
+}
+
+/** Forecast for the ride day at the start of its published track. */
+function RideWeather({ ride }: { ride: Ride }) {
+  const [start, setStart] = useState<[number, number] | null>(null);
+  useEffect(() => {
+    let alive = true;
+    api<Track>(`/tracks/${ride.trackId}`)
+      .then((t) => {
+        const first = t.geometry.coordinates[0]?.[0];
+        if (alive && first) setStart(first);
+      })
+      .catch(() => {
+        // Without the track the ride page simply has no forecast.
+      });
+    return () => {
+      alive = false;
+    };
+  }, [ride.trackId]);
+  if (!start) return null;
+  const d = new Date(ride.startsAt);
+  const day = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+  return <Weather latitude={start[1]} longitude={start[0]} day={day} />;
 }

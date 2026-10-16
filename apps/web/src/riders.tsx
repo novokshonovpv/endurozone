@@ -10,6 +10,7 @@ import {
   type Session,
 } from "@enduro/contracts";
 import { api } from "./api.ts";
+import { RiderCounters } from "./stats.tsx";
 import { Icon, Avatar, ErrorBox, Loading } from "./ui.tsx";
 import { PostCard } from "./community.tsx";
 import { Photos } from "./photos.tsx";
@@ -251,6 +252,7 @@ export function RiderProfile({
                   {profile.city} · {levels[profile.level]}
                 </p>
                 {profile.bio && <p className="rider-bio">{profile.bio}</p>}
+                <RiderCounters handle={profile.handle} />
                 <FollowPanel
                   handle={profile.handle}
                   profileId={profile.id}
