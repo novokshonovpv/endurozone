@@ -42,9 +42,9 @@ import { Parts } from "./parts.tsx";
 
 // Personal pages: in the sidebar under «Моё» and in the phone «Меню» sheet.
 const personal: { path: string; label: string; icon: IconName }[] = [
-  { path: "following", label: "Подписки", icon: "user" },
-  { path: "saved", label: "Избранное", icon: "book" },
-  { path: "profile", label: "Мой профиль", icon: "user" },
+  { path: "following", label: "Подписки", icon: "user-heart" },
+  { path: "saved", label: "Избранное", icon: "bookmark" },
+  { path: "profile", label: "Мой профиль", icon: "user-circle" },
   { path: "account", label: "Доступ к аккаунту", icon: "lock" },
 ];
 const details: [string, string][] = [
@@ -192,7 +192,7 @@ export default function App() {
                 className={`nav-item ${route === "moderation" ? "active" : ""}`}
                 href="#moderation"
               >
-                <Icon name="check" />
+                <Icon name="shield-check" />
                 Модерация
               </a>
               <a
@@ -235,7 +235,7 @@ export default function App() {
           <div className="top-actions">
             <span className="version">
               <span className="tiny-dot" />
-              Разработка · 0.29.1
+              Разработка · 0.29.2
             </span>
             {session ? (
               <>

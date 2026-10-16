@@ -14,7 +14,7 @@ export const sections: Section[] = [
   {
     id: "community",
     label: "Сообщество",
-    icon: "feed",
+    icon: "users",
     home: "feed",
     tabs: [
       { path: "feed", label: "Лента", also: ["post/"] },

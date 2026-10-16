@@ -18,7 +18,12 @@ export type IconName =
   | "bell"
   | "game"
   | "gear"
-  | "share";
+  | "share"
+  | "users"
+  | "user-heart"
+  | "bookmark"
+  | "user-circle"
+  | "shield-check";
 const paths: Record<IconName, ReactNode> = {
   share: (
     <>
@@ -33,12 +38,47 @@ const paths: Record<IconName, ReactNode> = {
       <circle cx="12" cy="12" r="6.5" />
     </>
   ),
+  // Navigation icons from Tabler Icons 3.24 (MIT, tabler.io/icons): users, route,
+  // device-gamepad-2, motorbike, user-heart, bookmark, user-circle, lock, shield-check,
+  // message, mountain — chosen by the owner on 16.10.2026 («Люди и путь»).
+  users: (
+    <>
+      <path d="M9 7m-4 0a4 4 0 1 0 8 0a4 4 0 1 0 -8 0" />
+      <path d="M3 21v-2a4 4 0 0 1 4 -4h4a4 4 0 0 1 4 4v2" />
+      <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+      <path d="M21 21v-2a4 4 0 0 0 -3 -3.85" />
+    </>
+  ),
   game: (
     <>
-      <path d="M7 7h10a5 5 0 0 1 5 5v1a4 4 0 0 1-7.2 2.4L13.5 14h-3l-1.3 1.4A4 4 0 0 1 2 13v-1a5 5 0 0 1 5-5z" />
-      <path d="M7 10v4M5 12h4" />
-      <circle cx="16" cy="11" r=".6" />
-      <circle cx="18" cy="13" r=".6" />
+      <path d="M12 5h3.5a5 5 0 0 1 0 10h-5.5l-4.015 4.227a2.3 2.3 0 0 1 -3.923 -2.035l1.634 -8.173a5 5 0 0 1 4.904 -4.019h3.4z" />
+      <path d="M14 15l4.07 4.284a2.3 2.3 0 0 0 3.925 -2.023l-1.6 -8.232" />
+      <path d="M8 9v2" />
+      <path d="M7 10h2" />
+      <path d="M14 10h2" />
+    </>
+  ),
+  "user-heart": (
+    <>
+      <path d="M8 7a4 4 0 1 0 8 0a4 4 0 0 0 -8 0" />
+      <path d="M6 21v-2a4 4 0 0 1 4 -4h.5" />
+      <path d="M18 22l3.35 -3.284a2.143 2.143 0 0 0 .005 -3.071a2.242 2.242 0 0 0 -3.129 -.006l-.224 .22l-.223 -.22a2.242 2.242 0 0 0 -3.128 -.006a2.143 2.143 0 0 0 -.006 3.071l3.355 3.296z" />
+    </>
+  ),
+  bookmark: (
+    <path d="M18 7v14l-6 -4l-6 4v-14a4 4 0 0 1 4 -4h4a4 4 0 0 1 4 4z" />
+  ),
+  "user-circle": (
+    <>
+      <path d="M12 12m-9 0a9 9 0 1 0 18 0a9 9 0 1 0 -18 0" />
+      <path d="M12 10m-3 0a3 3 0 1 0 6 0a3 3 0 1 0 -6 0" />
+      <path d="M6.168 18.849a4 4 0 0 1 3.832 -2.849h4a4 4 0 0 1 3.834 2.855" />
+    </>
+  ),
+  "shield-check": (
+    <>
+      <path d="M11.46 20.846a12 12 0 0 1 -7.96 -14.846a12 12 0 0 0 8.5 -3a12 12 0 0 0 8.5 3a12 12 0 0 1 -.09 7.06" />
+      <path d="M15 19l2 2l4 -4" />
     </>
   ),
   feed: (
@@ -48,9 +88,10 @@ const paths: Record<IconName, ReactNode> = {
   ),
   bike: (
     <>
-      <circle cx="5" cy="17" r="4" />
-      <circle cx="19" cy="17" r="4" />
-      <path d="m5 17 5-8 5 8H5l8-12h4l2 12M7 8h5" />
+      <path d="M5 16m-3 0a3 3 0 1 0 6 0a3 3 0 1 0 -6 0" />
+      <path d="M19 16m-3 0a3 3 0 1 0 6 0a3 3 0 1 0 -6 0" />
+      <path d="M7.5 14h5l4 -4h-10.5m1.5 4l4 -4" />
+      <path d="M13 6h2l1.5 3l2 4" />
     </>
   ),
   user: (
@@ -61,23 +102,35 @@ const paths: Record<IconName, ReactNode> = {
   ),
   route: (
     <>
-      <path d="M6 20c0-7 12-3 12-10M6 8V4m0 0H3m3 0h3" />
-      <circle cx="18" cy="6" r="3" />
-      <circle cx="6" cy="20" r="2" />
+      <path d="M3 19a2 2 0 1 0 4 0a2 2 0 0 0 -4 0" />
+      <path d="M19 7a2 2 0 1 0 0 -4a2 2 0 0 0 0 4z" />
+      <path d="M11 19h5.5a3.5 3.5 0 0 0 0 -7h-8a3.5 3.5 0 0 1 0 -7h4.5" />
     </>
   ),
   arrow: <path d="M5 12h14m-5-5 5 5-5 5" />,
   plus: <path d="M12 5v14M5 12h14" />,
   lock: (
     <>
-      <rect x="5" y="10" width="14" height="11" rx="2" />
-      <path d="M8 10V6a4 4 0 0 1 8 0v4M12 15v2" />
+      <path d="M5 13a2 2 0 0 1 2 -2h10a2 2 0 0 1 2 2v6a2 2 0 0 1 -2 2h-10a2 2 0 0 1 -2 -2v-6z" />
+      <path d="M11 16a1 1 0 1 0 2 0a1 1 0 0 0 -2 0" />
+      <path d="M8 11v-4a4 4 0 1 1 8 0v4" />
     </>
   ),
-  message: <path d="M3 4h18v13H9l-6 4V4Z" />,
+  message: (
+    <>
+      <path d="M8 9h8" />
+      <path d="M8 13h6" />
+      <path d="M18 4a3 3 0 0 1 3 3v8a3 3 0 0 1 -3 3h-5l-5 3v-3h-2a3 3 0 0 1 -3 -3v-8a3 3 0 0 1 3 -3h12z" />
+    </>
+  ),
   edit: <path d="m15 4 5 5-11 11H4v-5L15 4Zm-3 3 5 5" />,
   close: <path d="m6 6 12 12M18 6 6 18" />,
-  mountain: <path d="m2 20 8-15 5 9 3-6 5 12H2Zm6-11 2 3 2-3" />,
+  mountain: (
+    <>
+      <path d="M3 20h18l-6.921 -14.612a2.3 2.3 0 0 0 -4.158 0l-6.921 14.612z" />
+      <path d="M7.5 11l2 2.5l2.5 -2.5l2 3l2.5 -2" />
+    </>
+  ),
   shop: (
     <>
       <path d="M3 8h18l-2-5H5L3 8ZM5 8v13h14V8M9 21v-7h6v7" />
