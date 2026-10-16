@@ -616,3 +616,55 @@ function DraftQueue({
     </section>
   );
 }
+
+/** Home page: the nearest races, a step away from the full calendar. */
+export function UpcomingRaces() {
+  const [races, setRaces] = useState<Announcement[] | null>(null);
+  useEffect(() => {
+    let alive = true;
+    api<Page<Announcement>>("/announcements?limit=8")
+      .then((p) => {
+        if (alive)
+          setRaces(p.items.filter((a) => a.status !== "cancelled").slice(0, 4));
+      })
+      .catch(() => {
+        // The home page stays useful without this block.
+        if (alive) setRaces([]);
+      });
+    return () => {
+      alive = false;
+    };
+  }, []);
+  if (!races?.length) return null;
+  return (
+    <section className="upcoming-races" aria-label="Ближайшие гонки">
+      <div className="section-heading">
+        <div>
+          <p className="eyebrow">АНОНСЫ</p>
+          <h2>Ближайшие гонки</h2>
+        </div>
+        <a className="button outline small" href="#events">
+          Все мероприятия
+          <Icon name="arrow" size={16} />
+        </a>
+      </div>
+      <div className="upcoming-list">
+        {races.map((r) => (
+          <a className="card upcoming-race" href="#events" key={r.id}>
+            <DateBadge day={r.startsOn} until={r.endsOn} />
+            <span className="event-body">
+              <h3>{r.title}</h3>
+              <p>
+                {r.region}
+                {r.place && ` · ${r.place}`}
+              </p>
+              {r.status === "postponed" && (
+                <small className="event-note">Перенесено</small>
+              )}
+            </span>
+          </a>
+        ))}
+      </div>
+    </section>
+  );
+}

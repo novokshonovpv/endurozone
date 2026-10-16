@@ -27,6 +27,7 @@ import {
   ShareButton,
 } from "./ui.tsx";
 import { ReportButton } from "./locations.tsx";
+import { UpcomingRaces } from "./events.tsx";
 import { go } from "./routing.ts";
 import { GarageJournal, BikeServicePanel } from "./garage.tsx";
 import { Photos } from "./photos.tsx";
@@ -221,6 +222,7 @@ export function Feed({
           </div>
         </section>
       )}
+      {mode === "all" && <UpcomingRaces />}
       <div className="feed-layout">
         <section className="feed-main">
           {session && mode === "all" && (

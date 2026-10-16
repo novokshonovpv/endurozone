@@ -927,6 +927,46 @@ select:focus {
   background: rgba(255, 255, 255, 0.6);
   font-size: 14px;
 }
+/* Home: nearest races */
+.upcoming-races {
+  margin: 0 0 26px;
+}
+.upcoming-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
+  gap: 10px;
+}
+.upcoming-race {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 14px;
+  color: var(--ink);
+  transition: transform 0.2s var(--ease-out);
+}
+.upcoming-race:hover {
+  transform: translateY(-2px);
+}
+.upcoming-race .event-date {
+  width: 50px;
+  height: 50px;
+  border-radius: 14px;
+}
+.upcoming-race .event-date strong {
+  font-size: 18px;
+}
+.upcoming-race h3 {
+  font-size: 15px;
+  line-height: 1.25;
+}
+.upcoming-race p {
+  font-size: 13px;
+}
+@media (max-width: 760px) {
+  .upcoming-list {
+    grid-template-columns: 1fr;
+  }
+}
 /* Phone: frosted top and bottom bars, the four blocks at the thumb */
 @media (max-width: 760px) {
   .sidebar {
