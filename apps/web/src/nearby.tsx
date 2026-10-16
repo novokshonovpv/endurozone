@@ -3,6 +3,8 @@ import {
   cityCenters,
   defaultNearbyRadius,
   difficulties,
+  verifiedVisits,
+  type Difficulty,
   nearbyRadii,
   type GeoPoint,
   type NearbyRadius,
@@ -22,6 +24,19 @@ const coarse = (p: GeoPoint): GeoPoint => ({
 const km = (n: number) =>
   `≈ ${n.toLocaleString("ru-RU", { maximumFractionDigits: 1 })} км`;
 type Center = GeoPoint & { label: string };
+const localDay = (d: Date) =>
+  `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+/** The coming Saturday and Sunday (today included when it is the weekend). */
+function weekendDays(now = new Date()) {
+  const days = new Set<string>();
+  for (let i = 0; i < 7 && days.size < 2; i++) {
+    const d = new Date(now);
+    d.setDate(now.getDate() + i);
+    if (d.getDay() === 6 || d.getDay() === 0) days.add(localDay(d));
+    if (d.getDay() === 0) break;
+  }
+  return days;
+}
 // Map layers (filter chips). Everything is on by default; turning the last one off shows all again.
 type Layer = "rides" | "tracks" | "spots" | "services";
 const allLayers: Layer[] = ["rides", "tracks", "spots", "services"];
@@ -41,13 +56,36 @@ export function Nearby({ session }: { session: Session | null }) {
     [radius, setRadius] = useState<NearbyRadius>(defaultNearbyRadius),
     [choosing, setChoosing] = useState(false),
     [locating, setLocating] = useState(false),
-    [result, setResult] = useState<NearbyResult | null>(null),
+    [raw, setResult] = useState<NearbyResult | null>(null),
     [busy, setBusy] = useState(true),
     [error, setError] = useState(""),
     [notice, setNotice] = useState(""),
     [selected, setSelected] = useState(""),
     [retry, setRetry] = useState(0),
-    [layers, setLayers] = useState<Set<Layer>>(() => new Set(allLayers));
+    [layers, setLayers] = useState<Set<Layer>>(() => new Set(allLayers)),
+    [level, setLevel] = useState<Difficulty | "">(""),
+    [checkedOnly, setCheckedOnly] = useState(false),
+    [weekendOnly, setWeekendOnly] = useState(false);
+  // Filters narrow what was found: difficulty for places and tracks (a place counts with the
+  // riders' difficulty too), places checked by riders, rides on the coming weekend.
+  const result = useMemo<NearbyResult | null>(() => {
+    if (!raw) return null;
+    const days = weekendDays();
+    const fits = (d: Difficulty | null | undefined) => !level || d === level;
+    return {
+      ...raw,
+      locations: raw.locations.filter(
+        (l) =>
+          (!checkedOnly || l.visits >= verifiedVisits) &&
+          (l.kind !== "spot" || fits(l.difficulty ?? l.communityDifficulty)),
+      ),
+      tracks: raw.tracks.filter((t) => fits(t.difficulty)),
+      rides: raw.rides.filter(
+        (r) => !weekendOnly || days.has(localDay(new Date(r.startsAt))),
+      ),
+    };
+  }, [raw, level, checkedOnly, weekendOnly]);
+  const filtering = Boolean(level) || checkedOnly || weekendOnly;
   const cards = useRef<Record<string, HTMLElement | null>>({});
   const on = (l: Layer) => layers.has(l);
   const toggle = (l: Layer) =>
@@ -166,6 +204,49 @@ export function Nearby({ session }: { session: Session | null }) {
           </button>
         ))}
       </div>
+      <div className="chip-row map-filters" role="group" aria-label="Фильтры">
+        <label className="chip-select">
+          <span className="sr-only">Сложность</span>
+          <select
+            value={level}
+            onChange={(e) => setLevel(e.target.value as Difficulty | "")}
+          >
+            <option value="">Любая сложность</option>
+            {Object.entries(difficulties).map(([v, t]) => (
+              <option key={v} value={v}>
+                {t}
+              </option>
+            ))}
+          </select>
+        </label>
+        <button
+          className={`chip ${checkedOnly ? "active" : ""}`}
+          aria-pressed={checkedOnly}
+          onClick={() => setCheckedOnly(!checkedOnly)}
+        >
+          <Icon name="check" size={14} />
+          Проверено райдерами
+        </button>
+        <button
+          className={`chip ${weekendOnly ? "active" : ""}`}
+          aria-pressed={weekendOnly}
+          onClick={() => setWeekendOnly(!weekendOnly)}
+        >
+          Покатушки на выходных
+        </button>
+        {filtering && (
+          <button
+            className="text-button"
+            onClick={() => {
+              setLevel("");
+              setCheckedOnly(false);
+              setWeekendOnly(false);
+            }}
+          >
+            Сбросить
+          </button>
+        )}
+      </div>
       <section
         className="card nearby-controls"
         aria-label="Центр и радиус поиска"
@@ -263,10 +344,15 @@ export function Nearby({ session }: { session: Session | null }) {
             {!total ? (
               <div className="card empty-state">
                 <Icon name="mountain" size={32} />
-                <h3>В радиусе {radius} км пока ничего нет</h3>
+                <h3>
+                  {filtering
+                    ? "С такими фильтрами ничего не нашлось"
+                    : `В радиусе ${radius} км пока ничего нет`}
+                </h3>
                 <p>
-                  Увеличьте радиус или выберите другой центр. Знаете хорошее
-                  место? Предложите его на карте локаций.
+                  {filtering
+                    ? "Сбросьте фильтры или увеличьте радиус."
+                    : "Увеличьте радиус или выберите другой центр. Знаете хорошее место? Предложите его на карте локаций."}
                 </p>
                 <a className="button outline" href="#map">
                   Предложить место

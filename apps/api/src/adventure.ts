@@ -332,6 +332,12 @@ export function adventureRoutes(
           "Результат проверки вашего GPX-трека обновлён",
           `track/${r.id}`,
         );
+        // Followers learn about a new public track once, when it is first published.
+        if (b.action === "publish")
+          await tx.query(
+            "INSERT INTO notifications(id,user_id,message,path) SELECT gen_random_uuid(),f.follower_id,'Новый GPX-трек от райдера из ваших подписок','track/'||$1 FROM follows f WHERE f.followee_id=$2",
+            [r.id, owner.author_id],
+          );
         await tx.query(
           "INSERT INTO moderation_actions(id,actor_id,target_type,target_id,action,reason) VALUES ($1,$2,'track',$3,$4,$5)",
           [randomUUID(), a.user.id, r.id, b.action, b.reason.trim()],

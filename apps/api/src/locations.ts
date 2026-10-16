@@ -7,6 +7,7 @@ import {
   visitResponses,
   visitSchemas,
   difficultyVotesNeeded,
+  verifiedVisits,
   type Difficulty,
   type LocationInput,
   type LocationKind,
@@ -18,6 +19,7 @@ import {
 } from "@enduro/contracts";
 import type { Database, Row } from "./database.ts";
 import { profileOf } from "./auth.ts";
+import { teamHandle } from "./seed.ts";
 import { blockedBetween } from "./blocks.ts";
 
 export const locationOutputs: Record<string, [number, unknown]> = {
@@ -454,11 +456,26 @@ export function locationRoutes(
         place.kind === "spot" ? (req.body.difficulty ?? null) : null;
       // Without the field the earlier vote stays; null withdraws it.
       const replace = "difficulty" in req.body;
-      await db.query(
-        "INSERT INTO location_visits(location_id,user_id,difficulty) VALUES ($1,$2,$3) ON CONFLICT (location_id,user_id) DO UPDATE SET difficulty=CASE WHEN $4 THEN EXCLUDED.difficulty ELSE location_visits.difficulty END,updated_at=now()",
+      const [saved] = await db.query(
+        "INSERT INTO location_visits(location_id,user_id,difficulty) VALUES ($1,$2,$3) ON CONFLICT (location_id,user_id) DO UPDATE SET difficulty=CASE WHEN $4 THEN EXCLUDED.difficulty ELSE location_visits.difficulty END,updated_at=now() RETURNING (xmax=0) AS inserted",
         [place.id, auth.user.id, difficulty, replace],
       );
-      return visitsOf(place.id, auth.user.id);
+      const summary = await visitsOf(place.id, auth.user.id);
+      // The author hears about a new mark without names; while one notice is unread the next
+      // ones are not added, so marking and unmarking does not flood anybody.
+      if (saved?.inserted && place.author.handle !== teamHandle) {
+        const path = `${place.kind === "spot" ? "map" : "services"}?place=${place.id}`;
+        const message =
+          summary.visits === verifiedVisits
+            ? "Ваше место проверено райдерами: отметились трое"
+            : "Райдер отметил, что был на вашем месте";
+        const [unread] = await db.query(
+          "SELECT 1 FROM notifications WHERE user_id=$1 AND path=$2 AND message=$3 AND read_at IS NULL",
+          [place.author.id, path, message],
+        );
+        if (!unread) await notify(db, place.author.id, message, path);
+      }
+      return summary;
     },
   );
   app.delete<{ Params: { id: string } }>(
@@ -546,15 +563,28 @@ export function locationRoutes(
         );
         if (!r) throw conflict();
         const [owner] = await tx.query(
-          "SELECT author_id FROM locations WHERE id=$1",
+          "SELECT author_id,kind FROM locations WHERE id=$1",
           [r.id],
         );
+        const path = `${owner.kind === "spot" ? "map" : "services"}?place=${r.id}`;
         await notify(
           tx,
           owner.author_id,
           "Результат проверки вашей локации обновлён",
-          "map",
+          path,
         );
+        // Followers hear about a new place once: an edited card published again stays quiet.
+        if (b.action === "publish") {
+          const [before] = await tx.query(
+            "SELECT 1 FROM moderation_actions WHERE target_type='location' AND target_id=$1 AND action='publish' LIMIT 1",
+            [r.id],
+          );
+          if (!before)
+            await tx.query(
+              "INSERT INTO notifications(id,user_id,message,path) SELECT gen_random_uuid(),f.follower_id,'Новое место от райдера из ваших подписок',$1 FROM follows f WHERE f.followee_id=$2",
+              [path, owner.author_id],
+            );
+        }
         await tx.query(
           "INSERT INTO moderation_actions(id,actor_id,target_type,target_id,action,reason) VALUES ($1,$2,'location',$3,$4,$5)",
           [

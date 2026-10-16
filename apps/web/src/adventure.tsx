@@ -60,14 +60,20 @@ function TrackMap({ preview }: { preview: TrackPreview }) {
     </div>
   );
 }
-export function Tracks({ session, notify }: Props) {
+export function Tracks({
+  session,
+  notify,
+  upload = false,
+}: Props & {
+  /** #tracks?upload=1 opens the GPX form at once. */ upload?: boolean;
+}) {
   const [page, setPage] = useState<Page<Track>>({
       items: [],
       nextOffset: null,
     }),
     [mine, setMine] = useState(false),
     [city, setCity] = useState(""),
-    [editor, setEditor] = useState(false),
+    [editor, setEditor] = useState(upload && Boolean(session)),
     [error, setError] = useState(""),
     [busy, setBusy] = useState(true);
   async function load(offset = 0) {
@@ -116,6 +122,9 @@ export function Tracks({ session, notify }: Props) {
             Сохраните маршрут, проверьте публичную версию и поделитесь после
             модерации.
           </p>
+          <a className="text-button" href="#add-track">
+            Как записать и добавить свою трассу →
+          </a>
         </div>
         {session ? (
           <button className="button" onClick={() => setEditor(!editor)}>

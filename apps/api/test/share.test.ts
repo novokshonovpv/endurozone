@@ -72,7 +72,7 @@ describe("Share links with previews for messengers and search", () => {
     );
     assert.equal(meta(r.body, "og:image"), `${origin}/og.png`);
     assert.equal(meta(r.body, "og:url"), `${origin}/s/place/${place}`);
-    assert.ok(r.body.includes('url=/#map"'));
+    assert.ok(r.body.includes(`url=/#map?place=${place}`));
   });
   it("gives hidden, missing and unknown objects only the generic site card", async () => {
     for (const url of [

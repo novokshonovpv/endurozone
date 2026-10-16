@@ -85,7 +85,7 @@ export function shareRoutes(
         description: clip(
           `${kind}${level ? ` · ${level}` : ""} · ${l.city}. ${l.description}`,
         ),
-        hash: l.kind === "spot" ? "map" : "services",
+        hash: `${l.kind === "spot" ? "map" : "services"}?place=${id}`,
       };
     },
     async track(id) {

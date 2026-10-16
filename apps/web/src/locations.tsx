@@ -46,7 +46,8 @@ export function Locations({
   session,
   notify,
   view = "spots",
-}: Props & { view?: "spots" | "services" }) {
+  focus,
+}: Props & { view?: "spots" | "services"; focus?: string }) {
   const services = view === "services";
   const [items, setItems] = useState<EnduroLocation[]>([]),
     [next, setNext] = useState<number | null>(null),
@@ -112,6 +113,30 @@ export function Locations({
       alive = false;
     };
   }, [mine, city, kind, session?.user.id]);
+  // A place named in the address opens even when it is not on the first page of the list
+  // (or is the author's own card still on moderation).
+  useEffect(() => {
+    if (!focus || busy) return;
+    const known = items.find((l) => l.id === focus);
+    if (known) {
+      if (selected !== focus) select(focus);
+      return;
+    }
+    let alive = true;
+    api<EnduroLocation>(`/locations/${focus}`)
+      .then((l) => {
+        if (!alive) return;
+        setItems((old) => [l, ...old.filter((x) => x.id !== l.id)]);
+        setSelected(l.id);
+        setCenter({ latitude: l.latitude, longitude: l.longitude });
+      })
+      .catch(() => {
+        /* Hidden or removed: the list stays as it is. */
+      });
+    return () => {
+      alive = false;
+    };
+  }, [focus, busy]);
   useEffect(() => {
     let alive = true;
     setDecisions([]);

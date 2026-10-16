@@ -32,7 +32,7 @@ export const sections: Section[] = [
       { path: "nearby", label: "Карта" },
       { path: "map", label: "Места" },
       { path: "services", label: "Прокаты и гиды" },
-      { path: "tracks", label: "Треки", also: ["track/"] },
+      { path: "tracks", label: "Треки", also: ["track/", "add-track"] },
       { path: "rides", label: "Покатушки", also: ["ride/"] },
       { path: "learning", label: "Обучение", also: ["learning/"] },
     ],

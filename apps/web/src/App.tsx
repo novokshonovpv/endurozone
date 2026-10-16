@@ -33,6 +33,7 @@ import { Following, Favorites } from "./follows.tsx";
 import { Nearby } from "./nearby.tsx";
 import { SectionLinks, SectionTabs, tabOf } from "./sections.tsx";
 import { Events } from "./events.tsx";
+import { AddTrack } from "./add-track.tsx";
 import { FeedbackButton, MyFeedback, PilotFeedback } from "./feedback.tsx";
 import { TabBar } from "./tabbar.tsx";
 import { Game } from "./game.tsx";
@@ -55,6 +56,7 @@ const details: [string, string][] = [
   ["ride/", "Покатушка"],
   ["model/", "Модель"],
   ["parts/", "Подбор запчастей"],
+  ["add-track", "Добавь свою трассу"],
 ];
 const pages: Record<string, string> = {
   game: "Игра",
@@ -93,6 +95,9 @@ export default function App() {
     new URLSearchParams(rawRoute.split("?")[1] ?? "").get("bike") ?? "";
   const addModel =
     new URLSearchParams(rawRoute.split("?")[1] ?? "").get("model") ?? undefined;
+  // #map?place=<id>: notifications and shared links open one place's card.
+  const focusPlace =
+    new URLSearchParams(rawRoute.split("?")[1] ?? "").get("place") ?? undefined;
   const [session, setSession] = useState<Session | null>(null),
     [ready, setReady] = useState(false),
     [connectionError, setConnectionError] = useState(""),
@@ -230,7 +235,7 @@ export default function App() {
           <div className="top-actions">
             <span className="version">
               <span className="tiny-dot" />
-              Разработка · 0.28
+              Разработка · 0.29
             </span>
             {session ? (
               <>
@@ -377,6 +382,7 @@ export default function App() {
             <Locations
               key={route}
               view={route === "map" ? "spots" : "services"}
+              focus={focusPlace}
               session={session}
               notify={setNotice}
             />
@@ -393,7 +399,14 @@ export default function App() {
               key={session?.user.id}
               session={session}
               notify={setNotice}
+              upload={
+                new URLSearchParams(rawRoute.split("?")[1] ?? "").get(
+                  "upload",
+                ) === "1"
+              }
             />
+          ) : route === "add-track" ? (
+            <AddTrack session={session} />
           ) : route.startsWith("track/") ? (
             <TrackDetail
               key={route + session?.user.id}

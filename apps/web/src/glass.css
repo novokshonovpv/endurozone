@@ -856,6 +856,77 @@ select:focus {
   padding-left: 18px;
   font-size: 14px;
 }
+/* Map filters: difficulty select styled as a chip */
+.map-filters {
+  margin-top: -6px;
+  align-items: center;
+}
+.chip-select select {
+  height: 38px;
+  padding: 0 14px;
+  border-radius: 999px;
+  border: 1px solid rgba(75, 83, 32, 0.18);
+  background-color: rgba(255, 255, 255, 0.5);
+  font: inherit;
+  font-size: 14px;
+  font-weight: 560;
+  color: var(--olive);
+}
+/* «Добавь свою трассу» */
+.howto-steps {
+  list-style: none;
+  margin: 0 0 18px;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 12px;
+}
+.howto-steps li {
+  display: flex;
+  gap: 14px;
+  padding: 18px;
+}
+.howto-steps h2 {
+  font-size: 17px;
+  margin: 2px 0 6px;
+}
+.howto-steps p {
+  margin: 0;
+  font-size: 14px;
+}
+.howto-number {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 12px;
+  background: linear-gradient(160deg, var(--ochre-2), var(--ochre));
+  color: var(--olive);
+  font-weight: 800;
+}
+.howto-rules,
+.howto-invite {
+  padding: 20px 22px;
+  margin-bottom: 18px;
+}
+.howto-rules h2,
+.howto-invite h2 {
+  font-size: 19px;
+  margin: 0 0 8px;
+}
+.howto-rules ul {
+  margin: 0 0 10px;
+  padding-left: 20px;
+  line-height: 1.6;
+}
+.howto-invite blockquote {
+  margin: 10px 0 14px;
+  padding: 14px 16px;
+  border-radius: var(--radius-sm);
+  background: rgba(255, 255, 255, 0.6);
+  font-size: 14px;
+}
 /* Phone: frosted top and bottom bars, the four blocks at the thumb */
 @media (max-width: 760px) {
   .sidebar {
