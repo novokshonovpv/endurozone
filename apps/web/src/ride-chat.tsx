@@ -2,7 +2,7 @@ import { useEffect, useState, type FormEvent } from "react";
 import type { RideChat as Chat, RideMessage, Session } from "@enduro/contracts";
 import { api } from "./api.ts";
 import { Avatar, ErrorBox, Icon, Loading } from "./ui.tsx";
-import { ReportButton } from "./map.tsx";
+import { ReportButton } from "./report.tsx";
 const when = (value: string) =>
   new Intl.DateTimeFormat("ru-RU", {
     day: "numeric",

@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState, type FormEvent } from "react";
-import { MapCanvas, ReportButton } from "./map.tsx";
-export { ReportButton } from "./map.tsx";
+import { MapCanvas } from "./map.tsx";
+import { ReportButton } from "./report.tsx";
+export { ReportButton } from "./report.tsx";
 import { TrackModeration } from "./adventure.tsx";
 import { ModeratorRoles } from "./roles.tsx";
 import {

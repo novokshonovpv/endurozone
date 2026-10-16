@@ -16,7 +16,8 @@ import {
 } from "@enduro/contracts";
 import { api } from "./api.ts";
 import { ErrorBox, Loading, Modal, Icon, ShareButton } from "./ui.tsx";
-import { MapCanvas, ReportButton } from "./map.tsx";
+import { MapCanvas } from "./map.tsx";
+import { ReportButton } from "./report.tsx";
 import { go } from "./routing.ts";
 import { RideChat } from "./ride-chat.tsx";
 type Props = { session: Session | null; notify: (text: string) => void };

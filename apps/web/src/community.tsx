@@ -26,7 +26,7 @@ import {
   formatDate,
   ShareButton,
 } from "./ui.tsx";
-import { ReportButton } from "./locations.tsx";
+import { ReportButton } from "./report.tsx";
 import { UpcomingRaces } from "./events.tsx";
 import { go } from "./routing.ts";
 import { GarageJournal, BikeServicePanel } from "./garage.tsx";

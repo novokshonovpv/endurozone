@@ -1,4 +1,4 @@
-import { useEffect, useState, type FormEvent } from "react";
+import { lazy, Suspense, useEffect, useState, type FormEvent } from "react";
 import { api, RequestError, setSessionToken } from "./api.ts";
 import {
   Icon,
@@ -15,8 +15,6 @@ import {
   type RegisterInput,
   type Profile,
 } from "@enduro/contracts";
-import { Tracks, TrackDetail, Rides, RideDetail } from "./adventure.tsx";
-import { Locations, Moderation } from "./locations.tsx";
 import { go } from "./routing.ts";
 import {
   Account,
@@ -24,22 +22,63 @@ import {
   Notifications,
   NotificationBell,
 } from "./pilot.tsx";
-import { AccountData } from "./account-rights.tsx";
-import { Shop } from "./shop.tsx";
-import { Riders, RiderProfile } from "./riders.tsx";
-import { Mechanic } from "./mechanic.tsx";
-import { Learning } from "./learning.tsx";
 import { Following, Favorites } from "./follows.tsx";
-import { Nearby } from "./nearby.tsx";
 import { SectionLinks, SectionTabs, tabOf } from "./sections.tsx";
 import { Events } from "./events.tsx";
-import { AddTrack } from "./add-track.tsx";
 import { FeedbackButton, MyFeedback, PilotFeedback } from "./feedback.tsx";
 import { TabBar } from "./tabbar.tsx";
-import { Game } from "./game.tsx";
 import { Models, ModelPage } from "./models.tsx";
-import { Parts } from "./parts.tsx";
 
+// Sections other than the home feed load on first visit: the first screen stays light,
+// the map, parts, shop, game and the rest arrive when opened.
+const Tracks = lazy(() =>
+  import("./adventure.tsx").then((m) => ({ default: m.Tracks })),
+);
+const TrackDetail = lazy(() =>
+  import("./adventure.tsx").then((m) => ({ default: m.TrackDetail })),
+);
+const Rides = lazy(() =>
+  import("./adventure.tsx").then((m) => ({ default: m.Rides })),
+);
+const RideDetail = lazy(() =>
+  import("./adventure.tsx").then((m) => ({ default: m.RideDetail })),
+);
+const Locations = lazy(() =>
+  import("./locations.tsx").then((m) => ({ default: m.Locations })),
+);
+const Moderation = lazy(() =>
+  import("./locations.tsx").then((m) => ({ default: m.Moderation })),
+);
+const AccountData = lazy(() =>
+  import("./account-rights.tsx").then((m) => ({ default: m.AccountData })),
+);
+const Shop = lazy(() =>
+  import("./shop.tsx").then((m) => ({ default: m.Shop })),
+);
+const Riders = lazy(() =>
+  import("./riders.tsx").then((m) => ({ default: m.Riders })),
+);
+const RiderProfile = lazy(() =>
+  import("./riders.tsx").then((m) => ({ default: m.RiderProfile })),
+);
+const Mechanic = lazy(() =>
+  import("./mechanic.tsx").then((m) => ({ default: m.Mechanic })),
+);
+const Learning = lazy(() =>
+  import("./learning.tsx").then((m) => ({ default: m.Learning })),
+);
+const Nearby = lazy(() =>
+  import("./nearby.tsx").then((m) => ({ default: m.Nearby })),
+);
+const AddTrack = lazy(() =>
+  import("./add-track.tsx").then((m) => ({ default: m.AddTrack })),
+);
+const Game = lazy(() =>
+  import("./game.tsx").then((m) => ({ default: m.Game })),
+);
+const Parts = lazy(() =>
+  import("./parts.tsx").then((m) => ({ default: m.Parts })),
+);
 // Personal pages: in the sidebar under «Моё» and in the phone «Меню» sheet.
 const personal: { path: string; label: string; icon: IconName }[] = [
   { path: "following", label: "Подписки", icon: "user-heart" },
@@ -235,7 +274,7 @@ export default function App() {
           <div className="top-actions">
             <span className="version">
               <span className="tiny-dot" />
-              Разработка · 0.29.3
+              Разработка · 0.30
             </span>
             {session ? (
               <>
@@ -272,204 +311,208 @@ export default function App() {
               </p>
             )}
           {ready && <SectionTabs route={route} />}
-          {!ready ? (
-            <Loading />
-          ) : route === "login" || route === "register" ? (
-            <AuthForm
-              mode={route}
-              done={(s) => {
-                updateSession(s);
-                go("garage");
-                setNotice(
-                  route === "register"
-                    ? "Добро пожаловать! Добавьте свой мотоцикл."
-                    : "Вы вошли в аккаунт.",
-                );
-              }}
-            />
-          ) : route === "forgot" ||
-            route.startsWith("reset/") ||
-            route.startsWith("verify/") ? (
-            <Recovery key={route} route={route} refresh={updateSession} />
-          ) : route === "reset-done" || route === "verify-done" ? (
-            <section className="card">
-              <h1>Готово</h1>
-              <a href="#login">Вернуться ко входу</a>
-            </section>
-          ) : route === "account" ? (
-            session ? (
-              <>
-                <Account
-                  key={session.user.id}
-                  session={session}
-                  refresh={updateSession}
-                />
-                <AccountData
-                  deleted={() => {
-                    updateSession(null);
-                    go("feed");
-                    setNotice("Аккаунт и данные в основной базе удалены.");
-                  }}
-                />
-              </>
-            ) : (
-              <JoinGate />
-            )
-          ) : route === "notifications" ? (
-            session ? (
-              <Notifications key={session.user.id} />
-            ) : (
-              <JoinGate />
-            )
-          ) : route === "feedback" ? (
-            session ? (
-              <MyFeedback key={session.user.id} />
-            ) : (
-              <JoinGate />
-            )
-          ) : route === "pilot-feedback" ? (
-            session?.user.role === "moderator" ? (
-              <PilotFeedback key={session.user.id} notify={setNotice} />
-            ) : (
-              <JoinGate />
-            )
-          ) : route === "following" ? (
-            session ? (
-              <Following key={session.user.id} notify={setNotice} />
-            ) : (
-              <JoinGate />
-            )
-          ) : route === "saved" ? (
-            session ? (
-              <Favorites key={session.user.id} />
-            ) : (
-              <JoinGate />
-            )
-          ) : route === "game" ? (
-            <Game />
-          ) : route === "garage" ? (
-            session ? (
-              <Garage
-                key={session.user.id}
-                session={session}
-                notify={setNotice}
-                addModel={addModel}
-              />
-            ) : (
-              <JoinGate />
-            )
-          ) : route === "profile" ? (
-            session ? (
-              <ProfileForm
-                session={session}
+          <Suspense fallback={<Loading />}>
+            {!ready ? (
+              <Loading />
+            ) : route === "login" || route === "register" ? (
+              <AuthForm
+                mode={route}
                 done={(s) => {
                   updateSession(s);
-                  setNotice("Профиль сохранён.");
+                  go("garage");
+                  setNotice(
+                    route === "register"
+                      ? "Добро пожаловать! Добавьте свой мотоцикл."
+                      : "Вы вошли в аккаунт.",
+                  );
                 }}
               />
+            ) : route === "forgot" ||
+              route.startsWith("reset/") ||
+              route.startsWith("verify/") ? (
+              <Recovery key={route} route={route} refresh={updateSession} />
+            ) : route === "reset-done" || route === "verify-done" ? (
+              <section className="card">
+                <h1>Готово</h1>
+                <a href="#login">Вернуться ко входу</a>
+              </section>
+            ) : route === "account" ? (
+              session ? (
+                <>
+                  <Account
+                    key={session.user.id}
+                    session={session}
+                    refresh={updateSession}
+                  />
+                  <AccountData
+                    deleted={() => {
+                      updateSession(null);
+                      go("feed");
+                      setNotice("Аккаунт и данные в основной базе удалены.");
+                    }}
+                  />
+                </>
+              ) : (
+                <JoinGate />
+              )
+            ) : route === "notifications" ? (
+              session ? (
+                <Notifications key={session.user.id} />
+              ) : (
+                <JoinGate />
+              )
+            ) : route === "feedback" ? (
+              session ? (
+                <MyFeedback key={session.user.id} />
+              ) : (
+                <JoinGate />
+              )
+            ) : route === "pilot-feedback" ? (
+              session?.user.role === "moderator" ? (
+                <PilotFeedback key={session.user.id} notify={setNotice} />
+              ) : (
+                <JoinGate />
+              )
+            ) : route === "following" ? (
+              session ? (
+                <Following key={session.user.id} notify={setNotice} />
+              ) : (
+                <JoinGate />
+              )
+            ) : route === "saved" ? (
+              session ? (
+                <Favorites key={session.user.id} />
+              ) : (
+                <JoinGate />
+              )
+            ) : route === "game" ? (
+              <Game />
+            ) : route === "garage" ? (
+              session ? (
+                <Garage
+                  key={session.user.id}
+                  session={session}
+                  notify={setNotice}
+                  addModel={addModel}
+                />
+              ) : (
+                <JoinGate />
+              )
+            ) : route === "profile" ? (
+              session ? (
+                <ProfileForm
+                  session={session}
+                  done={(s) => {
+                    updateSession(s);
+                    setNotice("Профиль сохранён.");
+                  }}
+                />
+              ) : (
+                <JoinGate />
+              )
+            ) : route.startsWith("post/") ? (
+              <PostDetail
+                id={route.slice(5)}
+                session={session}
+                notify={setNotice}
+              />
+            ) : route === "nearby" ? (
+              <Nearby key={session?.user.id ?? "guest"} session={session} />
+            ) : route === "map" || route === "services" ? (
+              <Locations
+                key={route}
+                view={route === "map" ? "spots" : "services"}
+                focus={focusPlace}
+                session={session}
+                notify={setNotice}
+              />
+            ) : route === "news" || route === "service" ? (
+              <Feed
+                key={route}
+                session={session}
+                mode={route === "news" ? "news" : "service"}
+              />
+            ) : route === "events" ? (
+              <Events session={session} notify={setNotice} />
+            ) : route === "tracks" ? (
+              <Tracks
+                key={session?.user.id}
+                session={session}
+                notify={setNotice}
+                upload={
+                  new URLSearchParams(rawRoute.split("?")[1] ?? "").get(
+                    "upload",
+                  ) === "1"
+                }
+              />
+            ) : route === "add-track" ? (
+              <AddTrack session={session} />
+            ) : route.startsWith("track/") ? (
+              <TrackDetail
+                key={route + session?.user.id}
+                id={route.slice(6)}
+                session={session}
+                notify={setNotice}
+              />
+            ) : route === "rides" ? (
+              <Rides
+                key={session?.user.id}
+                session={session}
+                notify={setNotice}
+              />
+            ) : route.startsWith("ride/") ? (
+              <RideDetail
+                key={route + session?.user.id}
+                id={route.slice(5)}
+                session={session}
+                notify={setNotice}
+              />
+            ) : route === "shop" || route.startsWith("shop/") ? (
+              <Shop
+                key={session?.user.id ?? "guest"}
+                session={session}
+                productId={
+                  route.startsWith("shop/") ? route.slice(5) : undefined
+                }
+                requestedBike={shopBike}
+              />
+            ) : route === "learning" || route.startsWith("learning/") ? (
+              <Learning
+                key={session?.user.id ?? "guest"}
+                session={session}
+                lessonId={
+                  route.startsWith("learning/") ? route.slice(9) : undefined
+                }
+              />
+            ) : route === "riders" ? (
+              <Riders />
+            ) : route.startsWith("rider/") ? (
+              <RiderProfile
+                key={route.slice(6)}
+                handle={route.slice(6)}
+                session={session}
+                requestedBike={shopBike}
+              />
+            ) : route === "parts" || route.startsWith("parts/") ? (
+              <Parts route={route} session={session} />
+            ) : route === "models" ? (
+              <Models />
+            ) : route.startsWith("model/") ? (
+              <ModelPage
+                key={route.slice(6)}
+                slug={route.slice(6)}
+                signedIn={Boolean(session)}
+              />
+            ) : route === "mechanic" ? (
+              <Mechanic key={session?.user.id ?? "guest"} session={session} />
+            ) : route === "moderation" ? (
+              <Moderation session={session} notify={setNotice} />
+            ) : route === "roadmap" ? (
+              <Roadmap />
             ) : (
-              <JoinGate />
-            )
-          ) : route.startsWith("post/") ? (
-            <PostDetail
-              id={route.slice(5)}
-              session={session}
-              notify={setNotice}
-            />
-          ) : route === "nearby" ? (
-            <Nearby key={session?.user.id ?? "guest"} session={session} />
-          ) : route === "map" || route === "services" ? (
-            <Locations
-              key={route}
-              view={route === "map" ? "spots" : "services"}
-              focus={focusPlace}
-              session={session}
-              notify={setNotice}
-            />
-          ) : route === "news" || route === "service" ? (
-            <Feed
-              key={route}
-              session={session}
-              mode={route === "news" ? "news" : "service"}
-            />
-          ) : route === "events" ? (
-            <Events session={session} notify={setNotice} />
-          ) : route === "tracks" ? (
-            <Tracks
-              key={session?.user.id}
-              session={session}
-              notify={setNotice}
-              upload={
-                new URLSearchParams(rawRoute.split("?")[1] ?? "").get(
-                  "upload",
-                ) === "1"
-              }
-            />
-          ) : route === "add-track" ? (
-            <AddTrack session={session} />
-          ) : route.startsWith("track/") ? (
-            <TrackDetail
-              key={route + session?.user.id}
-              id={route.slice(6)}
-              session={session}
-              notify={setNotice}
-            />
-          ) : route === "rides" ? (
-            <Rides
-              key={session?.user.id}
-              session={session}
-              notify={setNotice}
-            />
-          ) : route.startsWith("ride/") ? (
-            <RideDetail
-              key={route + session?.user.id}
-              id={route.slice(5)}
-              session={session}
-              notify={setNotice}
-            />
-          ) : route === "shop" || route.startsWith("shop/") ? (
-            <Shop
-              key={session?.user.id ?? "guest"}
-              session={session}
-              productId={route.startsWith("shop/") ? route.slice(5) : undefined}
-              requestedBike={shopBike}
-            />
-          ) : route === "learning" || route.startsWith("learning/") ? (
-            <Learning
-              key={session?.user.id ?? "guest"}
-              session={session}
-              lessonId={
-                route.startsWith("learning/") ? route.slice(9) : undefined
-              }
-            />
-          ) : route === "riders" ? (
-            <Riders />
-          ) : route.startsWith("rider/") ? (
-            <RiderProfile
-              key={route.slice(6)}
-              handle={route.slice(6)}
-              session={session}
-              requestedBike={shopBike}
-            />
-          ) : route === "parts" || route.startsWith("parts/") ? (
-            <Parts route={route} session={session} />
-          ) : route === "models" ? (
-            <Models />
-          ) : route.startsWith("model/") ? (
-            <ModelPage
-              key={route.slice(6)}
-              slug={route.slice(6)}
-              signedIn={Boolean(session)}
-            />
-          ) : route === "mechanic" ? (
-            <Mechanic key={session?.user.id ?? "guest"} session={session} />
-          ) : route === "moderation" ? (
-            <Moderation session={session} notify={setNotice} />
-          ) : route === "roadmap" ? (
-            <Roadmap />
-          ) : (
-            <Feed session={session} />
-          )}
+              <Feed session={session} />
+            )}
+          </Suspense>
         </main>
         <footer>
           Enduro.Zone <span>Сообщество, гараж, маршруты и покатушки.</span>
