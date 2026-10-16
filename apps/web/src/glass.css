@@ -790,6 +790,72 @@ select:focus {
     align-items: center;
   }
 }
+/* «Был здесь» on a place card */
+.visit-panel {
+  margin: 18px 0 8px;
+  padding: 14px 16px;
+  border-radius: var(--radius-sm);
+  background: rgba(255, 255, 255, 0.5);
+  border: 1px solid rgba(255, 255, 255, 0.7);
+}
+.visit-panel h3 {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin: 0 0 4px;
+  font-size: 16px;
+}
+.visit-panel h3 .tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+.visit-panel p {
+  margin: 0 0 10px;
+  font-size: 14px;
+}
+.visit-votes {
+  margin: 0 0 8px;
+}
+.visit-votes .chip {
+  font-size: 13px;
+  padding: 6px 12px;
+}
+.error-text {
+  color: #b3261e;
+}
+/* Moderators: places from a spreadsheet */
+.page-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  justify-content: flex-end;
+}
+.import-file input {
+  margin-top: 6px;
+}
+.import-preview {
+  list-style: none;
+  padding: 0;
+  margin: 0 0 14px;
+  display: grid;
+  gap: 6px;
+}
+.import-preview li,
+.import-result {
+  padding: 8px 12px;
+  border-radius: var(--radius-sm);
+  background: rgba(255, 255, 255, 0.55);
+}
+.import-preview small {
+  display: block;
+}
+.import-result ul {
+  margin: 6px 0 0;
+  padding-left: 18px;
+  font-size: 14px;
+}
 /* Phone: frosted top and bottom bars, the four blocks at the thumb */
 @media (max-width: 760px) {
   .sidebar {

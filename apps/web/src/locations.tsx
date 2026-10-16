@@ -19,6 +19,8 @@ import {
   type RideMessage,
 } from "@enduro/contracts";
 import { api } from "./api.ts";
+import { VisitPanel } from "./visits.tsx";
+import { PlaceImport } from "./place-import.tsx";
 import { ErrorBox, Loading, Modal, Icon, ShareButton } from "./ui.tsx";
 
 type Point = { latitude: number; longitude: number };
@@ -28,9 +30,10 @@ type Props = { session: Session | null; notify: (message: string) => void };
 const errorOf = (e: unknown) => (e as Error).message;
 
 // The tag of a list row: difficulty for a riding spot, the kind for a service.
+// A spot without the author's difficulty shows the riders' one when they agreed on it.
 export const locationTag = (l: EnduroLocation) =>
-  l.kind === "spot" && l.difficulty
-    ? difficulties[l.difficulty]
+  l.kind === "spot" && (l.difficulty ?? l.communityDifficulty)
+    ? difficulties[(l.difficulty ?? l.communityDifficulty)!]
     : locationKinds[l.kind];
 const serviceKinds = ["rental", "guide", "school"] as const;
 const kindPlural: Record<(typeof serviceKinds)[number], string> = {
@@ -217,19 +220,29 @@ export function Locations({
           </p>
         </div>
         {session ? (
-          <button
-            className="button"
-            onClick={() => {
-              setEditor(!editor || Boolean(editing));
-              setEditing(null);
-              setFormKind(services ? "rental" : "spot");
-              setError("");
-              setPoint(null);
-            }}
-          >
-            <Icon name="plus" />
-            {services ? "Добавить прокат или гида" : "Предложить локацию"}
-          </button>
+          <div className="page-actions">
+            {session.user.role === "moderator" && (
+              <PlaceImport
+                done={() => {
+                  setMine(false);
+                  void load();
+                }}
+              />
+            )}
+            <button
+              className="button"
+              onClick={() => {
+                setEditor(!editor || Boolean(editing));
+                setEditing(null);
+                setFormKind(services ? "rental" : "spot");
+                setError("");
+                setPoint(null);
+              }}
+            >
+              <Icon name="plus" />
+              {services ? "Добавить прокат или гида" : "Предложить локацию"}
+            </button>
+          </div>
         ) : (
           <a className="button" href="#login">
             {services ? "Войти и добавить" : "Войти и добавить место"}
@@ -586,6 +599,25 @@ export function Locations({
               >
                 Открыть в OpenStreetMap ↗
               </a>
+              {detail.status === "published" && (
+                <VisitPanel
+                  place={detail}
+                  session={session}
+                  changed={(v) =>
+                    setItems((old) =>
+                      old.map((l) =>
+                        l.id === detail.id
+                          ? {
+                              ...l,
+                              visits: v.visits,
+                              communityDifficulty: v.communityDifficulty,
+                            }
+                          : l,
+                      ),
+                    )
+                  }
+                />
+              )}
               {detail.status === "published" && (
                 <ShareButton path={`place/${detail.id}`} title={detail.title} />
               )}

@@ -214,4 +214,15 @@ describe("Race announcements and starter content", () => {
     ).json<{ items: EnduroLocation[] }>();
     assert.ok(page.items.every((l) => l.latitude > 40 && l.longitude > 20));
   });
+  it("accepts an announcement without an end date (empty field from the form)", async () => {
+    const r = await request("POST", "/api/announcements", mod, {
+      title: "Synthetic one-day race",
+      startsOn: shift(20),
+      endsOn: null,
+      region: "Test region",
+      sourceUrl: "https://example.test/one-day",
+    });
+    assert.equal(r.statusCode, 201, r.body);
+    assert.equal(r.json<Announcement>().endsOn, null);
+  });
 });

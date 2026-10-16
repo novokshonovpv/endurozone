@@ -126,6 +126,8 @@ export function accountRightsRoutes(
             "SELECT scope,scope_key,node,name,part_number,comment,created_at FROM part_fits WHERE author_id=$1",
           partFitVotes:
             "SELECT fit_id,created_at FROM part_fit_votes WHERE user_id=$1",
+          locationVisits:
+            "SELECT location_id,difficulty,created_at,updated_at FROM location_visits WHERE user_id=$1",
           // Only the people this account blocked; who blocked it is not disclosed.
           blocked:
             "SELECT u.handle,b.created_at FROM blocks b JOIN users u ON u.id=b.blocked_id WHERE b.blocker_id=$1",

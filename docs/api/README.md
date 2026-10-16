@@ -215,3 +215,12 @@ GET/POST `/api/bikes/:id/photos` и `/api/posts/:id/photos` читают фот�
 | POST /api/moderation/announcement-drafts/{id}/dismiss | Убрать черновик                                                         |
 | GET /s/{type}/{id}                                    | Страница превью для мессенджеров: place, track, ride, race, post, model |
 | GET /sitemap.xml, GET /robots.txt                     | Для поисковиков                                                         |
+
+## Отметки «Был здесь» и загрузка таблицей (0.28)
+
+| Метод и путь                          | Результат                                                                |
+| ------------------------------------- | ------------------------------------------------------------------------ |
+| GET /api/locations/{id}/visits        | Сколько райдеров были, голоса за сложность, своя отметка                 |
+| PUT /api/locations/{id}/visit         | Отметиться; `difficulty` — голос (только для мест), `null` снимает голос |
+| DELETE /api/locations/{id}/visit      | Убрать свою отметку                                                      |
+| POST /api/moderation/locations/import | До 200 мест из таблицы; `{ added, skipped }`; только модератор           |

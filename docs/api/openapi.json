@@ -2,7 +2,7 @@
   "openapi": "3.0.3",
   "info": {
     "title": "Enduro.Zone API",
-    "version": "0.27.0",
+    "version": "0.28.0",
     "description": "Аккаунт, гараж, бортжурнал, локации и модерация. Для cookie-сессии запросить /api/me и передать csrfToken в X-CSRF-Token при изменении данных. Все изменения требуют X-Enduro-Client: web. Подтверждение email, восстановление доступа и личные уведомления. Проверка email перед публикацией включается REQUIRE_VERIFIED_EMAIL=true."
   },
   "components": {
@@ -29973,6 +29973,19 @@
                             ],
                             "nullable": true
                           },
+                          "communityDifficulty": {
+                            "type": "string",
+                            "enum": [
+                              "easy",
+                              "medium",
+                              "hard"
+                            ],
+                            "nullable": true
+                          },
+                          "visits": {
+                            "type": "integer",
+                            "minimum": 0
+                          },
                           "accessNotes": {
                             "type": "string",
                             "minLength": 0,
@@ -30011,6 +30024,8 @@
                           "longitude",
                           "kind",
                           "difficulty",
+                          "communityDifficulty",
+                          "visits",
                           "accessNotes",
                           "contacts",
                           "status",
@@ -30517,6 +30532,19 @@
                       ],
                       "nullable": true
                     },
+                    "communityDifficulty": {
+                      "type": "string",
+                      "enum": [
+                        "easy",
+                        "medium",
+                        "hard"
+                      ],
+                      "nullable": true
+                    },
+                    "visits": {
+                      "type": "integer",
+                      "minimum": 0
+                    },
                     "accessNotes": {
                       "type": "string",
                       "minLength": 0,
@@ -30555,6 +30583,8 @@
                     "longitude",
                     "kind",
                     "difficulty",
+                    "communityDifficulty",
+                    "visits",
                     "accessNotes",
                     "contacts",
                     "status",
@@ -31025,6 +31055,19 @@
                             ],
                             "nullable": true
                           },
+                          "communityDifficulty": {
+                            "type": "string",
+                            "enum": [
+                              "easy",
+                              "medium",
+                              "hard"
+                            ],
+                            "nullable": true
+                          },
+                          "visits": {
+                            "type": "integer",
+                            "minimum": 0
+                          },
                           "accessNotes": {
                             "type": "string",
                             "minLength": 0,
@@ -31063,6 +31106,8 @@
                           "longitude",
                           "kind",
                           "difficulty",
+                          "communityDifficulty",
+                          "visits",
                           "accessNotes",
                           "contacts",
                           "status",
@@ -31545,6 +31590,19 @@
                             ],
                             "nullable": true
                           },
+                          "communityDifficulty": {
+                            "type": "string",
+                            "enum": [
+                              "easy",
+                              "medium",
+                              "hard"
+                            ],
+                            "nullable": true
+                          },
+                          "visits": {
+                            "type": "integer",
+                            "minimum": 0
+                          },
                           "accessNotes": {
                             "type": "string",
                             "minLength": 0,
@@ -31583,6 +31641,8 @@
                           "longitude",
                           "kind",
                           "difficulty",
+                          "communityDifficulty",
+                          "visits",
                           "accessNotes",
                           "contacts",
                           "status",
@@ -32016,6 +32076,19 @@
                       ],
                       "nullable": true
                     },
+                    "communityDifficulty": {
+                      "type": "string",
+                      "enum": [
+                        "easy",
+                        "medium",
+                        "hard"
+                      ],
+                      "nullable": true
+                    },
+                    "visits": {
+                      "type": "integer",
+                      "minimum": 0
+                    },
                     "accessNotes": {
                       "type": "string",
                       "minLength": 0,
@@ -32054,6 +32127,8 @@
                     "longitude",
                     "kind",
                     "difficulty",
+                    "communityDifficulty",
+                    "visits",
                     "accessNotes",
                     "contacts",
                     "status",
@@ -32559,6 +32634,19 @@
                       ],
                       "nullable": true
                     },
+                    "communityDifficulty": {
+                      "type": "string",
+                      "enum": [
+                        "easy",
+                        "medium",
+                        "hard"
+                      ],
+                      "nullable": true
+                    },
+                    "visits": {
+                      "type": "integer",
+                      "minimum": 0
+                    },
                     "accessNotes": {
                       "type": "string",
                       "minLength": 0,
@@ -32597,6 +32685,8 @@
                     "longitude",
                     "kind",
                     "difficulty",
+                    "communityDifficulty",
+                    "visits",
                     "accessNotes",
                     "contacts",
                     "status",
@@ -32896,6 +32986,743 @@
                   },
                   "required": [
                     "error"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/moderation/locations/import": {
+      "post": {
+        "tags": [
+          "Moderation"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "items"
+                ],
+                "properties": {
+                  "items": {
+                    "type": "array",
+                    "minItems": 1,
+                    "maxItems": 200,
+                    "items": {
+                      "type": "object",
+                      "additionalProperties": false,
+                      "properties": {
+                        "kind": {
+                          "type": "string",
+                          "maxLength": 40
+                        },
+                        "title": {
+                          "type": "string",
+                          "maxLength": 400
+                        },
+                        "city": {
+                          "type": "string",
+                          "maxLength": 200
+                        },
+                        "latitude": {
+                          "type": "number",
+                          "nullable": true
+                        },
+                        "longitude": {
+                          "type": "number",
+                          "nullable": true
+                        },
+                        "difficulty": {
+                          "type": "string",
+                          "maxLength": 40
+                        },
+                        "description": {
+                          "type": "string",
+                          "maxLength": 4000
+                        },
+                        "accessNotes": {
+                          "type": "string",
+                          "maxLength": 2000
+                        },
+                        "contacts": {
+                          "type": "string",
+                          "maxLength": 400
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "cookieSession": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "added",
+                    "skipped"
+                  ],
+                  "properties": {
+                    "added": {
+                      "type": "integer",
+                      "minimum": 0
+                    },
+                    "skipped": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "additionalProperties": false,
+                        "required": [
+                          "row",
+                          "title",
+                          "reason"
+                        ],
+                        "properties": {
+                          "row": {
+                            "type": "integer"
+                          },
+                          "title": {
+                            "type": "string"
+                          },
+                          "reason": {
+                            "type": "string"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "additionalProperties": false,
+                      "properties": {
+                        "code": {
+                          "type": "string",
+                          "minLength": 1,
+                          "maxLength": 100
+                        },
+                        "message": {
+                          "type": "string",
+                          "minLength": 1,
+                          "maxLength": 1000
+                        },
+                        "requestId": {
+                          "type": "string",
+                          "minLength": 1,
+                          "maxLength": 100
+                        }
+                      },
+                      "required": [
+                        "code",
+                        "message",
+                        "requestId"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "additionalProperties": false,
+                      "properties": {
+                        "code": {
+                          "type": "string",
+                          "minLength": 1,
+                          "maxLength": 100
+                        },
+                        "message": {
+                          "type": "string",
+                          "minLength": 1,
+                          "maxLength": 1000
+                        },
+                        "requestId": {
+                          "type": "string",
+                          "minLength": 1,
+                          "maxLength": 100
+                        }
+                      },
+                      "required": [
+                        "code",
+                        "message",
+                        "requestId"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "additionalProperties": false,
+                      "properties": {
+                        "code": {
+                          "type": "string",
+                          "minLength": 1,
+                          "maxLength": 100
+                        },
+                        "message": {
+                          "type": "string",
+                          "minLength": 1,
+                          "maxLength": 1000
+                        },
+                        "requestId": {
+                          "type": "string",
+                          "minLength": 1,
+                          "maxLength": 100
+                        }
+                      },
+                      "required": [
+                        "code",
+                        "message",
+                        "requestId"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "additionalProperties": false,
+                      "properties": {
+                        "code": {
+                          "type": "string",
+                          "minLength": 1,
+                          "maxLength": 100
+                        },
+                        "message": {
+                          "type": "string",
+                          "minLength": 1,
+                          "maxLength": 1000
+                        },
+                        "requestId": {
+                          "type": "string",
+                          "minLength": 1,
+                          "maxLength": 100
+                        }
+                      },
+                      "required": [
+                        "code",
+                        "message",
+                        "requestId"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "additionalProperties": false,
+                      "properties": {
+                        "code": {
+                          "type": "string",
+                          "minLength": 1,
+                          "maxLength": 100
+                        },
+                        "message": {
+                          "type": "string",
+                          "minLength": 1,
+                          "maxLength": 1000
+                        },
+                        "requestId": {
+                          "type": "string",
+                          "minLength": 1,
+                          "maxLength": 100
+                        }
+                      },
+                      "required": [
+                        "code",
+                        "message",
+                        "requestId"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "additionalProperties": false,
+                      "properties": {
+                        "code": {
+                          "type": "string",
+                          "minLength": 1,
+                          "maxLength": 100
+                        },
+                        "message": {
+                          "type": "string",
+                          "minLength": 1,
+                          "maxLength": 1000
+                        },
+                        "requestId": {
+                          "type": "string",
+                          "minLength": 1,
+                          "maxLength": 100
+                        }
+                      },
+                      "required": [
+                        "code",
+                        "message",
+                        "requestId"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "additionalProperties": false,
+                      "properties": {
+                        "code": {
+                          "type": "string",
+                          "minLength": 1,
+                          "maxLength": 100
+                        },
+                        "message": {
+                          "type": "string",
+                          "minLength": 1,
+                          "maxLength": 1000
+                        },
+                        "requestId": {
+                          "type": "string",
+                          "minLength": 1,
+                          "maxLength": 100
+                        }
+                      },
+                      "required": [
+                        "code",
+                        "message",
+                        "requestId"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/locations/{id}/visits": {
+      "get": {
+        "tags": [
+          "Locations"
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "in": "path",
+            "name": "id",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "properties": {
+                    "visits": {
+                      "type": "integer",
+                      "minimum": 0
+                    },
+                    "votes": {
+                      "type": "object",
+                      "additionalProperties": false,
+                      "properties": {
+                        "easy": {
+                          "type": "integer",
+                          "minimum": 0
+                        },
+                        "medium": {
+                          "type": "integer",
+                          "minimum": 0
+                        },
+                        "hard": {
+                          "type": "integer",
+                          "minimum": 0
+                        }
+                      },
+                      "required": [
+                        "easy",
+                        "medium",
+                        "hard"
+                      ]
+                    },
+                    "communityDifficulty": {
+                      "type": "string",
+                      "enum": [
+                        "easy",
+                        "medium",
+                        "hard"
+                      ],
+                      "nullable": true
+                    },
+                    "mine": {
+                      "type": "object",
+                      "additionalProperties": false,
+                      "properties": {
+                        "visited": {
+                          "type": "boolean"
+                        },
+                        "difficulty": {
+                          "type": "string",
+                          "enum": [
+                            "easy",
+                            "medium",
+                            "hard"
+                          ],
+                          "nullable": true
+                        }
+                      },
+                      "required": [
+                        "visited",
+                        "difficulty"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "visits",
+                    "votes",
+                    "communityDifficulty",
+                    "mine"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/locations/{id}/visit": {
+      "put": {
+        "tags": [
+          "Locations"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "difficulty": {
+                    "type": "string",
+                    "enum": [
+                      "easy",
+                      "medium",
+                      "hard"
+                    ],
+                    "nullable": true
+                  }
+                },
+                "required": []
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "in": "path",
+            "name": "id",
+            "required": true
+          }
+        ],
+        "security": [
+          {
+            "cookieSession": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "properties": {
+                    "visits": {
+                      "type": "integer",
+                      "minimum": 0
+                    },
+                    "votes": {
+                      "type": "object",
+                      "additionalProperties": false,
+                      "properties": {
+                        "easy": {
+                          "type": "integer",
+                          "minimum": 0
+                        },
+                        "medium": {
+                          "type": "integer",
+                          "minimum": 0
+                        },
+                        "hard": {
+                          "type": "integer",
+                          "minimum": 0
+                        }
+                      },
+                      "required": [
+                        "easy",
+                        "medium",
+                        "hard"
+                      ]
+                    },
+                    "communityDifficulty": {
+                      "type": "string",
+                      "enum": [
+                        "easy",
+                        "medium",
+                        "hard"
+                      ],
+                      "nullable": true
+                    },
+                    "mine": {
+                      "type": "object",
+                      "additionalProperties": false,
+                      "properties": {
+                        "visited": {
+                          "type": "boolean"
+                        },
+                        "difficulty": {
+                          "type": "string",
+                          "enum": [
+                            "easy",
+                            "medium",
+                            "hard"
+                          ],
+                          "nullable": true
+                        }
+                      },
+                      "required": [
+                        "visited",
+                        "difficulty"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "visits",
+                    "votes",
+                    "communityDifficulty",
+                    "mine"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Locations"
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "in": "path",
+            "name": "id",
+            "required": true
+          }
+        ],
+        "security": [
+          {
+            "cookieSession": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "properties": {
+                    "visits": {
+                      "type": "integer",
+                      "minimum": 0
+                    },
+                    "votes": {
+                      "type": "object",
+                      "additionalProperties": false,
+                      "properties": {
+                        "easy": {
+                          "type": "integer",
+                          "minimum": 0
+                        },
+                        "medium": {
+                          "type": "integer",
+                          "minimum": 0
+                        },
+                        "hard": {
+                          "type": "integer",
+                          "minimum": 0
+                        }
+                      },
+                      "required": [
+                        "easy",
+                        "medium",
+                        "hard"
+                      ]
+                    },
+                    "communityDifficulty": {
+                      "type": "string",
+                      "enum": [
+                        "easy",
+                        "medium",
+                        "hard"
+                      ],
+                      "nullable": true
+                    },
+                    "mine": {
+                      "type": "object",
+                      "additionalProperties": false,
+                      "properties": {
+                        "visited": {
+                          "type": "boolean"
+                        },
+                        "difficulty": {
+                          "type": "string",
+                          "enum": [
+                            "easy",
+                            "medium",
+                            "hard"
+                          ],
+                          "nullable": true
+                        }
+                      },
+                      "required": [
+                        "visited",
+                        "difficulty"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "visits",
+                    "votes",
+                    "communityDifficulty",
+                    "mine"
                   ]
                 }
               }
@@ -33429,6 +34256,19 @@
                       ],
                       "nullable": true
                     },
+                    "communityDifficulty": {
+                      "type": "string",
+                      "enum": [
+                        "easy",
+                        "medium",
+                        "hard"
+                      ],
+                      "nullable": true
+                    },
+                    "visits": {
+                      "type": "integer",
+                      "minimum": 0
+                    },
                     "accessNotes": {
                       "type": "string",
                       "minLength": 0,
@@ -33467,6 +34307,8 @@
                     "longitude",
                     "kind",
                     "difficulty",
+                    "communityDifficulty",
+                    "visits",
                     "accessNotes",
                     "contacts",
                     "status",
@@ -35197,17 +36039,45 @@
                           "longitude": {
                             "type": "number"
                           },
+                          "kind": {
+                            "type": "string",
+                            "enum": [
+                              "spot",
+                              "rental",
+                              "guide",
+                              "school"
+                            ]
+                          },
                           "difficulty": {
                             "type": "string",
                             "enum": [
                               "easy",
                               "medium",
                               "hard"
-                            ]
+                            ],
+                            "nullable": true
+                          },
+                          "communityDifficulty": {
+                            "type": "string",
+                            "enum": [
+                              "easy",
+                              "medium",
+                              "hard"
+                            ],
+                            "nullable": true
+                          },
+                          "visits": {
+                            "type": "integer",
+                            "minimum": 0
                           },
                           "accessNotes": {
                             "type": "string",
                             "maxLength": 1500,
+                            "minLength": 0
+                          },
+                          "contacts": {
+                            "type": "string",
+                            "maxLength": 300,
                             "minLength": 0
                           },
                           "status": {
@@ -35237,8 +36107,12 @@
                           "city",
                           "latitude",
                           "longitude",
+                          "kind",
                           "difficulty",
+                          "communityDifficulty",
+                          "visits",
                           "accessNotes",
+                          "contacts",
                           "status",
                           "createdAt",
                           "updatedAt",

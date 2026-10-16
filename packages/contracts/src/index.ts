@@ -299,6 +299,14 @@ const locationResponse = obj({
       { type: "null" },
     ],
   },
+  // Riders' marks (0.28): how many were here and the difficulty they voted for.
+  communityDifficulty: {
+    anyOf: [
+      { type: "string", enum: ["easy", "medium", "hard"] },
+      { type: "null" },
+    ],
+  },
+  visits: { type: "integer", minimum: 0 },
   accessNotes: text(1500),
   contacts: text(300),
   status: {
@@ -383,6 +391,10 @@ export interface EnduroLocation
   > {
   kind: LocationKind;
   difficulty: "easy" | "medium" | "hard" | null;
+  /** Most riders' vote once at least two voted; null otherwise. */
+  communityDifficulty: "easy" | "medium" | "hard" | null;
+  /** Riders who marked «Был здесь». */
+  visits: number;
   contacts: string;
   id: string;
   author: Profile;
@@ -434,3 +446,5 @@ export * from "./blocks.ts";
 export * from "./models.ts";
 export * from "./parts.ts";
 export * from "./announcements.ts";
+export * from "./visits.ts";
+export * from "./place-import.ts";

@@ -1,7 +1,21 @@
 import type { FastifyInstance, FastifyRequest } from "fastify";
 import { notify } from "./pilot.ts";
 import { randomUUID } from "node:crypto";
-import { schemas, responses, type LocationInput } from "@enduro/contracts";
+import {
+  schemas,
+  responses,
+  visitResponses,
+  visitSchemas,
+  difficultyVotesNeeded,
+  type Difficulty,
+  type LocationInput,
+  type LocationKind,
+  type LocationVisits,
+  type PlaceImportResult,
+  type PlaceImportRow,
+  placeImportResponses,
+  placeImportSchemas,
+} from "@enduro/contracts";
 import type { Database, Row } from "./database.ts";
 import { profileOf } from "./auth.ts";
 import { blockedBetween } from "./blocks.ts";
@@ -11,6 +25,7 @@ export const locationOutputs: Record<string, [number, unknown]> = {
   "GET /api/me/locations": [200, responses.locations],
   "GET /api/locations/:id": [200, responses.location],
   "POST /api/locations": [201, responses.location],
+  "POST /api/moderation/locations/import": [200, placeImportResponses.result],
   "PATCH /api/locations/:id": [200, responses.location],
   "GET /api/locations/:id/decisions": [200, responses.audit],
   "GET /api/moderation/locations": [200, responses.locations],
@@ -20,7 +35,11 @@ export const locationOutputs: Record<string, [number, unknown]> = {
   "POST /api/moderation/reports/:id/decision": [200, responses.report],
 };
 const iso = (v: Date | string) => new Date(v).toISOString();
-export const locationSelect = `SELECT l.*,u.handle,u.display_name,u.level,u.bio,u.city AS author_city FROM locations l JOIN users u ON u.id=l.author_id`;
+// Riders' difficulty for a place: the most voted level once enough riders voted; a tie goes
+// to the medium, then the harder level, so nobody is lured onto a track by a split vote.
+export const communityDifficultySql = (place: string) =>
+  `(SELECT s.d FROM (SELECT v.difficulty AS d,count(*) AS n FROM location_visits v WHERE v.location_id=${place} AND v.difficulty IS NOT NULL GROUP BY v.difficulty) s WHERE (SELECT count(*) FROM location_visits w WHERE w.location_id=${place} AND w.difficulty IS NOT NULL)>=${difficultyVotesNeeded} ORDER BY s.n DESC,CASE s.d WHEN 'medium' THEN 0 WHEN 'hard' THEN 1 ELSE 2 END LIMIT 1)`;
+export const locationSelect = `SELECT l.*,u.handle,u.display_name,u.level,u.bio,u.city AS author_city,(SELECT count(*) FROM location_visits v WHERE v.location_id=l.id) AS visits,${communityDifficultySql("l.id")} AS community_difficulty FROM locations l JOIN users u ON u.id=l.author_id`;
 export const locationOf = (r: Row) => ({
   id: r.id,
   title: r.title,
@@ -30,6 +49,8 @@ export const locationOf = (r: Row) => ({
   longitude: r.longitude,
   kind: r.kind ?? "spot",
   difficulty: r.difficulty ?? null,
+  communityDifficulty: r.community_difficulty ?? null,
+  visits: Number(r.visits ?? 0),
   accessNotes: r.access_notes,
   contacts: r.contacts ?? "",
   status: r.status,
@@ -232,6 +253,232 @@ export function locationRoutes(
       );
       if (!updated) throw conflict();
       return get(req.params.id, req);
+    },
+  );
+  // Bulk upload by a moderator: each row is checked like the form; good rows are published
+  // at once under the moderator's name with a logged decision, bad rows come back with a reason.
+  const kindWords: Record<string, LocationKind> = {
+    spot: "spot",
+    место: "spot",
+    "место для катания": "spot",
+    трасса: "spot",
+    rental: "rental",
+    прокат: "rental",
+    guide: "guide",
+    гид: "guide",
+    school: "school",
+    школа: "school",
+  };
+  const difficultyWords: Record<string, Difficulty> = {
+    easy: "easy",
+    лёгкая: "easy",
+    легкая: "easy",
+    medium: "medium",
+    средняя: "medium",
+    hard: "hard",
+    сложная: "hard",
+    тяжёлая: "hard",
+    тяжелая: "hard",
+  };
+  app.post<{ Body: { items: PlaceImportRow[] } }>(
+    "/api/moderation/locations/import",
+    {
+      config: { rateLimit: { max: 10, timeWindow: "1 minute" } },
+      bodyLimit: 1024 * 1024,
+      schema: {
+        body: placeImportSchemas.body,
+        ...member,
+        tags: ["Moderation"],
+        response: { 200: placeImportResponses.result },
+      },
+    },
+    async (req) => {
+      const auth = moderator(req, true);
+      const result: PlaceImportResult = { added: 0, skipped: [] };
+      const seen = new Set<string>();
+      await db.transaction(async (tx) => {
+        for (const [index, row] of req.body.items.entries()) {
+          const title = (row.title ?? "").trim();
+          const skip = (reason: string) =>
+            result.skipped.push({ row: index + 2, title, reason });
+          const kind =
+            kindWords[(row.kind ?? "").trim().toLowerCase() || "spot"];
+          if (!kind) {
+            skip("Неизвестный тип: место, прокат, гид или школа.");
+            continue;
+          }
+          const difficultyText = (row.difficulty ?? "").trim().toLowerCase();
+          const difficulty = difficultyText
+            ? difficultyWords[difficultyText]
+            : undefined;
+          if (difficultyText && !difficulty) {
+            skip("Сложность: лёгкая, средняя или сложная.");
+            continue;
+          }
+          const { latitude, longitude } = row;
+          if (
+            typeof latitude !== "number" ||
+            typeof longitude !== "number" ||
+            Math.abs(latitude) > 90 ||
+            Math.abs(longitude) > 180
+          ) {
+            skip("Нет координат или они вне допустимого диапазона.");
+            continue;
+          }
+          let values: unknown[];
+          try {
+            values = fields({
+              kind,
+              title,
+              description: row.description ?? "",
+              city: row.city ?? "",
+              latitude,
+              longitude,
+              difficulty: difficulty ?? null,
+              accessNotes: row.accessNotes ?? "",
+              contacts: row.contacts ?? "",
+              publicationConsent: true,
+            });
+          } catch (e) {
+            skip((e as Error).message);
+            continue;
+          }
+          if (
+            title.length > 140 ||
+            (row.description ?? "").length > 3000 ||
+            (row.accessNotes ?? "").length > 1500 ||
+            (row.city ?? "").length > 80 ||
+            (row.contacts ?? "").length > 300
+          ) {
+            skip("Слишком длинный текст в одной из ячеек.");
+            continue;
+          }
+          const key = `${title.toLowerCase()}|${latitude.toFixed(3)}|${longitude.toFixed(3)}`;
+          if (seen.has(key)) {
+            skip("Повтор строки в файле.");
+            continue;
+          }
+          seen.add(key);
+          // About 150 m around: the same name there is the same place.
+          const [twin] = await tx.query(
+            "SELECT title FROM locations WHERE lower(title)=lower($1) AND abs(latitude-$2)<0.0015 AND abs(longitude-$3)<0.0025 LIMIT 1",
+            [title, latitude, longitude],
+          );
+          if (twin) {
+            skip("Такое место уже есть на карте.");
+            continue;
+          }
+          const id = randomUUID();
+          await tx.query(
+            "INSERT INTO locations(id,author_id,title,description,city,latitude,longitude,difficulty,access_notes,kind,contacts,status) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,'published')",
+            [id, auth.user.id, ...values],
+          );
+          await tx.query(
+            "INSERT INTO moderation_actions(id,actor_id,target_type,target_id,action,reason) VALUES ($1,$2,'location',$3,'publish','Загружено модератором из таблицы')",
+            [randomUUID(), auth.user.id, id],
+          );
+          result.added++;
+        }
+      });
+      return result;
+    },
+  );
+  // «Был здесь»: marks of riders who visited a published place, with a difficulty vote for spots.
+  async function visitsOf(
+    id: string,
+    me: string | null,
+  ): Promise<LocationVisits> {
+    const [r] = await db.query(
+      `SELECT count(*) AS visits,count(*) FILTER (WHERE difficulty='easy') AS easy,count(*) FILTER (WHERE difficulty='medium') AS medium,count(*) FILTER (WHERE difficulty='hard') AS hard,${communityDifficultySql("$1::uuid")} AS community FROM location_visits WHERE location_id=$1`,
+      [id],
+    );
+    const [mine] = me
+      ? await db.query(
+          "SELECT difficulty FROM location_visits WHERE location_id=$1 AND user_id=$2",
+          [id, me],
+        )
+      : [];
+    return {
+      visits: Number(r.visits),
+      votes: {
+        easy: Number(r.easy),
+        medium: Number(r.medium),
+        hard: Number(r.hard),
+      },
+      communityDifficulty: r.community ?? null,
+      mine: { visited: Boolean(mine), difficulty: mine?.difficulty ?? null },
+    };
+  }
+  async function visitable(id: string, req: FastifyRequest) {
+    const place = await get(id, req);
+    if (place.status !== "published") throw notFound();
+    return place;
+  }
+  app.get<{ Params: { id: string } }>(
+    "/api/locations/:id/visits",
+    {
+      schema: {
+        params: schemas.id,
+        tags: ["Locations"],
+        response: { 200: visitResponses.summary },
+      },
+    },
+    async (req) => {
+      await visitable(req.params.id, req);
+      return visitsOf(req.params.id, req.authContext?.user.id ?? null);
+    },
+  );
+  app.put<{ Params: { id: string }; Body: { difficulty?: Difficulty | null } }>(
+    "/api/locations/:id/visit",
+    {
+      config: { rateLimit: { max: 30, timeWindow: "1 minute" } },
+      schema: {
+        params: schemas.id,
+        body: visitSchemas.mark,
+        ...member,
+        tags: ["Locations"],
+        response: { 200: visitResponses.summary },
+      },
+    },
+    async (req) => {
+      const auth = requireWrite(req);
+      const place = await visitable(req.params.id, req);
+      if (place.author.id === auth.user.id)
+        throw new HttpError(
+          409,
+          "OWN_PLACE",
+          "Своё место отмечать не нужно — сложность вы указали при добавлении.",
+        );
+      // Only riding spots have a difficulty.
+      const difficulty =
+        place.kind === "spot" ? (req.body.difficulty ?? null) : null;
+      // Without the field the earlier vote stays; null withdraws it.
+      const replace = "difficulty" in req.body;
+      await db.query(
+        "INSERT INTO location_visits(location_id,user_id,difficulty) VALUES ($1,$2,$3) ON CONFLICT (location_id,user_id) DO UPDATE SET difficulty=CASE WHEN $4 THEN EXCLUDED.difficulty ELSE location_visits.difficulty END,updated_at=now()",
+        [place.id, auth.user.id, difficulty, replace],
+      );
+      return visitsOf(place.id, auth.user.id);
+    },
+  );
+  app.delete<{ Params: { id: string } }>(
+    "/api/locations/:id/visit",
+    {
+      schema: {
+        params: schemas.id,
+        ...member,
+        tags: ["Locations"],
+        response: { 200: visitResponses.summary },
+      },
+    },
+    async (req) => {
+      const auth = requireWrite(req);
+      await visitable(req.params.id, req);
+      await db.query(
+        "DELETE FROM location_visits WHERE location_id=$1 AND user_id=$2",
+        [req.params.id, auth.user.id],
+      );
+      return visitsOf(req.params.id, auth.user.id);
     },
   );
   app.get<{ Params: { id: string } }>(
