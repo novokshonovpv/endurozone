@@ -37,10 +37,10 @@
 С компьютера с доступом `ssh timeweb` (root):
 
 ```sh
-ssh timeweb "bash -s -- update feat/timeweb-stand" < deploy/stand.sh
+ssh timeweb "bash -s -- update main" < deploy/stand.sh
 ```
 
-Вместо `feat/timeweb-stand` можно указать другую опубликованную ветку. Скрипт берёт её из GitHub, ставит зависимости, собирает сайт, перезапускает службу и проверяет `/api/health`. База сохраняется.
+Из серийной консоли Timeweb (так стенд обновляется сейчас): `bash /root/enduro-stand.sh update main`. Стенд работает на `main`; вместо неё можно указать другую опубликованную ветку. Скрипт берёт её из GitHub, ставит зависимости, собирает сайт, перезапускает службу и проверяет `/api/health`. База сохраняется.
 
 ## Полезное
 
