@@ -1,8 +1,9 @@
 import { useRef, useState } from "react";
 import { Icon } from "./ui.tsx";
-// «ГАЗГАЗ 67!» — the owner's game from 67moto.ru, shown as is (scores stay in the 67МОТО table).
+// «Moto Trials» — the owner's game (github.com/novokshonovpv/gggame on GitHub Pages), shown as is.
+// Replaced «ГАЗГАЗ 67!» from 67moto.ru on 17.10.2026 at the owner's request.
 // Turning the phone sideways hides our chrome (CSS); the button goes full screen and asks for landscape.
-export const gameUrl = "https://67moto.ru/game.html";
+export const gameUrl = "https://novokshonovpv.github.io/gggame/";
 export function Game() {
   const box = useRef<HTMLDivElement>(null),
     [hint, setHint] = useState("");
@@ -28,10 +29,11 @@ export function Game() {
     <>
       <div className="page-heading game-heading">
         <div>
-          <p className="eyebrow">МИНИ-ИГРА 67МОТО</p>
-          <h1>ГАЗГАЗ 67!</h1>
+          <p className="eyebrow">МИНИ-ИГРА</p>
+          <h1>Moto Trials</h1>
           <p className="muted">
-            Заезд по смоленским трассам. Лучше всего играть горизонтально.
+            Гонка на время против соперников: газ, тормоз и наклоны, чтобы не
+            перевернуться. Лучше всего играть горизонтально.
           </p>
         </div>
         <button className="button" onClick={fullscreen}>
@@ -43,7 +45,7 @@ export function Game() {
       <div className="game-frame" ref={box}>
         <iframe
           src={gameUrl}
-          title="Мини-игра ГАЗГАЗ 67!"
+          title="Мини-игра Moto Trials"
           allow="fullscreen; autoplay"
           allowFullScreen
         />
