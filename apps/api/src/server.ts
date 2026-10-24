@@ -11,6 +11,11 @@ import { sendRideReminders } from "./reminders.ts";
 const envPath = fileURLToPath(new URL("../../../.env", import.meta.url));
 if (existsSync(envPath)) process.loadEnvFile(envPath);
 const origin = process.env.WEB_ORIGIN ?? "http://localhost:5173";
+// More public addresses of the same site, comma-separated (all must be https in production).
+const extraOrigins = (process.env.WEB_ORIGINS_EXTRA ?? "")
+  .split(",")
+  .map((o) => o.trim().replace(/\/+$/, ""))
+  .filter(Boolean);
 const sender = createMailSender(
   process.env,
   fileURLToPath(new URL("../../../.data/mail", import.meta.url)),
@@ -20,6 +25,7 @@ if (
   (!process.env.DATABASE_URL ||
     process.env.COOKIE_SECURE !== "true" ||
     !origin.startsWith("https://") ||
+    extraOrigins.some((o) => !o.startsWith("https://")) ||
     process.env.REQUIRE_VERIFIED_EMAIL !== "true")
 ) {
   throw new Error(
@@ -43,6 +49,7 @@ const app = await buildApp({
   db,
   mechanicResponder: createMechanicResponder(process.env),
   origin,
+  extraOrigins,
   secureCookie: process.env.COOKIE_SECURE === "true",
   logger: true,
   requireVerifiedEmail: process.env.REQUIRE_VERIFIED_EMAIL === "true",

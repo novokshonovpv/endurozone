@@ -178,6 +178,8 @@ const nonblank = (values: string[]) => {
 export async function buildApp(options: {
   db: Database;
   origin?: string;
+  /** Other public addresses of the same site (WEB_ORIGINS_EXTRA), trusted like `origin`. */
+  extraOrigins?: string[];
   secureCookie?: boolean;
   logger?: boolean;
   rateMax?: number;
@@ -193,7 +195,9 @@ export async function buildApp(options: {
 }): Promise<FastifyInstance> {
   const { db } = options;
   const origin = options.origin ?? "http://localhost:5173";
-  const trustedOrigins = new Set([origin]);
+  // The site may answer on several addresses (e.g. enduro.67moto.ru and the sslip.io stand
+  // address the Android app opens); requests from each of them are trusted.
+  const trustedOrigins = new Set([origin, ...(options.extraOrigins ?? [])]);
   if (
     !options.secureCookie &&
     /^http:\/\/(localhost|127\.0\.0\.1):\d+$/.test(origin)
