@@ -116,6 +116,15 @@ function crumb(route: string) {
     "Добро пожаловать"
   );
 }
+// On a wide screen the sidebar can shrink to icons; the choice stays in this browser.
+const collapsedKey = "ez:nav-collapsed";
+function readCollapsed() {
+  try {
+    return localStorage.getItem(collapsedKey) === "1";
+  } catch {
+    return false;
+  }
+}
 function useRoute() {
   const [route, set] = useState(window.location.hash.slice(1) || "feed");
   useEffect(() => {
@@ -142,7 +151,17 @@ export default function App() {
     [ready, setReady] = useState(false),
     [connectionError, setConnectionError] = useState(""),
     [notice, setNotice] = useState(""),
-    [menuOpen, setMenuOpen] = useState(false);
+    [menuOpen, setMenuOpen] = useState(false),
+    [collapsed, setCollapsed] = useState(readCollapsed);
+  const toggleCollapsed = () =>
+    setCollapsed((was) => {
+      try {
+        localStorage.setItem(collapsedKey, was ? "0" : "1");
+      } catch {
+        /* Not remembered in a private window; the toggle still works. */
+      }
+      return !was;
+    });
   // The phone menu sheet closes on any navigation.
   useEffect(() => setMenuOpen(false), [route]);
   const updateSession = (next: Session | null) => {
@@ -186,8 +205,23 @@ export default function App() {
     }
   };
   return (
-    <div className={`shell ${route === "game" ? "route-game" : ""}`}>
+    <div
+      className={`shell ${route === "game" ? "route-game" : ""} ${collapsed ? "nav-collapsed" : ""}`}
+    >
       <aside className={`sidebar ${menuOpen ? "menu-open" : ""}`}>
+        <span className="sidebar-lights" aria-hidden="true">
+          <i />
+          <i />
+          <i />
+        </span>
+        <button
+          className="nav-collapse"
+          onClick={toggleCollapsed}
+          aria-label={collapsed ? "Развернуть меню" : "Свернуть меню"}
+          title={collapsed ? "Развернуть меню" : "Свернуть меню"}
+        >
+          <Icon name="chevron" size={14} />
+        </button>
         <a className="brand" href="#feed" aria-label="Enduro.Zone, сообщество">
           <span className="brand-mark">
             EZ
@@ -211,6 +245,25 @@ export default function App() {
           )}
           Меню
         </button>
+        <a
+          className="nav-profile"
+          href={session ? "#profile" : "#login"}
+          title={session ? session.user.displayName : "Войти"}
+        >
+          {session ? (
+            <Avatar name={session.user.displayName} />
+          ) : (
+            <span className="avatar guest">
+              <Icon name="user" size={18} />
+            </span>
+          )}
+          <span className="nav-profile-text">
+            <strong>{session ? session.user.displayName : "Гость"}</strong>
+            <small>{session ? `@${session.user.handle}` : "Войти"}</small>
+          </span>
+          <Icon name="chevron" size={16} />
+        </a>
+        <div className="nav-caption nav-caption-main">РАЗДЕЛЫ</div>
         <nav aria-label="Основные разделы" className="block-nav">
           <SectionLinks route={route} className="nav-item" iconSize={20} />
         </nav>
@@ -221,9 +274,10 @@ export default function App() {
               key={n.path}
               href={`#${n.path}`}
               className={`nav-item ${route === n.path ? "active" : ""}`}
+              title={n.label}
             >
               <Icon name={n.icon} />
-              {n.label}
+              <span>{n.label}</span>
             </a>
           ))}
           {session?.user.role === "moderator" && (
@@ -231,26 +285,30 @@ export default function App() {
               <a
                 className={`nav-item ${route === "moderation" ? "active" : ""}`}
                 href="#moderation"
+                title="Модерация"
               >
                 <Icon name="shield-check" />
-                Модерация
+                <span>Модерация</span>
               </a>
               <a
                 className={`nav-item ${route === "pilot-feedback" ? "active" : ""}`}
                 href="#pilot-feedback"
+                title="Отзывы пилота"
               >
                 <Icon name="message" />
-                Отзывы пилота
+                <span>Отзывы пилота</span>
               </a>
             </>
           )}
         </nav>
+        <div className="nav-caption nav-caption-main">ПРОЕКТ</div>
         <a
           className={`nav-item roadmap-link ${route === "roadmap" ? "active" : ""}`}
           href="#roadmap"
+          title="Ход разработки"
         >
           <Icon name="mountain" />
-          Ход разработки
+          <span>Ход разработки</span>
         </a>
         <div className="sidebar-bottom">
           <span className="tiny-dot" />
@@ -275,7 +333,7 @@ export default function App() {
           <div className="top-actions">
             <span className="version">
               <span className="tiny-dot" />
-              Разработка · 0.31.1
+              Разработка · 0.32.0
             </span>
             {session ? (
               <>

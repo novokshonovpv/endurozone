@@ -115,6 +115,7 @@ export function SectionLinks({
             href={`#${s.home}`}
             className={`${className} ${on ? "active" : ""}`}
             aria-current={on ? "page" : undefined}
+            title={s.label}
           >
             <Icon name={s.icon} size={iconSize} />
             <span>{s.label}</span>

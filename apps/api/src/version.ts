@@ -1,2 +1,2 @@
 // Single source for the API version reported by /api/health, OpenAPI and pilot feedback.
-export const appVersion = "0.31.1";
+export const appVersion = "0.32.0";

@@ -23,7 +23,8 @@ export type IconName =
   | "user-heart"
   | "bookmark"
   | "user-circle"
-  | "shield-check";
+  | "shield-check"
+  | "chevron";
 const paths: Record<IconName, ReactNode> = {
   share: (
     <>
@@ -143,6 +144,7 @@ const paths: Record<IconName, ReactNode> = {
     <path d="M15 3a6 6 0 0 0-6 8L2 18l4 4 7-7a6 6 0 0 0 8-6l-4 3-4-4 3-5Z" />
   ),
   check: <path d="m4 12 5 5L20 6" />,
+  chevron: <path d="m9 6 6 6-6 6" />,
   bell: (
     <>
       <path d="M6 16v-5a6 6 0 0 1 12 0v5l2 2H4l2-2Z" />
